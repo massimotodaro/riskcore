@@ -137,8 +137,9 @@ These don't exist anywhere — this is our differentiation:
 
 - [x] Competitor analysis (60 articles scraped)
 - [x] GitHub research (found FinancePy, Riskfolio-Lib, OpenBB)
-- [ ] Pre-build research (Reddit, PyPI, vendor APIs)
-- [ ] Integration libraries research
+- [x] Pre-build research (Reddit, PyPI, vendor APIs, academic papers)
+- [x] Integration libraries research (simplefix, pyopenfigi, blp, quickfix)
+- [x] Library integrations guide (OpenBB, FinancePy, Riskfolio-Lib code examples)
 - [ ] Database schema design
 - [ ] Mock data generator
 
@@ -156,6 +157,9 @@ These don't exist anywhere — this is our differentiation:
 | Pricing | `/docs/PRICING.md` | Pricing layer design, FinancePy integration |
 | Integration | `/docs/INTEGRATION.md` | How we connect to client systems |
 | Decisions | `/docs/DECISIONS.md` | Key decisions with rationale |
+| **Pre-Build Research** | `/docs/pre_build_research.md` | Reddit, PyPI, vendor APIs, academic papers |
+| **Integration Libraries** | `/docs/integration_libraries.md` | GitHub libraries for FIX, Bloomberg, identifiers |
+| **Library Integrations** | `/docs/library_integrations.md` | OpenBB, FinancePy, Riskfolio-Lib code examples |
 
 ---
 
@@ -163,6 +167,10 @@ These don't exist anywhere — this is our differentiation:
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-09 | Use simplefix for FIX parsing | Lightweight, MIT license, easy upgrade to quickfix |
+| 2026-01-09 | Use pyopenfigi for identifier mapping | Free OpenFIGI API, Bloomberg-backed standard |
+| 2026-01-09 | Data validation pipeline in Week 1 | Research shows data quality is #1 cause of risk system failures |
+| 2026-01-09 | FIX + CSV for MVP (not vendor APIs) | Vendor APIs require client relationships |
 | 2025-01-09 | Use FinancePy for pricing | Don't rebuild derivatives pricing, MIT license, active |
 | 2025-01-09 | Use Riskfolio-Lib for VaR | 24 risk measures, active development |
 | 2025-01-09 | Use OpenBB for market data | 100+ providers, well-maintained |

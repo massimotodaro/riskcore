@@ -4,6 +4,94 @@
 
 ---
 
+## 2026-01-09
+
+### DECISION: Use simplefix for FIX protocol parsing
+
+**Context:** Need to ingest trade/position data from systems that support FIX protocol.
+
+**Decision:** Use simplefix library for MVP FIX message parsing.
+
+**Rationale:**
+- 250+ GitHub stars
+- MIT License (commercial OK)
+- Pure Python, no dependencies
+- Simple API for message creation/parsing
+- Easy upgrade path to quickfix for enterprise features
+
+**What we DON'T build:** FIX message parsing, validation, session management (for MVP).
+
+**Status:** Confirmed
+
+---
+
+### DECISION: Use pyopenfigi for identifier mapping
+
+**Context:** Need to map security identifiers (CUSIP, ISIN, SEDOL, Ticker) to build security master.
+
+**Decision:** Use pyopenfigi library to access OpenFIGI API.
+
+**Rationale:**
+- Free API (no subscription required)
+- Bloomberg-backed identifier standard
+- Maps all major identifier types to FIGI
+- MIT License
+- Rate limit: 25 requests/min (free tier)
+
+**What we DON'T build:** Identifier mapping logic, CUSIP checksum validation.
+
+**Status:** Confirmed
+
+---
+
+### DECISION: Prioritize data validation pipeline
+
+**Context:** Pre-build research revealed data quality is #1 cause of risk system failures.
+
+**Decision:** Build data validation pipeline in Week 1, before ingestion.
+
+**Rationale:**
+- Research quote: "The biggest reason for failure in risk monitoring is data quality"
+- 45% of funds struggle with inflexible systems that can't handle messy data
+- Validation catches issues early, before they propagate to risk calculations
+
+**Implementation:**
+- Schema validation (required fields, data types)
+- Identifier validation (using pyopenfigi)
+- Range checks (prices, quantities)
+- Duplicate detection
+- Audit trail for rejected records
+
+**Status:** Confirmed
+
+---
+
+### DECISION: FIX + CSV for MVP (not vendor APIs)
+
+**Context:** Pre-build research revealed all major vendor APIs require client relationships.
+
+**Decision:** Focus on FIX protocol and CSV/Excel for MVP. Defer vendor API integration.
+
+**Rationale:**
+- Enfusion API: Requires client relationship
+- SS&C Eze API: Requires client relationship
+- Bloomberg BLPAPI: Requires Terminal/B-PIPE subscription
+- Charles River API: Requires client relationship
+- FIX Protocol: Open standard, publicly documented
+- CSV/Excel: Universal, every fund has this
+
+**MVP Integration Priority:**
+1. CSV/Excel/JSON file upload
+2. FIX protocol (using simplefix)
+3. REST API for custom integrations
+
+**Phase 2 (when client relationships form):**
+- Vendor-specific API adapters
+
+**Status:** Confirmed
+
+---
+
 ## 2025-01-09
 
 ### DECISION: Create knowledge base for Claude Code

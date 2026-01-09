@@ -85,6 +85,56 @@ Capabilities:
 - **Use for:** Performance reporting, tear sheets
 - **Install:** `pip install quantstats`
 
+### simplefix (FIX Protocol) - MVP Priority
+
+- **URL:** https://github.com/da4089/simplefix
+- **Stars:** 250+
+- **License:** MIT
+- **Use for:** Lightweight FIX message parsing for trade/position ingestion
+- **Install:** `pip install simplefix`
+- **Why:** Pure Python, no dependencies, easy upgrade path to quickfix
+
+### pyopenfigi (Identifier Mapping) - MVP Priority
+
+- **URL:** https://github.com/tlouarn/pyopenfigi
+- **Stars:** 23+
+- **License:** MIT
+- **Use for:** Map CUSIP/ISIN/SEDOL/Ticker to FIGI
+- **Install:** `pip install pyopenfigi`
+- **Why:** Free OpenFIGI API, Bloomberg-backed standard
+
+### blp (Bloomberg Wrapper) - Phase 2
+
+- **URL:** https://github.com/matthewgilbert/blp
+- **Stars:** 141+
+- **License:** Apache-2.0
+- **Use for:** Pythonic Bloomberg API access (requires Terminal)
+- **Install:** `pip install blp`
+- **Why:** Successor to pdblp, pandas integration
+
+### quickfix (Full FIX Engine) - Phase 3
+
+- **URL:** https://github.com/quickfix/quickfix
+- **Stars:** 1,900+
+- **License:** QuickFIX (BSD-like)
+- **Use for:** Full FIX protocol connectivity (bi-directional)
+- **Install:** `pip install quickfix`
+- **Why:** Enterprise-grade, session management, FIX 4.0-5.0
+
+---
+
+## Integration Priority (from Pre-Build Research)
+
+| Phase | Library | Purpose | Effort |
+|-------|---------|---------|--------|
+| **MVP** | simplefix | FIX message parsing | Low |
+| **MVP** | pyopenfigi | Identifier mapping | Low |
+| **MVP** | quantstats | Portfolio analytics | Low |
+| **MVP** | Riskfolio-Lib | Risk calculations | Low |
+| **Phase 2** | blp | Bloomberg integration | Medium |
+| **Phase 2** | PyPortfolioOpt | Advanced optimization | Low |
+| **Phase 3** | quickfix | Full FIX connectivity | High |
+
 ---
 
 ## Python Dependencies
@@ -111,6 +161,12 @@ openbb>=4.0.0
 financepy>=0.350
 riskfolio-lib>=6.0.0
 quantstats>=0.0.62
+
+# Integration libraries (from pre-build research)
+simplefix>=1.0.0          # FIX protocol parsing (MVP)
+pyopenfigi>=0.3.0         # Identifier mapping (MVP)
+# blp>=0.1.0              # Bloomberg wrapper (Phase 2, requires Terminal)
+# quickfix>=1.15.0        # Full FIX engine (Phase 3)
 
 # AI
 anthropic>=0.18.0

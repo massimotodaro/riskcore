@@ -58,18 +58,22 @@ These don't exist anywhere — this is our value:
 
 ## Integration Phases
 
-### Phase 1 (MVP): File Drop + REST API
+### Phase 1 (MVP): File Drop + FIX + REST API
 
 | System | Type | Priority | Reason |
 |--------|------|----------|--------|
 | Excel/CSV | File | HIGH | Universal, every fund has this |
-| Enfusion | API | HIGH | Cloud-native, good API, 950+ HF clients |
-| Eze Eclipse | API | HIGH | 200+ clients, modern API |
+| **FIX Protocol** | simplefix | HIGH | Open standard, vendor APIs require client relationship |
+| JSON | File | HIGH | API-friendly format |
+
+**Key Research Finding:** Vendor APIs (Enfusion, Eze, Bloomberg) all require client relationships. FIX protocol is open standard.
 
 Deliverables:
-- Accept CSV/Excel uploads (any format)
+- Accept CSV/Excel/JSON uploads (any format)
 - Auto-detect columns, map to RISKCORE schema
-- Basic connectors for Enfusion and Eze (if API docs available)
+- **FIX adapter using simplefix** for trade/position ingestion
+- **Data validation pipeline** (research shows data quality is #1 failure cause)
+- **pyopenfigi integration** for identifier mapping (CUSIP/ISIN/SEDOL/Ticker to FIGI)
 
 ### Phase 2: Database Connectors
 
@@ -108,6 +112,8 @@ MVP is successful when:
 - [ ] Finalize database schema
 - [ ] Create Supabase tables
 - [ ] Build mock data generator (realistic positions, multiple PMs)
+- [ ] **Data validation pipeline** (schema validation, required fields, data types)
+- [ ] **pyopenfigi integration** for security master identifier mapping
 - [ ] Set up GitHub repo structure
 - [ ] Write README
 - [ ] Create project board (GitHub Projects or Notion)
@@ -118,9 +124,10 @@ MVP is successful when:
 ## Week 2 Checklist
 
 - [ ] Position ingestion API (POST /positions)
-- [ ] File upload endpoint (CSV, Excel)
+- [ ] File upload endpoint (CSV, Excel, JSON)
+- [ ] **FIX adapter using simplefix** (parse FIX messages for trades/positions)
 - [ ] Column auto-detection
-- [ ] Basic validation
+- [ ] Data validation (using Week 1 pipeline)
 - [ ] P&L calculation (position × price - cost)
 - [ ] Unit tests
 
@@ -173,8 +180,10 @@ MVP is successful when:
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Enfusion/Eze APIs not publicly documented | Can't build connectors | Focus on CSV/Excel first, approach vendors later |
+| **Vendor APIs require client relationship** | Can't build direct connectors | **FIX protocol + CSV for MVP** (confirmed by research) |
+| **Data quality issues** | Risk system failures (#1 cause) | **Data validation pipeline in Week 1** |
 | FinancePy doesn't cover all instruments | Pricing gaps | Use client override for edge cases |
 | Riskfolio-Lib learning curve | Delays Week 3 | Study library in Week 1-2 |
 | Dashboard takes longer than expected | Week 5 overruns | Use component library (shadcn/ui) |
 | AI queries too slow | Poor UX | Cache common queries, optimize prompts |
+| Correlation instability in crises | VaR underestimation | Implement regime-aware modeling (Phase 2) |
