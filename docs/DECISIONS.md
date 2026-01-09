@@ -4,95 +4,98 @@
 
 ---
 
-## 2026-01-09
+## 2025-01-09 (Afternoon)
+
+### DECISION: Build Correlation Framework as Phase 2-3 differentiator
+
+**Context:** CIO/CRO at multi-manager funds need to see correlation between books/PMs. No platform does this well. 2008 showed correlations spike to 1 in crisis.
+
+**Decision:** Build comprehensive correlation framework:
+- Phase 2: Realized + Implied correlation matrices
+- Phase 3: Stress testing + Hedge overlay suggestions
+
+**Components:**
+1. Risk factor taxonomy (standard factors per asset class)
+2. Factor exposure decomposition per book
+3. Realized correlation (historical P&L-based)
+4. Implied correlation (factor-based, forward-looking)
+5. Stress testing (correlation → 0.9 scenario)
+6. Hedge overlay suggestions (AI-powered trade recommendations)
+
+**Rationale:**
+- Unique differentiator — no competitor has this
+- Solves real CIO/CRO pain point
+- Builds on existing Riskfolio-Lib capabilities
+- Natural extension of aggregation engine
+
+**Status:** ✅ Added to roadmap
+
+---
 
 ### DECISION: Use simplefix for FIX protocol parsing
 
-**Context:** Need to ingest trade/position data from systems that support FIX protocol.
+**Context:** Need to ingest trade/position data from client systems. Vendor APIs require client relationships.
 
-**Decision:** Use simplefix library for MVP FIX message parsing.
+**Decision:** Use `simplefix` library for MVP FIX parsing.
 
 **Rationale:**
-- 250+ GitHub stars
-- MIT License (commercial OK)
+- MIT license
 - Pure Python, no dependencies
-- Simple API for message creation/parsing
-- Easy upgrade path to quickfix for enterprise features
+- Simple API
+- Upgrade path to `quickfix` for enterprise
 
-**What we DON'T build:** FIX message parsing, validation, session management (for MVP).
-
-**Status:** Confirmed
+**Status:** ✅ Confirmed
 
 ---
 
 ### DECISION: Use pyopenfigi for identifier mapping
 
-**Context:** Need to map security identifiers (CUSIP, ISIN, SEDOL, Ticker) to build security master.
+**Context:** Need to map CUSIP/ISIN/SEDOL/Ticker to canonical identifier.
 
-**Decision:** Use pyopenfigi library to access OpenFIGI API.
+**Decision:** Use `pyopenfigi` library with OpenFIGI API.
 
 **Rationale:**
-- Free API (no subscription required)
-- Bloomberg-backed identifier standard
-- Maps all major identifier types to FIGI
-- MIT License
-- Rate limit: 25 requests/min (free tier)
+- Free API (no subscription)
+- Bloomberg-backed standard
+- MIT license
+- Maps all major identifier types
 
-**What we DON'T build:** Identifier mapping logic, CUSIP checksum validation.
-
-**Status:** Confirmed
+**Status:** ✅ Confirmed
 
 ---
 
 ### DECISION: Prioritize data validation pipeline
 
-**Context:** Pre-build research revealed data quality is #1 cause of risk system failures.
+**Context:** Pre-build research found data quality is #1 cause of risk system failures.
 
-**Decision:** Build data validation pipeline in Week 1, before ingestion.
+**Decision:** Build data validation pipeline in Week 1, before other features.
 
 **Rationale:**
-- Research quote: "The biggest reason for failure in risk monitoring is data quality"
-- 45% of funds struggle with inflexible systems that can't handle messy data
-- Validation catches issues early, before they propagate to risk calculations
+- Garbage in, garbage out
+- Reddit/HN consensus: data quality is critical
+- Better to validate early than debug later
 
-**Implementation:**
-- Schema validation (required fields, data types)
-- Identifier validation (using pyopenfigi)
-- Range checks (prices, quantities)
-- Duplicate detection
-- Audit trail for rejected records
-
-**Status:** Confirmed
+**Status:** ✅ Confirmed
 
 ---
 
 ### DECISION: FIX + CSV for MVP (not vendor APIs)
 
-**Context:** Pre-build research revealed all major vendor APIs require client relationships.
+**Context:** Enfusion, Eze, Bloomberg APIs all require client relationships. No public documentation.
 
-**Decision:** Focus on FIX protocol and CSV/Excel for MVP. Defer vendor API integration.
+**Decision:** Focus on FIX protocol and CSV/Excel import for MVP. Vendor APIs in Phase 2+ when we have client relationships.
 
 **Rationale:**
-- Enfusion API: Requires client relationship
-- SS&C Eze API: Requires client relationship
-- Bloomberg BLPAPI: Requires Terminal/B-PIPE subscription
-- Charles River API: Requires client relationship
-- FIX Protocol: Open standard, publicly documented
-- CSV/Excel: Universal, every fund has this
+- FIX is open standard
+- CSV is universal
+- Can't build vendor connectors without API access
+- Client relationship comes after we have working product
 
-**MVP Integration Priority:**
-1. CSV/Excel/JSON file upload
-2. FIX protocol (using simplefix)
-3. REST API for custom integrations
-
-**Phase 2 (when client relationships form):**
-- Vendor-specific API adapters
-
-**Status:** Confirmed
+**Status:** ✅ Confirmed
 
 ---
 
-## 2025-01-09
+## 2025-01-09 (Morning)
 
 ### DECISION: Create knowledge base for Claude Code
 
@@ -209,17 +212,16 @@
 **Context:** Need to decide which systems to support first.
 
 **Decision:**
-1. **MVP (HIGH):** Excel/CSV, Enfusion, Eze Eclipse
-2. **Phase 2 (MEDIUM):** Bloomberg AIM/PORT, Charles River, SimCorp
-3. **Phase 3:** FIX protocol, Webhooks
+1. **MVP (HIGH):** Excel/CSV, FIX protocol
+2. **Phase 2 (MEDIUM):** Bloomberg AIM/PORT, Enfusion, Eze (with client relationships)
+3. **Phase 3:** Real-time WebSocket, database connectors
 
 **Rationale:**
 - Excel/CSV = universal, every fund has this
-- Enfusion = 950+ HF clients, modern API
-- Eze = 200+ clients, SS&C backed
-- Bloomberg = complex BLPAPI, longer sales cycle
+- FIX = open standard, no vendor relationship needed
+- Vendor APIs = require client relationship first
 
-**Status:** ✅ Confirmed
+**Status:** ✅ Updated based on research
 
 ---
 
@@ -272,6 +274,8 @@
 - SLA guarantees
 - Premium support
 - Advanced compliance reports
+- Correlation framework (Phase 2-3)
+- Hedge overlay suggestions
 
 **Status:** ✅ Strategic direction
 
