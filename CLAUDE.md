@@ -36,7 +36,7 @@ This makes adoption easy — no one changes their workflow.
 | Charts | **Recharts / Tremor** | Modern, React-native |
 | AI | **Claude API** | Natural language risk queries |
 | Hosting | **Vercel + Railway** | Free tier for MVP |
-| Repo | **GitHub (public)** | Open-source visibility |
+| Repo | **GitHub (public)** | github.com/massimotodaro/riskcore |
 
 ---
 
@@ -44,13 +44,14 @@ This makes adoption easy — no one changes their workflow.
 
 These don't exist anywhere — this is our differentiation:
 
+- [ ] Data validation pipeline
 - [ ] Position ingestion & normalization API
-- [ ] Security master (CUSIP/ISIN/SEDOL/Ticker mapping)
+- [ ] Security master (CUSIP/ISIN/SEDOL/Ticker + FIGI mapping)
 - [ ] Multi-PM aggregation engine
 - [ ] Cross-PM netting & overlap detection
 - [ ] Firm-wide risk rollup
 - [ ] Natural language interface (Claude)
-- [ ] Dashboard
+- [ ] Riskboard Dashboard
 
 ---
 
@@ -64,6 +65,8 @@ These don't exist anywhere — this is our differentiation:
 | Derivatives Pricing | **FinancePy** | 2.6k+ | Bonds, swaps, options, CDS, Greeks |
 | Risk Metrics | **Riskfolio-Lib** | 3k+ | VaR, CVaR, covariance, 24 risk measures |
 | Performance Analytics | **QuantStats** | 4.5k+ | Tear sheets, reporting |
+| FIX Protocol | **simplefix** | 250+ | Lightweight FIX parsing |
+| Identifier Mapping | **pyopenfigi** | 23+ | Free OpenFIGI API |
 
 ---
 
@@ -71,7 +74,7 @@ These don't exist anywhere — this is our differentiation:
 
 ```
 1. DATA INGESTION
-   - Client: File upload (CSV/Excel), REST API, Database read
+   - Client: File upload (CSV/Excel), REST API, FIX protocol
    - Market: OpenBB (100+ providers)
    
 2. PRICING LAYER (FinancePy)
@@ -80,7 +83,7 @@ These don't exist anywhere — this is our differentiation:
    
 3. AGGREGATION ENGINE (RISKCORE Unique) ← THIS IS THE CORE
    - Multi-PM position consolidation
-   - Security master mapping
+   - Security master mapping (pyopenfigi)
    - Cross-PM netting & overlap detection
    - Hierarchy: Firm → Fund → PM → Strategy → Book
    - IBOR (Investment Book of Record)
@@ -94,9 +97,21 @@ These don't exist anywhere — this is our differentiation:
    - "What's our net tech exposure across all PMs?"
    
 6. DASHBOARD (React + Tailwind)
+   - Riskboard with RiskCards
    - Firm-wide view, PM drill-down
+   - Correlation matrix heatmap
    - Real-time updates, alerts, chat interface
 ```
+
+---
+
+## Business Model
+
+| Tier | Price | Features |
+|------|-------|----------|
+| **Free** | $0 | Core platform, 1 user, CSV upload, basic risk, "Powered by RISKCORE" watermark |
+| **Pro** | $500-2K/mo | Multi-user (10), API access (100 req/min), priority support |
+| **Enterprise** | $5-25K/mo | Unlimited users, SSO/SAML, 2FA required, API (1000 req/min), SLA, custom integrations |
 
 ---
 
@@ -105,16 +120,16 @@ These don't exist anywhere — this is our differentiation:
 **Phase 1 (MVP):**
 | System | Type | Priority | Reason |
 |--------|------|----------|--------|
-| Excel/CSV | File | HIGH | Universal, every fund has this |
-| Enfusion | API | HIGH | Cloud-native, good API, 950+ HF clients |
-| Eze Eclipse | API | HIGH | 200+ clients, modern API |
+| CSV/Excel | File | HIGH | Universal, every fund has this |
+| FIX Protocol | simplefix | HIGH | Open standard, no vendor relationship needed |
+| JSON API | REST | HIGH | Modern integration |
 
-**Phase 2 (Post-MVP):**
+**Phase 2 (With Client Relationships):**
 | System | Type | Priority | Reason |
 |--------|------|----------|--------|
-| Bloomberg AIM/PORT | BLPAPI | MEDIUM | Complex API, enterprise sales cycle |
-| Charles River | API | MEDIUM | OMS focus, less common at multi-managers |
-| SimCorp | API | MEDIUM | Asset managers |
+| Bloomberg AIM/PORT | BLPAPI | MEDIUM | Requires Terminal access |
+| Enfusion | REST API | MEDIUM | Requires partnership |
+| Eze Eclipse | REST API | MEDIUM | Requires SS&C relationship |
 
 ---
 
@@ -122,62 +137,125 @@ These don't exist anywhere — this is our differentiation:
 
 | Week | Deliverable |
 |------|-------------|
-| 1 | Database schema, mock data generator, GitHub repo public |
-| 2 | Position & trade ingestion API, basic P&L calculation |
+| 1 | Database schema, data validation pipeline, mock data generator, pyopenfigi integration |
+| 2 | Position & trade ingestion API, FIX adapter (simplefix), CSV/Excel upload |
 | 3 | Risk engine: VaR (Riskfolio-Lib), exposures, Greeks (FinancePy) |
-| **4** | **AGGREGATION ENGINE: Cross-PM netting, firm-level view** |
-| 5 | Dashboard: Beautiful, responsive, real-time |
-| 6 | AI layer: Natural language queries, polish, docs |
+| **4** | **AGGREGATION ENGINE: Cross-PM netting, firm-level view, overlap detection** |
+| 5 | Dashboard: Riskboard, RiskCards, correlation matrix, responsive |
+| 6 | AI layer: Natural language queries, documentation, polish |
 
 ---
 
 ## Current Phase
 
-**Planning & Research** (before Week 1)
+**Ready to Start Week 1**
 
-- [x] Competitor analysis (60 articles scraped)
-- [x] GitHub research (found FinancePy, Riskfolio-Lib, OpenBB)
+- [x] Competitor analysis (60 articles)
+- [x] GitHub research (FinancePy, Riskfolio-Lib, OpenBB)
 - [x] Pre-build research (Reddit, PyPI, vendor APIs, academic papers)
 - [x] Integration libraries research (simplefix, pyopenfigi, blp, quickfix)
-- [x] Library integrations guide (OpenBB, FinancePy, Riskfolio-Lib code examples)
-- [ ] Database schema design
+- [x] Library integrations guide (code examples)
+- [x] UI/Auth architecture design
+- [x] Security architecture design
+- [x] GDPR & data residency research
+- [ ] **Database schema design** ← NEXT
 - [ ] Mock data generator
 
 ---
 
 ## Key Documentation
 
+### Core Architecture
 | Doc | Location | Contents |
 |-----|----------|----------|
-| Architecture | `/docs/ARCHITECTURE.md` | Full system design, layers, diagrams |
+| Architecture | `/docs/ARCHITECTURE.md` | System design, layers, data flow |
 | MVP | `/docs/MVP.md` | Scope, timeline, success metrics |
 | Tech Stack | `/docs/TECH_STACK.md` | What we use and why |
-| Competitors | `/docs/COMPETITORS.md` | RiskVal, Imagine, Enfusion, Eze, etc. |
-| GitHub Research | `/docs/GITHUB_RESEARCH.md` | Open-source findings |
-| Pricing | `/docs/PRICING.md` | Pricing layer design, FinancePy integration |
-| Integration | `/docs/INTEGRATION.md` | How we connect to client systems |
+| Vision | `/docs/VISION.md` | Problem statement, why open source |
 | Decisions | `/docs/DECISIONS.md` | Key decisions with rationale |
-| **Pre-Build Research** | `/docs/pre_build_research.md` | Reddit, PyPI, vendor APIs, academic papers |
-| **Integration Libraries** | `/docs/integration_libraries.md` | GitHub libraries for FIX, Bloomberg, identifiers |
-| **Library Integrations** | `/docs/library_integrations.md` | OpenBB, FinancePy, Riskfolio-Lib code examples |
+
+### Product & Business
+| Doc | Location | Contents |
+|-----|----------|----------|
+| Business Model | `/docs/BUSINESS_MODEL.md` | Pricing, monetization, go-to-market |
+| Correlation Framework | `/docs/CORRELATION_FRAMEWORK.md` | Phase 2-3: realized/implied correlation |
+
+### UI & Security
+| Doc | Location | Contents |
+|-----|----------|----------|
+| **UI/Auth Architecture** | `/docs/UI_AUTH_ARCHITECTURE.md` | Riskboard, RiskCards, RBAC, multi-tenant |
+| **Security** | `/docs/SECURITY.md` | Auth, encryption, GDPR, audit logging, export controls |
+
+### Research
+| Doc | Location | Contents |
+|-----|----------|----------|
+| Competitor Analysis | `/docs/competitor_analysis.md` | RiskVal, Imagine, Enfusion, Eze, etc. |
+| GitHub Research | `/docs/github_research.md` | Open-source landscape |
+| Market Research | `/docs/market_research_analysis.md` | 60 articles, pain points, gaps |
+| Pre-Build Research | `/docs/pre_build_research.md` | Reddit, PyPI, vendor APIs, academic papers |
+
+### Integration
+| Doc | Location | Contents |
+|-----|----------|----------|
+| Integration Libraries | `/docs/integration_libraries.md` | GitHub libraries for FIX, Bloomberg, identifiers |
+| Library Integrations | `/docs/library_integrations.md` | OpenBB, FinancePy, Riskfolio-Lib code examples |
 
 ---
 
-## Decisions Log
+## RBAC Roles
+
+| Role | Scope | Key Permissions |
+|------|-------|-----------------|
+| **SuperAdmin** | Platform | All permissions, manage tenants |
+| **Admin** | Tenant | User management, configuration |
+| **CIO** | Tenant | View all, approve limits, export |
+| **CRO** | Tenant | View all, set limits, RiskOff |
+| **PM** | Own Books | View own positions, acknowledge alerts |
+| **Analyst** | Assigned | View assigned books only |
+
+---
+
+## Database Tables
+
+### Existing (Job Hunt System)
+- `research_articles` (60 articles loaded)
+- `jobs_raw`, `jobs`, `user_profile`
+
+### RISKCORE Core
+| Table | Purpose |
+|-------|---------|
+| `tenants` | Multi-tenant isolation |
+| `users` | User accounts with roles |
+| `books` | Trading books (PM portfolios) |
+| `positions` | Current positions per book |
+| `trades` | Trade history |
+| `securities` | Security master |
+| `prices` | Price history |
+| `risk_metrics` | Calculated risk metrics |
+| `limits` | Risk limits per book/firm |
+| `limit_breaches` | Breach history |
+| `audit_logs` | Security audit trail |
+| `correlation_matrices` | Realized/implied correlations |
+
+---
+
+## Recent Decisions
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-01-09 | Use simplefix for FIX parsing | Lightweight, MIT license, easy upgrade to quickfix |
-| 2026-01-09 | Use pyopenfigi for identifier mapping | Free OpenFIGI API, Bloomberg-backed standard |
-| 2026-01-09 | Data validation pipeline in Week 1 | Research shows data quality is #1 cause of risk system failures |
-| 2026-01-09 | FIX + CSV for MVP (not vendor APIs) | Vendor APIs require client relationships |
-| 2025-01-09 | Use FinancePy for pricing | Don't rebuild derivatives pricing, MIT license, active |
-| 2025-01-09 | Use Riskfolio-Lib for VaR | 24 risk measures, active development |
-| 2025-01-09 | Use OpenBB for market data | 100+ providers, well-maintained |
-| 2025-01-09 | READ-ONLY overlay architecture | Easy adoption, no workflow disruption |
-| 2025-01-09 | Excel/CSV first, then Enfusion/Eze | Universal format first, then popular platforms |
-| 2025-01-09 | Supabase for database | Already set up, real-time, free tier |
-| 2025-01-09 | Week 4 = Aggregation Engine | Core differentiator, must be solid |
+| 2026-01-10 | Free tier: "Powered by RISKCORE" watermark | Subtle branding, removed in Pro |
+| 2026-01-10 | Audit logging: sensitive actions only | Viewing platform, not trading - expand later if needed |
+| 2026-01-10 | 2FA: Enterprise only | Balance security vs friction |
+| 2026-01-10 | SSO/SAML: Phase 2-3 | Nice-to-have, not MVP |
+| 2026-01-10 | Data retention: 5 years fixed | Regulatory standard, not configurable |
+| 2026-01-10 | US infrastructure for MVP | GDPR allows with SCCs, EU option in Enterprise |
+| 2026-01-10 | Export controls by role | PMs own book only, CRO/CIO firm-wide |
+| 2026-01-10 | Riskboard dashboard design | RiskCards, book selector, correlation heatmap |
+| 2026-01-10 | Multi-tenant from day 1 | tenant_id + RLS on all tables |
+| 2026-01-09 | Use simplefix for FIX parsing | Lightweight, MIT, upgrade to quickfix later |
+| 2026-01-09 | Use pyopenfigi for identifiers | Free OpenFIGI API, Bloomberg-backed |
+| 2026-01-09 | Data validation pipeline Week 1 | Data quality = #1 failure cause |
+| 2026-01-09 | READ-ONLY architecture | Easy adoption, no workflow disruption |
 
 ---
 
@@ -187,18 +265,6 @@ These don't exist anywhere — this is our differentiation:
 Project ID: vukinjdeddwwlaumtfij
 URL: https://vukinjdeddwwlaumtfij.supabase.co
 ```
-
-Tables created:
-- `research_articles` (60 articles loaded)
-- `jobs_raw`, `jobs`, `user_profile` (job hunt system)
-
-Tables needed for RISKCORE:
-- `positions`
-- `trades`
-- `securities`
-- `portfolios`
-- `price_history`
-- `risk_metrics`
 
 ---
 
@@ -238,5 +304,7 @@ When working on this project:
 2. **Don't rebuild** what FinancePy, Riskfolio-Lib, or OpenBB already do
 3. **The aggregation engine is the core** — everything else supports it
 4. **READ-ONLY** — we never write to client systems
-5. **Beautiful dashboard** — this will be demoed to prospects
-6. **Ask if unsure** — check DECISIONS.md or ask for clarification
+5. **Multi-tenant from day 1** — tenant_id + RLS on every table
+6. **Security matters** — see SECURITY.md for auth, audit, export controls
+7. **Beautiful dashboard** — this will be demoed to prospects
+8. **Ask if unsure** — check DECISIONS.md or ask for clarification
