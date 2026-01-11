@@ -44,9 +44,9 @@ This makes adoption easy — no one changes their workflow.
 
 These don't exist anywhere — this is our differentiation:
 
-- [ ] Data validation pipeline
+- [x] Data validation pipeline
 - [ ] Position ingestion & normalization API
-- [ ] Security master (CUSIP/ISIN/SEDOL/Ticker + FIGI mapping)
+- [x] Security master (CUSIP/ISIN/SEDOL/Ticker + FIGI mapping)
 - [ ] Multi-PM aggregation engine
 - [ ] Cross-PM netting & overlap detection
 - [ ] Firm-wide risk rollup
@@ -148,7 +148,7 @@ These don't exist anywhere — this is our differentiation:
 
 ## Current Phase
 
-**Ready to Start Week 1**
+**Week 1 COMPLETE**
 
 - [x] Competitor analysis (60 articles)
 - [x] GitHub research (FinancePy, Riskfolio-Lib, OpenBB)
@@ -158,8 +158,62 @@ These don't exist anywhere — this is our differentiation:
 - [x] UI/Auth architecture design
 - [x] Security architecture design
 - [x] GDPR & data residency research
-- [ ] **Database schema design** ← NEXT
-- [ ] Mock data generator
+- [x] Database schema design (34 tables, RLS, validation pipeline)
+- [x] Mock data generator (realistic multi-PM hedge fund data)
+- [x] OpenFIGI integration (custom client, security master service)
+- [x] Data validation pipeline (configurable rules, multi-table validation)
+
+---
+
+## Current Implementation State
+
+**Last Updated:** 2026-01-11
+
+### Backend Services
+
+| Service | File | Status | Notes |
+|---------|------|--------|-------|
+| OpenFIGI Client | `backend/services/openfigi.py` | ✅ Complete | Custom API v3 client, rate-limited |
+| Security Master | `backend/services/security_master.py` | ✅ Complete | FIGI resolution + DB integration |
+| Validation | `backend/services/validation.py` | ✅ Complete | 11 rules, 5 rule types |
+| Position Ingestion | `backend/api/positions.py` | ⬜ Week 2 | FastAPI endpoints |
+| Trade Ingestion | `backend/api/trades.py` | ⬜ Week 2 | FastAPI endpoints |
+| FIX Parser | `backend/services/fix_parser.py` | ⬜ Week 2 | simplefix integration |
+| Risk Engine | `backend/services/risk_engine.py` | ⬜ Week 3 | Riskfolio-Lib |
+| Aggregation | `backend/services/aggregation.py` | ⬜ Week 4 | Cross-PM netting |
+
+### Database Migrations
+
+| Migration | Purpose | Status |
+|-----------|---------|--------|
+| `20260109*_initial` | 32 core tables with RLS | ✅ Applied |
+| `20260111160000_schema_improvements` | +2 tables, indexes, triggers | ✅ Applied |
+| `20260111180000_add_composite_figi` | FIGI enum values | ✅ Applied |
+
+### Scripts
+
+| Script | Purpose | Status |
+|--------|---------|--------|
+| `scripts/generate_mock_data.py` | Test data (~$1.2B AUM, 10 PMs) | ✅ Working |
+| `scripts/test_validation.py` | Validation pipeline tests | ✅ Passing |
+
+### Frontend
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| React App | ⬜ Week 5 | Vite + Tailwind |
+| Dashboard | ⬜ Week 5 | Riskboard layout |
+| Chat Interface | ⬜ Week 6 | Claude integration |
+
+---
+
+## Knowledge Sync (CC ↔ CD)
+
+**For Claude Desktop sync, copy these 2 files:**
+- `CLAUDE.md` - Architecture, decisions, current state
+- `ROADMAP.md` - Detailed milestones, progress tracking
+
+See `ROADMAP.md` for detailed week-by-week progress.
 
 ---
 
@@ -217,25 +271,40 @@ These don't exist anywhere — this is our differentiation:
 
 ## Database Tables
 
-### Existing (Job Hunt System)
-- `research_articles` (60 articles loaded)
-- `jobs_raw`, `jobs`, `user_profile`
+### Legacy (Job Hunt System - keeping for now)
+- `research_articles`, `jobs_raw`, `jobs`, `user_profile`, `cv_profile`, `scrape_sources`
 
 ### RISKCORE Core
 | Table | Purpose |
 |-------|---------|
 | `tenants` | Multi-tenant isolation |
 | `users` | User accounts with roles |
-| `books` | Trading books (PM portfolios) |
-| `positions` | Current positions per book |
+| `funds` | Organizational grouping of books |
+| `books` | Trading books (PM portfolios) - has `pm_id` |
+| `book_user_access` | Granular access control for PM/Analyst |
+| `securities` | Global security master (NOT tenant-scoped) |
+| `security_identifiers` | FIGI/ISIN/CUSIP/SEDOL/ticker mapping |
+| `security_prices` | Historical prices |
+| `positions` | Current positions (includes convexity) |
+| `position_history` | Historical snapshots |
+| `position_changes` | Event log of position changes |
 | `trades` | Trade history |
-| `securities` | Security master |
-| `prices` | Price history |
-| `risk_metrics` | Calculated risk metrics |
-| `limits` | Risk limits per book/firm |
-| `limit_breaches` | Breach history |
-| `audit_logs` | Security audit trail |
-| `correlation_matrices` | Realized/implied correlations |
+| `risk_metrics` | Pre-calculated risk metrics |
+| `risk_metric_history` | Historical risk metrics |
+| `limits` | Risk limits per book/fund/tenant |
+| `limit_breaches` | Breach history with workflow |
+| `correlation_matrices` | Cross-book correlations |
+| `factor_exposures` | Factor exposures per book |
+| `model_overrides` | User overrides for model inputs |
+| `validation_rules` | Data validation rule definitions |
+| `validation_results` | Validation errors and warnings |
+| `uploads` | File upload tracking |
+| `upload_records` | Individual records from uploads |
+| `notifications` | User notifications |
+| `saved_views` | User-saved book combinations |
+| `api_keys` | API key management |
+| `audit_logs` | Security audit trail (includes `user_email`) |
+| `pending_invitations` | User invitations |
 
 ---
 
@@ -243,6 +312,10 @@ These don't exist anywhere — this is our differentiation:
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-11 | Mock data generator with 3 scales | Realistic multi-PM hedge fund data, fake but believable tickers |
+| 2026-01-11 | Schema improvements: convexity, pm_id, validation tables | Complete fixed income support, PM tracking, data quality pipeline |
+| 2026-01-11 | audit_logs.user_email denormalized | Permanent audit trail preserved after user deletion |
+| 2026-01-11 | snapshot_type converted to enum | Type safety and consistency |
 | 2026-01-10 | Free tier: "Powered by RISKCORE" watermark | Subtle branding, removed in Pro |
 | 2026-01-10 | Audit logging: sensitive actions only | Viewing platform, not trading - expand later if needed |
 | 2026-01-10 | 2FA: Enterprise only | Balance security vs friction |
@@ -280,8 +353,13 @@ cd frontend && npm run dev
 # Run tests
 pytest
 
-# Generate mock data
-python scripts/generate_mock_data.py
+# Generate mock data (medium scale: 10 PMs, 200 securities, ~1000 positions)
+python scripts/generate_mock_data.py --clean --scale medium
+
+# Other mock data options
+python scripts/generate_mock_data.py --scale small   # 5 PMs, 50 securities
+python scripts/generate_mock_data.py --scale large   # 20 PMs, 500 securities
+python scripts/generate_mock_data.py --clean-only    # Just clean, don't generate
 ```
 
 ---
