@@ -434,3 +434,55 @@ When working on this project:
 6. **Security matters** — see SECURITY.md for auth, audit, export controls
 7. **Beautiful dashboard** — this will be demoed to prospects
 8. **Ask if unsure** — check DECISIONS.md or ask for clarification
+
+---
+
+## Subagent Strategy
+
+Use these subagent types strategically based on task complexity:
+
+### When to Use Each Subagent
+
+| Subagent | Use For | Example |
+|----------|---------|---------|
+| **Explore** | Finding files, understanding patterns across 3+ files | "Where is validation handled?" |
+| **Plan** | Architecture decisions, algorithm design | Week 4 aggregation features |
+| **Bash** | Git operations, running commands | Tests, builds, deployments |
+| **general-purpose** | Complex multi-step research | Library integration research |
+
+### Week 4 Aggregation (CRITICAL - Use Plan Agent)
+
+Before implementing Week 4 aggregation features, **always use Plan agent first**:
+
+```
+Week 4 Tasks Requiring Plan Agent:
+├── Cross-PM netting algorithm
+│   → Plan: Design netting logic, handle currency, same-day trades
+├── Overlap detection
+│   → Plan: Define overlap threshold, reporting format, alert triggers
+├── Firm-level rollup
+│   → Plan: Hierarchy traversal, aggregation levels, caching strategy
+└── Position consolidation
+    → Plan: Security matching logic, handling stale prices, reconciliation
+```
+
+**Why Plan agent for Week 4:**
+- Aggregation is RISKCORE's core differentiator
+- Mistakes here affect all downstream features
+- Algorithm design needs careful thought before coding
+- Cross-PM netting has edge cases (splits, corporate actions, FX)
+
+### Direct Implementation (No Subagent Needed)
+
+- Simple CRUD endpoints
+- Standard FastAPI patterns
+- Unit tests for existing code
+- Bug fixes with clear scope
+
+---
+
+## Hooks Configured
+
+Python syntax validation runs automatically after Edit/Write on `.py` files.
+
+Location: `.claude/hooks/validate-python.ps1`
