@@ -294,7 +294,55 @@ python scripts/generate_mock_data.py
 - Building this as thought leadership + open-source contribution
 - LinkedIn content strategy in parallel
 
+
+## Local Development Environment
+
+**Status:** Configured and working (2026-01-11)
+
+### Setup Complete
+- ✅ Supabase CLI installed (v2.67.1)
+- ✅ Project linked to `vukinjdeddwwlaumtfij`
+- ✅ Schema pulled to `supabase/migrations/`
+- ✅ Local environment tested (32 tables)
+
+### Project Folder
+```
+C:\Users\massi\Desktop\RISKCORE
+```
+
+### Start Local Environment
+```powershell
+cd C:\Users\massi\Desktop\RISKCORE
+supabase start
+```
+
+### Local URLs
+| Service | URL |
+|---------|-----|
+| Studio | http://127.0.0.1:54323 |
+| API | http://127.0.0.1:54321 |
+| Database | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+
+### Key Commands
+```powershell
+supabase start      # Start local environment
+supabase stop       # Stop local environment
+supabase db reset   # Wipe and reapply migrations
+supabase db pull    # Download production schema
+supabase db push    # Deploy to production
+```
+
+### Schema Source of Truth
+Migrations are in `supabase/migrations/`. **Query these files** instead of guessing column names.
+
+### For Claude/CC
+- If user says "query local" → use `127.0.0.1:54322`
+- If user says "check schema" → read `supabase/migrations/*.sql`
+- If writing tests → use local database URL
+- Schema changes → test locally first with `supabase db reset`
+
 ---
+
 
 ## Context for Claude Code
 
