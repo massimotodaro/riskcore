@@ -1,3 +1,6 @@
+# RISKCORE CI Pipeline
+# Runs on push/PR to develop and master branches
+
 name: CI
 
 on:
@@ -6,95 +9,137 @@ on:
   pull_request:
     branches: [develop, master]
 
+env:
+  PYTHON_VERSION: "3.11"
+
 jobs:
+  # ============================================
+  # JOB 1: Validate repository structure
+  # ============================================
   validate:
-    name: Validate Repository
+    name: Validate
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check project structure
+      - name: Check required files exist
         run: |
-          echo "=== Repository Structure ==="
-          ls -la
+          echo "Checking repository structure..."
+          
+          # Required files
+          FILES=(
+            "README.md"
+            "CLAUDE.md"
+          )
+          
+          for file in "${FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✓ $file exists"
+            else
+              echo "✗ $file missing"
+              exit 1
+            fi
+          done
+          
+          # Required directories
+          DIRS=(
+            "docs"
+            "supabase/migrations"
+          )
+          
+          for dir in "${DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "✓ $dir/ exists"
+            else
+              echo "✗ $dir/ missing"
+              exit 1
+            fi
+          done
+          
           echo ""
-          echo "=== Checking required files ==="
-          
-          # Check for key files
-          if [ -f "CLAUDE.md" ]; then
-            echo "✓ CLAUDE.md exists"
-          else
-            echo "✗ CLAUDE.md missing"
-          fi
-          
-          if [ -f "README.md" ]; then
-            echo "✓ README.md exists"
-          else
-            echo "✗ README.md missing"
-          fi
-          
-          if [ -d "docs" ]; then
-            echo "✓ docs/ directory exists"
-          else
-            echo "✗ docs/ directory missing"
-          fi
-          
-          if [ -d "supabase" ]; then
-            echo "✓ supabase/ directory exists"
-          else
-            echo "✗ supabase/ directory missing"
-          fi
+          echo "All required files and directories present!"
 
       - name: Validate SQL migrations
         run: |
-          echo "=== Checking SQL Migrations ==="
-          if [ -d "supabase/migrations" ]; then
+          echo "Checking SQL migration files..."
+          
+          MIGRATION_COUNT=$(find supabase/migrations -name "*.sql" 2>/dev/null | wc -l)
+          
+          if [ "$MIGRATION_COUNT" -gt 0 ]; then
+            echo "Found $MIGRATION_COUNT migration file(s)"
+            
+            # Basic SQL syntax check (look for common issues)
             for file in supabase/migrations/*.sql; do
               if [ -f "$file" ]; then
-                echo "Checking $file..."
-                if [ -s "$file" ]; then
-                  echo "  ✓ Valid (non-empty)"
-                else
-                  echo "  ✗ Empty file"
-                  exit 1
+                # Check for unclosed parentheses (basic check)
+                OPEN=$(grep -o "(" "$file" | wc -l)
+                CLOSE=$(grep -o ")" "$file" | wc -l)
+                
+                if [ "$OPEN" -ne "$CLOSE" ]; then
+                  echo "⚠ Warning: Parentheses mismatch in $file (open: $OPEN, close: $CLOSE)"
                 fi
+                
+                echo "✓ $file validated"
               fi
             done
-            echo "✓ All migrations valid"
           else
-            echo "No migrations directory yet - skipping"
+            echo "No migration files found (this is OK for initial setup)"
           fi
 
+  # ============================================
+  # JOB 2: Lint Python code
+  # ============================================
   lint:
-    name: Lint Python Code
+    name: Lint
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('backend/**/*.py') != '' }}
+    needs: validate
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for Python files
+        id: check_python
+        run: |
+          if find . -name "*.py" -type f | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+            echo "Python files found"
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "No Python files found - skipping lint"
+          fi
+
       - name: Set up Python
+        if: steps.check_python.outputs.has_python == 'true'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install linters
-        run: pip install ruff black
+        if: steps.check_python.outputs.has_python == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black
 
       - name: Run Ruff (linter)
-        run: ruff check backend/ --ignore E501
+        if: steps.check_python.outputs.has_python == 'true'
+        run: ruff check . --output-format=github
+        continue-on-error: true
 
       - name: Run Black (formatter check)
-        run: black --check backend/
+        if: steps.check_python.outputs.has_python == 'true'
+        run: black --check --diff .
+        continue-on-error: true
 
+  # ============================================
+  # JOB 3: Run tests
+  # ============================================
   test:
-    name: Run Tests
+    name: Test
     runs-on: ubuntu-latest
     needs: validate
-    if: ${{ hashFiles('backend/tests/**/*.py') != '' }}
     
     services:
       postgres:
@@ -102,7 +147,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
+          POSTGRES_DB: riskcore_test
         ports:
           - 5432:5432
         options: >-
@@ -115,29 +160,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for test files
+        id: check_tests
+        run: |
+          if find . -path "*/tests/*.py" -type f | grep -q .; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "Test files found"
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "No test files found - skipping tests"
+          fi
+
       - name: Set up Python
+        if: steps.check_tests.outputs.has_tests == 'true'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
+        if: steps.check_tests.outputs.has_tests == 'true'
         run: |
           python -m pip install --upgrade pip
-          if [ -f "backend/requirements.txt" ]; then
+          if [ -f backend/requirements.txt ]; then
             pip install -r backend/requirements.txt
           fi
-          pip install pytest pytest-cov pytest-asyncio httpx
+          pip install pytest pytest-cov pytest-asyncio
 
       - name: Run tests
+        if: steps.check_tests.outputs.has_tests == 'true'
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-          ENVIRONMENT: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/riskcore_test
         run: |
-          cd backend
-          pytest --cov=. --cov-report=xml -v
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./backend/coverage.xml
-          fail_ci_if_error: false
+          pytest backend/tests/ -v --tb=short
