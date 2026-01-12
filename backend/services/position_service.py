@@ -371,6 +371,73 @@ class PositionService:
 
         return None
 
+    def calculate_book_pnl(
+        self,
+        book_id: UUID,
+        tenant_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Calculate aggregated P&L for all positions in a book.
+
+        Returns aggregate metrics including total market value, cost basis,
+        unrealized P&L, and long/short exposure breakdown.
+        """
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        # Build query with optional tenant filter
+        conditions = ["book_id = %s"]
+        params = [str(book_id)]
+
+        if tenant_id:
+            conditions.append("tenant_id = %s")
+            params.append(str(tenant_id))
+
+        where_clause = " AND ".join(conditions)
+
+        # Query aggregate metrics
+        cur.execute(f"""
+            SELECT
+                COUNT(*) as position_count,
+                COUNT(CASE WHEN market_value IS NOT NULL AND cost_basis IS NOT NULL THEN 1 END) as positions_with_pnl,
+                COALESCE(SUM(market_value), 0) as total_market_value,
+                COALESCE(SUM(cost_basis), 0) as total_cost_basis,
+                COALESCE(SUM(unrealized_pnl), 0) as total_unrealized_pnl,
+                COALESCE(SUM(CASE WHEN direction = 'long' THEN market_value ELSE 0 END), 0) as long_value,
+                COALESCE(SUM(CASE WHEN direction = 'short' THEN market_value ELSE 0 END), 0) as short_value
+            FROM positions
+            WHERE {where_clause}
+        """, params)
+
+        result = cur.fetchone()
+
+        if result["position_count"] == 0:
+            raise ValueError(f"No positions found for book {book_id}")
+
+        total_market_value = float(result["total_market_value"])
+        total_cost_basis = float(result["total_cost_basis"])
+        total_unrealized_pnl = float(result["total_unrealized_pnl"])
+        long_value = float(result["long_value"])
+        short_value = float(result["short_value"])
+
+        # Calculate P&L percentage
+        pnl_percentage = None
+        if total_cost_basis != 0:
+            pnl_percentage = (total_unrealized_pnl / total_cost_basis) * 100
+
+        return {
+            "book_id": str(book_id),
+            "position_count": result["position_count"],
+            "positions_with_pnl": result["positions_with_pnl"],
+            "total_market_value": total_market_value,
+            "total_cost_basis": total_cost_basis,
+            "total_unrealized_pnl": total_unrealized_pnl,
+            "pnl_percentage": pnl_percentage,
+            "long_value": long_value,
+            "short_value": short_value,
+            "net_exposure": long_value - short_value,
+            "gross_exposure": long_value + short_value,
+        }
+
     def validate_book_exists(self, book_id: UUID, tenant_id: UUID) -> bool:
         """Check if a book exists and belongs to the tenant."""
         cur = self.conn.cursor()

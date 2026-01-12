@@ -91,8 +91,8 @@
 - [x] CSV/Excel file upload endpoint (Thursday)
 - [x] Column auto-detection for uploads (Thursday)
 - [x] FIX message parsing (simplefix) (Thursday)
-- [ ] Basic P&L calculation
-- [x] Unit tests for all endpoints (64 tests passing)
+- [x] Basic P&L calculation (position + book level)
+- [x] Unit tests for all endpoints (90 tests passing)
 
 ### Acceptance Criteria
 
@@ -134,7 +134,7 @@
 | `backend/models/position.py` | Pydantic models for positions | ✅ Done |
 | `backend/models/trade.py` | Pydantic models for trades | ✅ Done |
 | `backend/models/upload.py` | Pydantic models for uploads | ✅ Done |
-| `backend/tests/test_trades.py` | Trade API tests | ⬜ Friday |
+| `backend/tests/test_trades.py` | Trade API tests (26 tests) | ✅ Done |
 | `backend/tests/test_upload.py` | Upload API tests (20 tests) | ✅ Done |
 | `backend/tests/test_fix.py` | FIX protocol tests (19 tests) | ✅ Done |
 | `backend/requirements.txt` | Python dependencies | ✅ Done |
@@ -390,4 +390,4 @@ After each CC work session:
 
 ---
 
-*Last milestone completed: Week 2 Day 4 - FIX Protocol Parser (2026-01-12)*
+*Last milestone completed: Week 2 Day 4 - All Week 2 features complete (2026-01-12)*

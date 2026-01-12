@@ -336,6 +336,45 @@ def get_position_pnl(
         )
 
 
+@router.get("/book/{book_id}/pnl")
+def get_book_pnl(
+    book_id: UUID,
+    tenant_id: Optional[UUID] = Query(None, description="Tenant ID for RLS"),
+):
+    """
+    Calculate aggregated P&L for all positions in a book.
+
+    **Returns:**
+    - book_id: Book UUID
+    - total_market_value: Sum of all position market values
+    - total_cost_basis: Sum of all position cost bases
+    - total_unrealized_pnl: Sum of all unrealized P&L
+    - pnl_percentage: Overall P&L percentage
+    - position_count: Number of positions
+    - positions_with_pnl: Count of positions with P&L data
+    - long_value: Total value of long positions
+    - short_value: Total value of short positions
+    - net_exposure: long_value - short_value
+    """
+    try:
+        with get_db_connection() as conn:
+            service = PositionService(conn)
+            result = service.calculate_book_pnl(book_id, tenant_id)
+            return result
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error(f"Error calculating book P&L for {book_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to calculate book P&L: {str(e)}",
+        )
+
+
 @router.post("/bulk", response_model=dict)
 def create_positions_bulk(positions: list[PositionCreate]):
     """

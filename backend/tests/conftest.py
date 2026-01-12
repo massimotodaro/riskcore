@@ -107,6 +107,54 @@ def sample_position_response(sample_tenant_id, sample_book_id, sample_security_i
 
 
 @pytest.fixture
+def valid_trade_data(sample_tenant_id, sample_book_id, sample_security_id):
+    """Valid trade data for creating trades."""
+    from datetime import date
+    return {
+        "tenant_id": str(sample_tenant_id),
+        "book_id": str(sample_book_id),
+        "security_id": str(sample_security_id),
+        "side": "buy",
+        "quantity": "100",
+        "price": "150.50",
+        "currency": "USD",
+        "trade_date": str(date.today()),
+        "source": "api",
+    }
+
+
+@pytest.fixture
+def sample_trade_response(sample_tenant_id, sample_book_id, sample_security_id):
+    """Sample trade response from database."""
+    from datetime import date
+    return {
+        "id": str(uuid4()),
+        "tenant_id": str(sample_tenant_id),
+        "book_id": str(sample_book_id),
+        "security_id": str(sample_security_id),
+        "side": "buy",
+        "quantity": 100.0,
+        "price": 150.50,
+        "currency": "USD",
+        "trade_date": str(date.today()),
+        "trade_time": None,
+        "settlement_date": None,
+        "source": "api",
+        "source_reference": None,
+        "trade_id_external": None,
+        "order_id_external": None,
+        "notional": 15050.0,
+        "broker": None,
+        "counterparty": None,
+        "commission": None,
+        "fees": None,
+        "is_cancelled": False,
+        "cancelled_at": None,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+
+@pytest.fixture
 def client():
     """Create a FastAPI test client."""
     from backend.main import app
