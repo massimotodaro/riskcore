@@ -497,14 +497,20 @@ class MockDataGenerator:
             self.fund_ids.append(fund_id)
 
         # Create one book per PM
+        used_book_names = set()
         for idx, (pm_id, pm_name) in enumerate(self.pm_user_ids):
             book_id = str(uuid.uuid4())
             fund_id = self.fund_ids[idx % len(self.fund_ids)]
             strategy = random.choice(STRATEGIES)
 
-            # Book name based on PM
+            # Book name based on PM - ensure uniqueness
             last_name = pm_name.split()[-1]
             book_name = f"{last_name} - {strategy}"
+
+            # If duplicate, add index to make unique
+            if book_name in used_book_names:
+                book_name = f"{last_name} {idx+1} - {strategy}"
+            used_book_names.add(book_name)
 
             cur.execute("""
                 INSERT INTO books (id, tenant_id, fund_id, pm_id, name, description, strategy, is_active)
@@ -722,7 +728,7 @@ class MockDataGenerator:
         today = date.today()
         num_trades = len(self.position_ids) // 2  # Roughly half as many trades as positions
 
-        for _ in range(num_trades):
+        for trade_idx in range(num_trades):
             book_id, book_name, pm_id = random.choice(self.book_ids)
             security_id, sec_name, ticker, asset_class, currency = random.choice(self.security_ids)
 
@@ -743,7 +749,7 @@ class MockDataGenerator:
                 )
             """, (
                 trade_id, self.tenant_id, book_id, security_id,
-                f"TRD-{random.randint(100000, 999999)}",
+                f"TRD-{trade_idx + 1:06d}",  # Unique sequential trade ID
                 side, quantity, price, round(quantity * price, 2),
                 currency, trade_date, trade_date + timedelta(days=2),
                 "file_upload", False
