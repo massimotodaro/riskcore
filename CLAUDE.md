@@ -28,15 +28,23 @@ This makes adoption easy — no one changes their workflow.
 
 ## Tech Stack
 
+**⚠️ ON-PREMISES DEPLOYMENT ONLY - NO CLOUD STORAGE**
+
+All position, trade, and risk data stays on the client's local infrastructure.
+No hedge fund will accept cloud storage of their positions and exposures.
+
 | Layer | Solution | Notes |
 |-------|----------|-------|
-| Database | **Supabase** | Postgres + real-time, project: `vukinjdeddwwlaumtfij` |
+| Database | **PostgreSQL (local)** | On-premises only, psycopg2 driver |
 | Backend | **Python + FastAPI** | Standard, integrates with finance libs |
 | Frontend | **React + Tailwind** | Beautiful, professional |
 | Charts | **Recharts / Tremor** | Modern, React-native |
 | AI | **Claude API** | Natural language risk queries |
-| Hosting | **Vercel + Railway** | Free tier for MVP |
+| Hosting | **On-premises** | Client infrastructure |
 | Repo | **GitHub (public)** | github.com/massimotodaro/riskcore |
+
+**Development:** Uses Supabase local (`supabase start`) for convenience
+**Production:** 100% on-premises PostgreSQL - data never leaves client network
 
 ---
 
@@ -45,7 +53,8 @@ This makes adoption easy — no one changes their workflow.
 These don't exist anywhere — this is our differentiation:
 
 - [x] Data validation pipeline
-- [ ] Position ingestion & normalization API
+- [x] Position ingestion & normalization API
+- [x] Trade ingestion API
 - [x] Security master (CUSIP/ISIN/SEDOL/Ticker + FIGI mapping)
 - [ ] Multi-PM aggregation engine
 - [ ] Cross-PM netting & overlap detection
@@ -148,36 +157,48 @@ These don't exist anywhere — this is our differentiation:
 
 ## Current Phase
 
-**Week 1 COMPLETE**
+**Week 2 IN PROGRESS** - Data Ingestion Layer
 
-- [x] Competitor analysis (60 articles)
-- [x] GitHub research (FinancePy, Riskfolio-Lib, OpenBB)
-- [x] Pre-build research (Reddit, PyPI, vendor APIs, academic papers)
-- [x] Integration libraries research (simplefix, pyopenfigi, blp, quickfix)
-- [x] Library integrations guide (code examples)
-- [x] UI/Auth architecture design
-- [x] Security architecture design
-- [x] GDPR & data residency research
-- [x] Database schema design (34 tables, RLS, validation pipeline)
-- [x] Mock data generator (realistic multi-PM hedge fund data)
-- [x] OpenFIGI integration (custom client, security master service)
-- [x] Data validation pipeline (configurable rules, multi-table validation)
+- [x] Week 1 COMPLETE (Foundation)
+- [x] FastAPI application structure (Monday)
+- [x] Position API with CRUD + validation (Tuesday)
+- [x] Trade API with CRUD + cancellation (Wednesday)
+- [ ] CSV/Excel file upload with auto-detection (Thursday)
+- [ ] FIX protocol parsing with simplefix (Friday)
 
 ---
 
 ## Current Implementation State
 
-**Last Updated:** 2026-01-11
+**Last Updated:** 2026-01-12
+
+### Architecture: On-Premises Only
+
+**CRITICAL:** RISKCORE uses direct psycopg2 connections to PostgreSQL.
+No Supabase client, no cloud storage, no REST API wrappers for database access.
+
+- **Development:** `supabase start` provides local PostgreSQL on port 54322
+- **Production:** Client's on-premises PostgreSQL server
+- **Driver:** psycopg2 with connection pooling (ThreadedConnectionPool)
 
 ### Backend Services
 
 | Service | File | Status | Notes |
 |---------|------|--------|-------|
+| **FastAPI App** | `backend/main.py` | ✅ Complete | Entry point, CORS, middleware, on-premises mode |
+| **Config** | `backend/config.py` | ✅ Complete | Pydantic settings, DATABASE_URL only |
+| **Database** | `backend/database.py` | ✅ Complete | **psycopg2 connection pool** (not Supabase) |
+| **API Router** | `backend/api/__init__.py` | ✅ Complete | Positions + Trades routers |
+| **Position Models** | `backend/models/position.py` | ✅ Complete | Pydantic models |
+| **Trade Models** | `backend/models/trade.py` | ✅ Complete | Pydantic models |
 | OpenFIGI Client | `backend/services/openfigi.py` | ✅ Complete | Custom API v3 client, rate-limited |
 | Security Master | `backend/services/security_master.py` | ✅ Complete | FIGI resolution + DB integration |
 | Validation | `backend/services/validation.py` | ✅ Complete | 11 rules, 5 rule types |
-| Position Ingestion | `backend/api/positions.py` | ⬜ Week 2 | FastAPI endpoints |
-| Trade Ingestion | `backend/api/trades.py` | ⬜ Week 2 | FastAPI endpoints |
+| **Position API** | `backend/api/positions.py` | ✅ Complete | Full CRUD, P&L, bulk, security resolution |
+| **Position Service** | `backend/services/position_service.py` | ✅ Complete | psycopg2, business logic |
+| **Position Tests** | `backend/tests/test_positions.py` | ✅ Complete | 25 tests (13 pass without DB) |
+| **Trade API** | `backend/api/trades.py` | ✅ Complete | Full CRUD, cancel, bulk, book query |
+| **Trade Service** | `backend/services/trade_service.py` | ✅ Complete | psycopg2, business logic |
 | FIX Parser | `backend/services/fix_parser.py` | ⬜ Week 2 | simplefix integration |
 | Risk Engine | `backend/services/risk_engine.py` | ⬜ Week 3 | Riskfolio-Lib |
 | Aggregation | `backend/services/aggregation.py` | ⬜ Week 4 | Cross-PM netting |
@@ -312,6 +333,9 @@ See `ROADMAP.md` for detailed week-by-week progress.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-12 | **ON-PREMISES ONLY** - No cloud storage | Hedge funds won't accept cloud-stored positions/trades. Data leakage risk. |
+| 2026-01-12 | psycopg2 instead of Supabase client | Direct PostgreSQL for on-premises. Connection pooling for production. |
+| 2026-01-12 | Synchronous FastAPI endpoints | psycopg2 is synchronous. Simpler code, no async complexity. |
 | 2026-01-11 | Mock data generator with 3 scales | Realistic multi-PM hedge fund data, fake but believable tickers |
 | 2026-01-11 | Schema improvements: convexity, pm_id, validation tables | Complete fixed income support, PM tracking, data quality pipeline |
 | 2026-01-11 | audit_logs.user_email denormalized | Permanent audit trail preserved after user deletion |
@@ -332,8 +356,20 @@ See `ROADMAP.md` for detailed week-by-week progress.
 
 ---
 
-## Supabase Connection
+## Database Connection
 
+**Production:** On-premises PostgreSQL (client infrastructure)
+**Development:** Supabase local (`supabase start`) for convenience
+
+```bash
+# Development (Supabase local)
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+# Production (on-premises example)
+DATABASE_URL=postgresql://riskcore_user:secure_password@db.internal.yourfirm.com:5432/riskcore
+```
+
+**Supabase Cloud Project (schema design only, NOT for production data):**
 ```
 Project ID: vukinjdeddwwlaumtfij
 URL: https://vukinjdeddwwlaumtfij.supabase.co
@@ -375,13 +411,19 @@ python scripts/generate_mock_data.py --clean-only    # Just clean, don't generat
 
 ## Local Development Environment
 
-**Status:** Configured and working (2026-01-11)
+**Status:** Configured and working (2026-01-12)
+
+### On-Premises Architecture
+RISKCORE is designed for **100% on-premises deployment**.
+- All position, trade, and risk data stays on client's local servers
+- No cloud storage of sensitive financial data - ever
+- Uses psycopg2 for direct PostgreSQL access (not Supabase REST client)
 
 ### Setup Complete
-- ✅ Supabase CLI installed (v2.67.1)
-- ✅ Project linked to `vukinjdeddwwlaumtfij`
+- ✅ Supabase CLI installed (v2.67.1) - for local dev only
+- ✅ psycopg2 connection pooling
 - ✅ Schema pulled to `supabase/migrations/`
-- ✅ Local environment tested (32 tables)
+- ✅ Position API + Trade API complete
 
 ### Project Folder
 ```
@@ -391,32 +433,35 @@ C:\Users\massi\Desktop\RISKCORE
 ### Start Local Environment
 ```powershell
 cd C:\Users\massi\Desktop\RISKCORE
-supabase start
+supabase start   # Starts local PostgreSQL on port 54322
 ```
 
 ### Local URLs
 | Service | URL |
 |---------|-----|
 | Studio | http://127.0.0.1:54323 |
-| API | http://127.0.0.1:54321 |
-| Database | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| PostgreSQL | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| FastAPI | http://127.0.0.1:8000 (run `uvicorn backend.main:app --reload`) |
 
 ### Key Commands
 ```powershell
-supabase start      # Start local environment
+# Database
+supabase start      # Start local PostgreSQL
 supabase stop       # Stop local environment
 supabase db reset   # Wipe and reapply migrations
-supabase db pull    # Download production schema
-supabase db push    # Deploy to production
+
+# Backend
+python -m uvicorn backend.main:app --reload    # Start FastAPI
+python -m pytest backend/tests/ -v             # Run tests
 ```
 
 ### Schema Source of Truth
 Migrations are in `supabase/migrations/`. **Query these files** instead of guessing column names.
 
 ### For Claude/CC
+- Database access: psycopg2 with context managers
 - If user says "query local" → use `127.0.0.1:54322`
 - If user says "check schema" → read `supabase/migrations/*.sql`
-- If writing tests → use local database URL
 - Schema changes → test locally first with `supabase db reset`
 
 ---
@@ -426,14 +471,16 @@ Migrations are in `supabase/migrations/`. **Query these files** instead of guess
 
 When working on this project:
 
-1. **Always check /docs first** before implementing anything
-2. **Don't rebuild** what FinancePy, Riskfolio-Lib, or OpenBB already do
-3. **The aggregation engine is the core** — everything else supports it
-4. **READ-ONLY** — we never write to client systems
-5. **Multi-tenant from day 1** — tenant_id + RLS on every table
-6. **Security matters** — see SECURITY.md for auth, audit, export controls
-7. **Beautiful dashboard** — this will be demoed to prospects
-8. **Ask if unsure** — check DECISIONS.md or ask for clarification
+1. **ON-PREMISES ONLY** — all data stays on client's local servers, never cloud
+2. **psycopg2 for database** — direct PostgreSQL, no Supabase REST client
+3. **Always check /docs first** before implementing anything
+4. **Don't rebuild** what FinancePy, Riskfolio-Lib, or OpenBB already do
+5. **The aggregation engine is the core** — everything else supports it
+6. **READ-ONLY** — we never write to client systems
+7. **Multi-tenant from day 1** — tenant_id + RLS on every table
+8. **Security matters** — see SECURITY.md for auth, audit, export controls
+9. **Beautiful dashboard** — this will be demoed to prospects
+10. **Ask if unsure** — check DECISIONS.md or ask for clarification
 
 ---
 

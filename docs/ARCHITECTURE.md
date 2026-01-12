@@ -1,8 +1,25 @@
 # RISKCORE Architecture
 
-> Last Updated: 2025-01-09
+> Last Updated: 2026-01-12
 
-## Core Principle
+## Core Principles
+
+### 1. ON-PREMISES ONLY - NO CLOUD STORAGE
+
+**⚠️ CRITICAL: All position, trade, and risk data stays on the client's local infrastructure.**
+
+Hedge funds will NOT accept cloud-stored positions and risk exposures:
+- Data leakage risk is unacceptable
+- Regulatory concerns (GDPR, data residency)
+- Competitive intelligence protection
+
+**Implementation:**
+- Direct PostgreSQL access via psycopg2
+- No Supabase REST client for production data
+- Connection pooling (ThreadedConnectionPool) for production
+- DATABASE_URL points to client's on-premises PostgreSQL
+
+### 2. READ-ONLY Overlay
 
 **RISKCORE is a READ-ONLY overlay.**
 
@@ -283,8 +300,11 @@ risk_metrics
 
 ## Security Considerations
 
-1. **No credentials in code** — use environment variables
-2. **Client data isolation** — multi-tenant design
-3. **Audit logging** — all data access logged
-4. **Encryption at rest** — Supabase handles this
-5. **API authentication** — JWT tokens
+1. **ON-PREMISES ONLY** — all position/trade/risk data stays on client's local servers
+2. **No credentials in code** — use environment variables
+3. **Client data isolation** — multi-tenant design with tenant_id + RLS
+4. **Audit logging** — all data access logged to audit_logs table
+5. **Encryption at rest** — handled by client's PostgreSQL configuration
+6. **Encryption in transit** — SSL/TLS for database connections
+7. **API authentication** — JWT tokens or API keys
+8. **psycopg2 connection pooling** — secure, direct PostgreSQL access

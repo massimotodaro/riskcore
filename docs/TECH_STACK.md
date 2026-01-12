@@ -1,6 +1,15 @@
 # RISKCORE Tech Stack
 
-> Last Updated: 2025-01-09
+> Last Updated: 2026-01-12
+
+## ON-PREMISES DEPLOYMENT
+
+**⚠️ CRITICAL: RISKCORE is designed for 100% on-premises deployment.**
+
+All position, trade, and risk data stays on the client's local infrastructure.
+No hedge fund will accept cloud storage of their positions and exposures.
+
+---
 
 ## Build vs Buy Strategy
 
@@ -11,7 +20,7 @@
 | Market Data | Use existing | **OpenBB** | 100+ data providers |
 | Pricing Models | Use existing | **FinancePy** | Derivatives, curves, Greeks |
 | Risk Measures | Use existing | **Riskfolio-Lib** | 24 risk measures, VaR, CVaR |
-| Database | Use existing | **Supabase** | Postgres + real-time |
+| Database | Use existing | **PostgreSQL (local)** | On-premises only, psycopg2 |
 | Position Aggregation | **BUILD** | RISKCORE core | Our unique value |
 | IBOR | **BUILD** | RISKCORE core | No open-source exists |
 | Cross-PM Netting | **BUILD** | RISKCORE core | Our unique value |
@@ -25,13 +34,15 @@
 
 | Layer | Choice | Reason |
 |-------|--------|--------|
-| Database | **Supabase** | Already set up, real-time subscriptions, free tier, project `vukinjdeddwwlaumtfij` |
+| Database | **PostgreSQL (on-premises)** | Direct psycopg2 access, connection pooling, client's local server |
+| DB Driver | **psycopg2** | Synchronous, battle-tested, ThreadedConnectionPool |
 | Backend | **Python + FastAPI** | Industry standard, integrates with FinancePy/Riskfolio |
 | Frontend | **React + Tailwind** | Beautiful, professional, component-based |
 | Charts | **Recharts / Tremor** | Modern, React-native, clean |
 | AI | **Claude API** | Natural language risk queries |
 | Market Data | **OpenBB + Yahoo** | Free for MVP, upgrade path to Bloomberg |
-| Hosting | **Vercel + Railway** | Free tier, easy deployment |
+| Hosting | **On-premises** | Client's own infrastructure |
+| Dev Environment | **Supabase local** | For development/testing only |
 | Repo | **GitHub (public)** | Open-source visibility, thought leadership |
 
 ---
@@ -147,9 +158,8 @@ fastapi>=0.100.0
 uvicorn>=0.23.0
 python-multipart>=0.0.6
 
-# Database
-supabase>=2.0.0
-asyncpg>=0.28.0
+# Database (ON-PREMISES - psycopg2, NOT Supabase client)
+psycopg2-binary>=2.9.0    # PostgreSQL driver (use psycopg2 for production)
 
 # Data processing
 pandas>=2.0.0
@@ -174,6 +184,7 @@ anthropic>=0.18.0
 # Utilities
 python-dotenv>=1.0.0
 pydantic>=2.0.0
+pydantic-settings>=2.0.0
 httpx>=0.24.0
 ```
 
@@ -264,10 +275,20 @@ httpx>=0.24.0
 
 ```bash
 # .env.example
+# IMPORTANT: RISKCORE is designed for ON-PREMISES deployment.
+# All position, trade, and risk data stays on YOUR servers.
+# No cloud storage - ever.
 
-# Supabase
-SUPABASE_URL=https://vukinjdeddwwlaumtfij.supabase.co
-SUPABASE_KEY=your_key_here
+# Database (ON-PREMISES PostgreSQL)
+# Development (Supabase local)
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+# Production (your internal server)
+# DATABASE_URL=postgresql://riskcore_user:secure_password@db.internal.yourfirm.com:5432/riskcore
+
+# Connection pool settings
+DB_POOL_MIN=2
+DB_POOL_MAX=10
 
 # Claude AI
 ANTHROPIC_API_KEY=your_key_here
@@ -276,8 +297,9 @@ ANTHROPIC_API_KEY=your_key_here
 OPENBB_TOKEN=your_token_here
 
 # Environment
-ENVIRONMENT=development
 DEBUG=true
+APP_NAME=RISKCORE
+APP_VERSION=0.2.0
 ```
 
 ---

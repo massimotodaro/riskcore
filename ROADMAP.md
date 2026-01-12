@@ -1,7 +1,7 @@
 # RISKCORE Development Roadmap
 
 > Living document tracking MVP development progress.
-> **Last Updated:** 2026-01-11
+> **Last Updated:** 2026-01-12
 > **Sync to Claude Desktop:** Copy this file + CLAUDE.md daily
 
 ---
@@ -11,7 +11,7 @@
 | Week | Phase | Status | Summary |
 |------|-------|--------|---------|
 | 1 | Foundation | ✅ COMPLETE | Database schema, mock data, OpenFIGI, validation pipeline |
-| 2 | Data Ingestion | ⬜ NOT STARTED | Position/trade API, FIX adapter, CSV/Excel upload |
+| 2 | Data Ingestion | 🔄 IN PROGRESS | Position/trade API, FIX adapter, CSV/Excel upload |
 | 3 | Risk Engine | ⬜ NOT STARTED | Riskfolio-Lib integration, VaR, exposures, Greeks |
 | 4 | Aggregation | ⬜ NOT STARTED | Cross-PM netting, overlap detection, firm rollup |
 | 5 | Dashboard | ⬜ NOT STARTED | React + Tailwind, real-time, charts |
@@ -69,15 +69,25 @@
 
 ---
 
-## Week 2: Data Ingestion ⬜ NOT STARTED
+## Week 2: Data Ingestion 🔄 IN PROGRESS
 
 **Target:** Position & trade ingestion API with multiple input methods
+**Dates:** 2026-01-12 to 2026-01-17
+
+### Architecture Decision: ON-PREMISES ONLY
+
+**CRITICAL CHANGE (2026-01-12):** Refactored to psycopg2 for direct PostgreSQL access.
+- No cloud storage of positions, trades, or risk data
+- Hedge funds won't accept cloud-stored financial data
+- Development: Supabase local (`supabase start`)
+- Production: Client's on-premises PostgreSQL
 
 ### Milestones
 
-- [ ] FastAPI application structure
-- [ ] Position ingestion API endpoints
-- [ ] Trade ingestion API endpoints
+- [x] FastAPI application structure (Monday)
+- [x] Position ingestion API endpoints (Tuesday)
+- [x] Refactor to psycopg2 (on-premises architecture) (Wednesday)
+- [x] Trade ingestion API endpoints (Wednesday)
 - [ ] CSV/Excel file upload endpoint
 - [ ] Column auto-detection for uploads
 - [ ] FIX message parsing (simplefix)
@@ -103,35 +113,47 @@
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
-| `backend/main.py` | FastAPI application entry point |
-| `backend/api/__init__.py` | API router initialization |
-| `backend/api/positions.py` | Position endpoints |
-| `backend/api/trades.py` | Trade endpoints |
-| `backend/api/upload.py` | File upload endpoint |
-| `backend/services/fix_parser.py` | FIX message parser using simplefix |
-| `backend/services/file_parser.py` | CSV/Excel parser with column detection |
-| `backend/models/position.py` | Pydantic models for positions |
-| `backend/models/trade.py` | Pydantic models for trades |
-| `backend/tests/test_positions.py` | Position API tests |
-| `backend/tests/test_trades.py` | Trade API tests |
-| `backend/tests/test_upload.py` | Upload API tests |
-| `requirements.txt` | Python dependencies |
+| File | Purpose | Status |
+|------|---------|--------|
+| `backend/main.py` | FastAPI application entry point | ✅ Done |
+| `backend/config.py` | Application configuration | ✅ Done |
+| `backend/database.py` | **psycopg2 connection pool** (not Supabase) | ✅ Done |
+| `backend/api/__init__.py` | API router initialization | ✅ Done |
+| `backend/api/positions.py` | Position endpoints (full CRUD) | ✅ Done |
+| `backend/services/position_service.py` | Position business logic (psycopg2) | ✅ Done |
+| `backend/tests/test_positions.py` | Position API tests (25 tests) | ✅ Done |
+| `backend/api/trades.py` | Trade endpoints (full CRUD + cancel) | ✅ Done |
+| `backend/services/trade_service.py` | Trade business logic (psycopg2) | ✅ Done |
+| `backend/api/upload.py` | File upload endpoint | ⬜ Thursday |
+| `backend/services/fix_parser.py` | FIX message parser using simplefix | ⬜ Friday |
+| `backend/services/file_parser.py` | CSV/Excel parser with column detection | ⬜ Thursday |
+| `backend/models/__init__.py` | Model exports | ✅ Done |
+| `backend/models/common.py` | Shared enums, mixins | ✅ Done |
+| `backend/models/position.py` | Pydantic models for positions | ✅ Done |
+| `backend/models/trade.py` | Pydantic models for trades | ✅ Done |
+| `backend/tests/test_trades.py` | Trade API tests | ⬜ Thursday |
+| `backend/tests/test_upload.py` | Upload API tests | ⬜ Friday |
+| `backend/requirements.txt` | Python dependencies | ✅ Done |
 
 ### Technical Approach
 
-1. **FastAPI Structure:**
+1. **On-Premises Architecture:**
+   - Direct PostgreSQL via psycopg2 (not Supabase client)
+   - ThreadedConnectionPool for production scalability
+   - Context managers for safe connection handling
+   - Synchronous endpoints (psycopg2 is synchronous)
+
+2. **FastAPI Structure:**
    - Modular routers per domain (positions, trades, upload)
-   - Dependency injection for database connections
+   - Context manager `get_db_connection()` for database access
    - Pydantic models for request/response validation
 
-2. **File Upload:**
+3. **File Upload:**
    - Accept CSV, XLSX, XLS formats
    - Auto-detect column mappings (ticker, quantity, price, etc.)
    - Return preview for user confirmation before import
 
-3. **FIX Parsing:**
+4. **FIX Parsing:**
    - Use simplefix for message parsing
    - Support ExecutionReport (tag 35=8) and PositionReport (tag 35=AP)
    - Extract: symbol, quantity, price, side, account
@@ -364,4 +386,4 @@ After each CC work session:
 
 ---
 
-*Last milestone completed: Week 1 - Foundation (2026-01-11)*
+*Last milestone completed: Week 2 Day 3 - Trade API + On-Premises Refactoring (2026-01-12)*
