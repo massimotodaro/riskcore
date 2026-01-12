@@ -74,7 +74,7 @@ class ConcentrationResponse(BaseModel):
     book_id: str
     top_10_concentration: float
     single_name_max: float
-    single_name_max_ticker: Optional[str] = None
+    single_name_max_security: Optional[str] = None
     sector_hhi: float
     position_count: int
     total_gross_exposure: float

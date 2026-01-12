@@ -77,7 +77,6 @@ class ExposureService:
                 p.market_value,
                 p.direction,
                 s.{dimension_column} as dimension_value,
-                s.ticker,
                 s.name as security_name
             FROM positions p
             JOIN securities s ON p.security_id = s.id
@@ -247,7 +246,6 @@ class ExposureService:
                 p.security_id,
                 p.market_value,
                 p.direction,
-                s.ticker,
                 s.name as security_name,
                 s.sector
             FROM positions p
@@ -264,8 +262,10 @@ class ExposureService:
                 "book_id": str(book_id),
                 "top_10_concentration": 0.0,
                 "single_name_max": 0.0,
+                "single_name_max_security": None,
                 "sector_hhi": 0.0,
                 "position_count": 0,
+                "total_gross_exposure": 0.0,
             }
 
         # Total market value (gross)
@@ -297,7 +297,7 @@ class ExposureService:
             "book_id": str(book_id),
             "top_10_concentration": round(top_10_concentration, 2),
             "single_name_max": round(single_name_max, 2),
-            "single_name_max_ticker": positions[0]["ticker"] if positions else None,
+            "single_name_max_security": positions[0]["security_name"] if positions else None,
             "sector_hhi": round(sector_hhi, 2),
             "position_count": len(positions),
             "total_gross_exposure": total_mv,

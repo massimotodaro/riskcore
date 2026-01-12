@@ -313,7 +313,6 @@ class RiskEngine:
                 p.quantity,
                 p.market_value,
                 p.direction,
-                s.ticker,
                 s.name as security_name
             FROM positions p
             JOIN securities s ON p.security_id = s.id

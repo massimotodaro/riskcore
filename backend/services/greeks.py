@@ -308,12 +308,11 @@ class GreeksService:
                 p.market_value,
                 p.direction,
                 s.id as security_id,
-                s.ticker,
-                s.name,
+                s.name as security_name,
                 s.asset_class,
                 s.option_type,
                 s.strike_price,
-                s.expiration_date,
+                s.expiry_date,
                 s.underlying_security_id
             FROM positions p
             JOIN securities s ON p.security_id = s.id
@@ -353,9 +352,9 @@ class GreeksService:
             }
 
         # Calculate time to expiry
-        if position["expiration_date"]:
+        if position["expiry_date"]:
             today = date.today()
-            expiry = position["expiration_date"]
+            expiry = position["expiry_date"]
             if isinstance(expiry, datetime):
                 expiry = expiry.date()
             days_to_expiry = (expiry - today).days
@@ -392,7 +391,7 @@ class GreeksService:
 
         return {
             "position_id": str(position_id),
-            "ticker": position["ticker"],
+            "security_name": position["security_name"],
             "quantity": quantity,
             "direction": position["direction"],
             "option_type": opt_type.value,
@@ -448,9 +447,9 @@ class GreeksService:
                 s.asset_class,
                 s.option_type,
                 s.strike_price,
-                s.expiration_date,
+                s.expiry_date,
                 s.underlying_security_id,
-                s.ticker
+                s.name as security_name
             FROM positions p
             JOIN securities s ON p.security_id = s.id
             WHERE p.book_id = %s AND p.tenant_id = %s
@@ -497,7 +496,7 @@ class GreeksService:
                 total_rho += result["position_rho"] * direction_mult
 
                 position_details.append({
-                    "ticker": opt["ticker"],
+                    "security_name": opt["security_name"],
                     "delta": result["position_delta"] * direction_mult,
                     "gamma": result["position_gamma"] * direction_mult,
                 })

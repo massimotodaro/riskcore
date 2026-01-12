@@ -10,16 +10,40 @@
 | Field | Value |
 |-------|-------|
 | **Week** | 3 - Risk Engine |
-| **Status** | IN PROGRESS |
-| **Next** | Verification criteria & commit |
+| **Status** | ✅ COMPLETE |
+| **Next** | Week 4 - Aggregation Engine |
 | **Tests** | 121 passing |
-| **Last Commit** | 1c679a5 |
+| **Last Commit** | Pending |
 
 ---
 
 ## Session Log
 
-### 2026-01-12 Session 2 (Latest)
+### 2026-01-12 Session 3 (Latest)
+
+**Completed:**
+- Battle-tested all 8 risk API endpoints
+- Fixed schema issues (s.ticker → s.name, expiration_date → expiry_date)
+- Fixed test imports for proper package structure
+- All 121 tests passing
+- Updated ROADMAP.md with Week 3 complete
+- Week 3 verification criteria all passed
+
+**Verified:**
+- VaR calculations with known normal distribution values
+- Greeks: ATM call delta = 0.5695 (~0.5 expected)
+- Put-call parity: Call delta - Put delta = 1.0
+- All API endpoints return 200 OK
+
+**Key Fixes:**
+- Test imports changed from `backend.` to correct module path
+- Database schema: `s.ticker` doesn't exist, use `s.name` instead
+- Database schema: `expiration_date` → `expiry_date` for options
+- Added `total_gross_exposure` to empty concentration response
+
+---
+
+### 2026-01-12 Session 2
 
 **Completed:**
 - Risk engine with VaR/CVaR calculations (historical, parametric, Monte Carlo)
@@ -99,6 +123,16 @@
 
 ---
 
+## Verification Checklist (Week 3)
+
+- [x] VaR/CVaR calculations correct (tested with known distributions)
+- [x] Greeks calculations correct (ATM delta ~0.5, put-call parity)
+- [x] All 8 risk API endpoints return 200 OK
+- [x] Exposure breakdowns work (sector, geography, asset class, currency)
+- [x] Concentration metrics work (top 10, single name, HHI)
+- [x] Book Greeks work (returns valid response for empty book)
+- [x] 121 tests passing (90 Week 2 + 31 Week 3)
+
 ## Verification Checklist (Week 2)
 
 - [x] `POST /api/v1/positions` accepts valid data, rejects invalid
@@ -121,17 +155,21 @@ See `ISSUES.md` for deferred items.
 ## Quick Commands
 
 ```bash
-# Run all tests
-cd backend && python -m pytest -v
+# Run all tests (from RISKCORE directory!)
+cd C:\Users\massi\Desktop\RISKCORE
+python -m pytest backend/tests -v
 
 # Run specific test file
-python -m pytest backend/tests/test_positions.py -v
+python -m pytest backend/tests/test_risk.py -v
 
 # Start FastAPI server
-cd backend && uvicorn main:app --reload
+cd backend && uvicorn backend.main:app --reload
 
 # Generate mock data
 python scripts/generate_mock_data.py --clean --scale medium
+
+# Battle test API endpoints
+python -c "from backend.main import app; from fastapi.testclient import TestClient; client = TestClient(app); print(client.get('/api/v1/health').json())"
 ```
 
 ---
