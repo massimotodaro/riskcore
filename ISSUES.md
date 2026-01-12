@@ -50,6 +50,13 @@
 **Impact:** Other FIX messages return "unsupported" error.
 **Suggested Fix:** Add support for NewOrderSingle, OrderCancelRequest, etc. as needed.
 
+#### ISSUE-007: riskfolio-lib not installed (Windows build issues)
+**Created:** 2026-01-12
+**Component:** `backend/requirements.txt`
+**Description:** riskfolio-lib fails to install on Windows due to cvxpy/osqp wheel build failures.
+**Impact:** Portfolio optimization features not available. VaR/CVaR implemented directly with numpy/scipy as workaround.
+**Suggested Fix:** Use Docker/Linux for development, or wait for pre-built Windows wheels.
+
 #### ISSUE-005: Trade bulk create doesn't use transactions
 **Created:** 2026-01-12
 **Component:** `backend/services/trade_service.py`

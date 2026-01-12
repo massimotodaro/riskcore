@@ -9,17 +9,39 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 2 - Data Ingestion |
-| **Status** | COMPLETE |
-| **Next** | Week 3 - Risk Engine |
-| **Tests** | 90 passing |
-| **Last Commit** | d64a47e |
+| **Week** | 3 - Risk Engine |
+| **Status** | IN PROGRESS |
+| **Next** | Verification criteria & commit |
+| **Tests** | 121 passing |
+| **Last Commit** | 1c679a5 |
 
 ---
 
 ## Session Log
 
-### 2026-01-12 (Latest)
+### 2026-01-12 Session 2 (Latest)
+
+**Completed:**
+- Risk engine with VaR/CVaR calculations (historical, parametric, Monte Carlo)
+- Exposure service (sector, geography, asset class, currency breakdowns)
+- Greeks service (delta, gamma, vega, theta, rho) using Black-Scholes
+- Risk API endpoints (12 new endpoints)
+- Risk tests (31 tests)
+
+**Tests Added:**
+- `test_risk.py` - 31 tests (VaR, CVaR, Greeks, exposures, API)
+
+**Key Decisions:**
+- Implemented VaR/CVaR directly with numpy/scipy (riskfolio-lib has Windows build issues with cvxpy)
+- Pure Python Black-Scholes for Greeks (FinancePy as optional enhancement)
+- Three VaR methods: historical, parametric, Monte Carlo
+- VaR scaling with sqrt(time) for different horizons
+
+**Blockers:** riskfolio-lib install fails on Windows (cvxpy/osqp wheel build issues) - not blocking, implemented directly
+
+---
+
+### 2026-01-12 Session 1
 
 **Completed:**
 - Upload API (CSV/Excel with column auto-detection)
@@ -27,6 +49,7 @@
 - Trade API tests (26 tests)
 - Book-level P&L aggregation endpoint
 - All Week 2 milestones
+- Process improvement files (STATE.md, ISSUES.md, verification criteria)
 
 **Tests Added:**
 - `test_upload.py` - 20 tests

@@ -27,6 +27,23 @@ from .validation import (
     create_validator,
 )
 
+from .risk_engine import (
+    RiskEngine,
+    VaRMethod,
+    RiskMetricType,
+    MetricLevel,
+)
+
+from .exposures import (
+    ExposureService,
+    ExposureDimension,
+)
+
+from .greeks import (
+    GreeksService,
+    OptionType,
+)
+
 __all__ = [
     # OpenFIGI
     "OpenFIGIClient",
@@ -49,4 +66,15 @@ __all__ = [
     "Severity",
     "RuleType",
     "create_validator",
+    # Risk Engine
+    "RiskEngine",
+    "VaRMethod",
+    "RiskMetricType",
+    "MetricLevel",
+    # Exposures
+    "ExposureService",
+    "ExposureDimension",
+    # Greeks
+    "GreeksService",
+    "OptionType",
 ]

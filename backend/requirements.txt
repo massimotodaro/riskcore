@@ -27,8 +27,10 @@ python-dateutil>=2.8.0
 simplefix>=1.0.16
 
 # === Risk Libraries (Week 3) ===
-# riskfolio-lib>=6.0.0  # Enable when needed
-# financepy>=0.350     # Enable when needed
+riskfolio-lib>=6.0.0
+financepy>=0.350
+numpy>=1.24.0
+scipy>=1.11.0
 
 # === Utilities ===
 python-dotenv>=1.0.0

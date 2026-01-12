@@ -164,22 +164,23 @@
 
 ---
 
-## Week 3: Risk Engine ⬜ NOT STARTED
+## Week 3: Risk Engine 🔄 IN PROGRESS
 
 **Target:** Risk calculations using Riskfolio-Lib and FinancePy
-**Dates:** 2026-01-13 to 2026-01-17
+**Dates:** 2026-01-12 to 2026-01-17
 
 ### Milestones
 
-- [ ] Riskfolio-Lib integration
-- [ ] VaR calculation (95%, 99% confidence)
-- [ ] CVaR/Expected Shortfall
-- [ ] Sector exposure breakdown
-- [ ] Geography exposure breakdown
-- [ ] Asset class exposure breakdown
-- [ ] FinancePy integration for Greeks (options)
-- [ ] Risk metrics stored in database
-- [ ] Unit tests for all risk calculations
+- [x] VaR calculation (95%, 99% confidence) - implemented with numpy/scipy
+- [x] CVaR/Expected Shortfall
+- [x] Sector exposure breakdown
+- [x] Geography exposure breakdown
+- [x] Asset class exposure breakdown
+- [x] Currency exposure breakdown
+- [x] Greeks calculation (delta, gamma, vega, theta, rho) - pure Python Black-Scholes
+- [x] Risk metrics stored in database
+- [x] Unit tests for all risk calculations (31 tests)
+- [ ] Riskfolio-Lib integration (deferred - Windows build issues)
 
 ### Acceptance Criteria
 
