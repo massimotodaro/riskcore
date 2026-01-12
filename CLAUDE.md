@@ -230,11 +230,16 @@ No Supabase client, no cloud storage, no REST API wrappers for database access.
 
 ## Knowledge Sync (CC ↔ CD)
 
-**For Claude Desktop sync, copy these 2 files:**
-- `CLAUDE.md` - Architecture, decisions, current state
-- `ROADMAP.md` - Detailed milestones, progress tracking
+**For Claude Desktop sync, copy these 4 files:**
 
-See `ROADMAP.md` for detailed week-by-week progress.
+| File | Purpose | Update Frequency |
+|------|---------|------------------|
+| `CLAUDE.md` | Architecture, decisions, context | When architecture changes |
+| `ROADMAP.md` | Milestones, progress, verification criteria | After each milestone |
+| `STATE.md` | Current position, session log, blockers | After each session |
+| `ISSUES.md` | Tech debt, deferred items, enhancements | As issues discovered |
+
+**Quick context restore:** Read `STATE.md` first for current position, then `ROADMAP.md` for next steps.
 
 ---
 

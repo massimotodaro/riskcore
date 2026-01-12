@@ -167,6 +167,7 @@
 ## Week 3: Risk Engine ⬜ NOT STARTED
 
 **Target:** Risk calculations using Riskfolio-Lib and FinancePy
+**Dates:** 2026-01-13 to 2026-01-17
 
 ### Milestones
 
@@ -178,6 +179,7 @@
 - [ ] Asset class exposure breakdown
 - [ ] FinancePy integration for Greeks (options)
 - [ ] Risk metrics stored in database
+- [ ] Unit tests for all risk calculations
 
 ### Acceptance Criteria
 
@@ -187,6 +189,35 @@
 - [ ] Risk metrics persisted to `risk_metrics` table
 - [ ] Historical risk metrics queryable by date range
 - [ ] Calculations complete in <5 seconds for typical portfolio
+
+### Verification Criteria (MUST PASS before Week 4)
+
+```
+VERIFY-3.1: VaR Calculation
+  [ ] Run: python -m pytest backend/tests/test_risk.py::TestVaR -v
+  [ ] Expected: All VaR tests pass
+  [ ] Manual: Compare 95% VaR with known portfolio example
+
+VERIFY-3.2: Exposure Breakdowns
+  [ ] Run: python -m pytest backend/tests/test_risk.py::TestExposures -v
+  [ ] Expected: Sector/geography/asset breakdowns sum to 100%
+  [ ] Manual: Spot-check 2-3 positions for correct categorization
+
+VERIFY-3.3: Greeks Calculation
+  [ ] Run: python -m pytest backend/tests/test_risk.py::TestGreeks -v
+  [ ] Expected: Options positions have delta, gamma, vega, theta
+  [ ] Manual: Verify delta makes sense (call ~0.5 ATM)
+
+VERIFY-3.4: API Endpoints
+  [ ] Run: curl http://localhost:8000/api/v1/risk/var/{book_id}
+  [ ] Expected: Returns VaR metrics in <5 seconds
+  [ ] Run: curl http://localhost:8000/api/v1/risk/exposures/{book_id}
+  [ ] Expected: Returns exposure breakdown
+
+VERIFY-3.5: Database Persistence
+  [ ] Run: SELECT * FROM risk_metrics WHERE book_id = '<test_book>'
+  [ ] Expected: Risk metrics saved with timestamp
+```
 
 ### Dependencies
 
@@ -227,6 +258,40 @@
 - [ ] Aggregation handles different position dates correctly
 - [ ] Currency conversion applied where needed
 - [ ] Aggregation completes in <10 seconds for 10,000 positions
+
+### Verification Criteria (MUST PASS before Week 5)
+
+```
+VERIFY-4.1: Cross-PM Netting
+  [ ] Setup: Create positions - PM1 long 1000 AAPL, PM2 short 300 AAPL
+  [ ] Run: GET /api/v1/aggregation/firm/net?security=AAPL
+  [ ] Expected: net_position = 700, gross_long = 1000, gross_short = 300
+  [ ] Edge case: Same security, different currencies - verify FX applied
+
+VERIFY-4.2: Overlap Detection
+  [ ] Setup: 3 PMs with overlapping MSFT positions
+  [ ] Run: GET /api/v1/aggregation/overlaps
+  [ ] Expected: MSFT flagged with list of PMs, quantities, direction
+  [ ] Verify: Overlap report shows concentration risk %
+
+VERIFY-4.3: Hierarchy Navigation
+  [ ] Run: GET /api/v1/aggregation/hierarchy/firm
+  [ ] Expected: Firm -> Fund -> PM -> Strategy -> Book structure
+  [ ] Drill-down: Each level shows correct aggregated metrics
+  [ ] Verify: Sum of children equals parent at each level
+
+VERIFY-4.4: Performance
+  [ ] Generate: 10,000 positions across 20 PMs
+  [ ] Run: time curl /api/v1/aggregation/firm/summary
+  [ ] Expected: Response in <10 seconds
+  [ ] Verify: No N+1 query issues (check query count)
+
+VERIFY-4.5: Edge Cases
+  [ ] Test: Same security, different position dates
+  [ ] Test: Same security, one with stale price (warning generated)
+  [ ] Test: Currency mismatch requiring FX conversion
+  [ ] Test: Corporate action (split) affecting matching
+```
 
 ### Dependencies
 
