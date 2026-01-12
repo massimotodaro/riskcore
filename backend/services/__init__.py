@@ -44,6 +44,23 @@ from .greeks import (
     OptionType,
 )
 
+from .netting import (
+    NettingService,
+    NetPosition,
+)
+
+from .overlap import (
+    OverlapDetectionService,
+    PositionOverlap,
+    OverlapType,
+    OverlapSeverity,
+)
+
+from .aggregation import (
+    AggregationService,
+    HierarchyNode,
+)
+
 __all__ = [
     # OpenFIGI
     "OpenFIGIClient",
@@ -77,4 +94,15 @@ __all__ = [
     # Greeks
     "GreeksService",
     "OptionType",
+    # Netting
+    "NettingService",
+    "NetPosition",
+    # Overlap Detection
+    "OverlapDetectionService",
+    "PositionOverlap",
+    "OverlapType",
+    "OverlapSeverity",
+    # Aggregation
+    "AggregationService",
+    "HierarchyNode",
 ]

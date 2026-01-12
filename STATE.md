@@ -9,17 +9,61 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 3 - Risk Engine |
-| **Status** | ✅ COMPLETE |
-| **Next** | Week 4 - Aggregation Engine |
-| **Tests** | 121 passing |
-| **Last Commit** | c3c3948 |
+| **Week** | 4 - Aggregation Engine |
+| **Status** | 🔄 IN PROGRESS |
+| **Next** | Battle test with mock data, merge to develop |
+| **Tests** | 154 passing (121 + 33 aggregation) |
+| **Branch** | feature/week4-aggregation |
 
 ---
 
 ## Session Log
 
-### 2026-01-12 Session 4 (Latest)
+### 2026-01-12 Session 5 (Latest)
+
+**Completed:**
+- Created NettingService (cross-PM net position calculations)
+- Created OverlapDetectionService (overlap detection, severity classification)
+- Created AggregationService (main orchestrator, hierarchy navigation)
+- Created aggregation API endpoints (14 new endpoints)
+- Created test_aggregation.py (33 tests)
+- All 154 tests passing
+- Battle tested all API endpoints (all returning 200 OK)
+
+**Files Created:**
+- `backend/services/netting.py` - Cross-PM netting, NetPosition model
+- `backend/services/overlap.py` - Overlap detection, severity, concentration
+- `backend/services/aggregation.py` - Main orchestrator, hierarchy
+- `backend/api/aggregation.py` - 14 API endpoints
+- `backend/tests/test_aggregation.py` - 33 tests
+
+**Key Features Implemented:**
+- Net position calculation: PM1 long 1000 + PM2 short 300 = net 700
+- Netting efficiency calculation (gross to net reduction %)
+- Overlap detection (same-direction = concentration, opposing = netting opportunity)
+- Severity classification (high/medium/low)
+- Firm hierarchy navigation (Firm → Fund → PM → Book)
+- PM contribution to netting analysis
+
+**API Endpoints Added:**
+- `/aggregation/firm/summary` - Firm-level summary with netting/overlaps
+- `/aggregation/firm/hierarchy` - Full hierarchy tree
+- `/aggregation/firm/positions` - Netted or raw positions
+- `/aggregation/netting/summary` - Netting efficiency summary
+- `/aggregation/netting/positions` - All net positions
+- `/aggregation/netting/security/{id}` - Per-security detail
+- `/aggregation/netting/pm/{id}` - PM netting contribution
+- `/aggregation/overlaps` - All overlaps with filters
+- `/aggregation/overlaps/summary` - Overlap statistics
+- `/aggregation/overlaps/concentration-risks` - Same-direction risks
+- `/aggregation/overlaps/netting-opportunities` - Opposing overlaps
+- `/aggregation/overlaps/pm/{id}` - PM overlap exposure
+- `/aggregation/pm/{id}/summary` - PM-level summary
+- `/aggregation/fund/{id}/summary` - Fund-level summary
+
+---
+
+### 2026-01-12 Session 4
 
 **Completed:**
 - Analyzed SpecKit/ralph-wiggum plugin from Anthropic

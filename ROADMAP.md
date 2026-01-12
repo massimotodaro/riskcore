@@ -13,11 +13,11 @@
 | 1 | Foundation | ✅ COMPLETE | Database schema, mock data, OpenFIGI, validation pipeline |
 | 2 | Data Ingestion | ✅ COMPLETE | Position/trade API, FIX adapter, CSV/Excel upload |
 | 3 | Risk Engine | ✅ COMPLETE | VaR/CVaR (numpy/scipy), exposures, Greeks (Black-Scholes) |
-| 4 | Aggregation | ⬜ NOT STARTED | Cross-PM netting, overlap detection, firm rollup |
+| 4 | Aggregation | 🔄 IN PROGRESS | Cross-PM netting, overlap detection, firm rollup |
 | 5 | Dashboard | ⬜ NOT STARTED | React + Tailwind, real-time, charts |
 | 6 | AI + Polish | ⬜ NOT STARTED | Claude integration, NL queries, documentation |
 
-**Current Focus:** Week 4 - Aggregation Engine (THE CORE)
+**Current Focus:** Week 4 - Aggregation Engine (THE CORE) - Services complete, testing in progress
 
 ---
 
@@ -251,10 +251,11 @@ VERIFY-3.5: Test Suite ✅
 
 ---
 
-## Week 4: Aggregation Engine ⬜ NOT STARTED
+## Week 4: Aggregation Engine 🔄 IN PROGRESS
 
 **Target:** THE CORE - Cross-PM aggregation and overlap detection
 **Branch:** `feature/week4-aggregation` (isolated development, merge to develop when complete)
+**Status:** Services complete, battle testing in progress
 
 ### Development Workflow
 
@@ -279,13 +280,13 @@ git push origin develop
 
 ### Milestones
 
-- [ ] Position aggregation across PMs
-- [ ] Net position calculation (long + short netting)
-- [ ] Cross-PM overlap detection algorithm
-- [ ] Firm-level position rollup
-- [ ] Hierarchy navigation (Firm → Fund → PM → Strategy → Book)
-- [ ] Overlap report generation
-- [ ] Aggregation API endpoints
+- [x] Position aggregation across PMs
+- [x] Net position calculation (long + short netting)
+- [x] Cross-PM overlap detection algorithm
+- [x] Firm-level position rollup
+- [x] Hierarchy navigation (Firm → Fund → PM → Strategy → Book)
+- [x] Overlap report generation
+- [x] Aggregation API endpoints
 
 ### Acceptance Criteria
 
@@ -335,15 +336,15 @@ VERIFY-4.5: Edge Cases
 - Week 2 position ingestion (need positions to aggregate)
 - Week 1 security master (for security matching across systems)
 
-### Files to Create
+### Files Created
 
-| File | Purpose |
-|------|---------|
-| `backend/services/aggregation.py` | Core aggregation engine |
-| `backend/services/overlap.py` | Overlap detection algorithm |
-| `backend/services/netting.py` | Net position calculation |
-| `backend/api/aggregation.py` | Aggregation API endpoints |
-| `backend/tests/test_aggregation.py` | Aggregation tests |
+| File | Purpose | Status |
+|------|---------|--------|
+| `backend/services/netting.py` | Cross-PM netting calculations | ✅ Complete |
+| `backend/services/overlap.py` | Overlap detection algorithm | ✅ Complete |
+| `backend/services/aggregation.py` | Main orchestrator, hierarchy navigation | ✅ Complete |
+| `backend/api/aggregation.py` | 14 aggregation API endpoints | ✅ Complete |
+| `backend/tests/test_aggregation.py` | 33 aggregation tests | ✅ Passing |
 
 ---
 
