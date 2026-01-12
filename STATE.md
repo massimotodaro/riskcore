@@ -152,6 +152,57 @@ See `ISSUES.md` for deferred items.
 
 ---
 
+## Workflow Procedures
+
+### Pre-Commit Persona Review
+
+**Apply before EVERY commit:**
+
+```
+[0] CODE REVIEWER
+    [ ] Security issues (injection, XSS, secrets)
+    [ ] Error handling complete
+    [ ] Edge cases covered
+
+[1] QA ENGINEER
+    [ ] Tests exist for new code
+    [ ] Tests pass
+    [ ] Edge case tests included
+
+[2] ARCHITECT
+    [ ] Follows existing patterns
+    [ ] Files in correct locations
+    [ ] No circular imports
+
+[3] DOCUMENTATION
+    [ ] ROADMAP.md updated
+    [ ] STATE.md updated
+    [ ] New issues in ISSUES.md
+```
+
+### Feature Branch (Week 4+)
+
+For complex features like Week 4 Aggregation:
+
+```bash
+git checkout -b feature/week4-aggregation
+# ... develop with persona review on each commit ...
+git checkout develop && git merge feature/week4-aggregation
+```
+
+### Quality Gate (Before Week Completion)
+
+```
+[ ] All milestones checked
+[ ] All verification criteria passed
+[ ] All tests passing
+[ ] Battle testing complete
+[ ] Documentation updated
+[ ] Pushed to remote
+```
+
+---
+
 ## Quick Commands
 
 ```bash

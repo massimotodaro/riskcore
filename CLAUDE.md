@@ -533,6 +533,138 @@ Week 4 Tasks Requiring Plan Agent:
 
 ---
 
+## Pre-Commit Persona Review
+
+**REQUIRED before every commit.** Review work from multiple perspectives to catch issues early.
+
+### Review Checklist
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PRE-COMMIT REVIEW                        │
+├─────────────────────────────────────────────────────────────┤
+│ [0] CODE REVIEWER                                           │
+│     [ ] Security issues checked (injection, XSS, secrets)   │
+│     [ ] Error handling complete                             │
+│     [ ] Edge cases covered                                  │
+│     [ ] No hardcoded values                                 │
+│                                                             │
+│ [1] QA ENGINEER                                             │
+│     [ ] Tests exist for new code                            │
+│     [ ] Tests pass (run pytest)                             │
+│     [ ] Edge case tests included                            │
+│     [ ] No skipped/commented tests                          │
+│                                                             │
+│ [2] ARCHITECT                                               │
+│     [ ] Follows existing patterns                           │
+│     [ ] No unnecessary coupling                             │
+│     [ ] Files in correct locations                          │
+│     [ ] No circular imports                                 │
+│                                                             │
+│ [3] DOCUMENTATION                                           │
+│     [ ] ROADMAP.md updated                                  │
+│     [ ] STATE.md updated                                    │
+│     [ ] New issues in ISSUES.md                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### When to Apply Full Review
+
+| Scenario | Full Review? |
+|----------|--------------|
+| New feature implementation | **Yes** |
+| Bug fix with code changes | **Yes** |
+| Documentation-only changes | No (just [3]) |
+| Simple formatting fixes | No |
+
+---
+
+## Feature Branch Workflow
+
+### When to Use Feature Branches
+
+| Scenario | Use Feature Branch? |
+|----------|---------------------|
+| Simple bug fix | No - commit to develop |
+| Single file change | No - commit to develop |
+| New API endpoint | No - commit to develop |
+| **Complex multi-file feature** | **Yes** |
+| **Core architecture changes** | **Yes** |
+| **Risky refactoring** | **Yes** |
+| **Week 4 Aggregation Engine** | **Yes** |
+
+### Feature Branch Process
+
+```bash
+# 1. Create feature branch from develop
+git checkout develop
+git pull origin develop
+git checkout -b feature/week4-aggregation
+
+# 2. Develop with regular commits (apply persona review each time)
+git add . && git commit -m "feat: Add netting service"
+
+# 3. Run full test suite before merge
+python -m pytest backend/tests -v
+
+# 4. Complete persona review (all checks pass)
+
+# 5. Push and create PR (or merge locally)
+git push -u origin feature/week4-aggregation
+
+# 6. Merge to develop after review
+git checkout develop
+git merge feature/week4-aggregation
+git push origin develop
+
+# 7. Clean up
+git branch -d feature/week4-aggregation
+git push origin --delete feature/week4-aggregation
+```
+
+### Week 4 Branch Strategy
+
+Week 4 (Aggregation) is THE CORE - use feature branch:
+
+```
+develop ──●──●──●─────────────────────●──●── (continue)
+              │                       │
+              └─── feature/week4-agg ─┘
+                   ●──●──●──●──●
+                   (isolated development)
+```
+
+---
+
+## Quality Gates
+
+### Before Marking Week Complete
+
+```
+QUALITY GATE CHECKLIST
+
+[ ] All milestones checked in ROADMAP.md
+[ ] All acceptance criteria verified
+[ ] All verification criteria passed (with evidence)
+[ ] All tests passing (run full suite)
+[ ] Persona review completed for all commits
+[ ] STATE.md updated with completion
+[ ] No P0/P1 issues in ISSUES.md
+[ ] Changes pushed to remote
+```
+
+### Battle Testing Protocol
+
+Before marking any week as COMPLETE:
+
+1. **Run full test suite** - `python -m pytest backend/tests -v`
+2. **Manual API testing** - Hit all new endpoints with test client
+3. **Edge case verification** - Empty data, invalid input, boundary conditions
+4. **Schema validation** - Queries work against actual database schema
+5. **Documentation review** - ROADMAP verification criteria all checked
+
+---
+
 ## Hooks Configured
 
 Python syntax validation runs automatically after Edit/Write on `.py` files.

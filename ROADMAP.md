@@ -254,6 +254,28 @@ VERIFY-3.5: Test Suite ✅
 ## Week 4: Aggregation Engine ⬜ NOT STARTED
 
 **Target:** THE CORE - Cross-PM aggregation and overlap detection
+**Branch:** `feature/week4-aggregation` (isolated development, merge to develop when complete)
+
+### Development Workflow
+
+This is RISKCORE's core differentiator. Use feature branch workflow:
+
+```bash
+# Start Week 4
+git checkout develop && git pull
+git checkout -b feature/week4-aggregation
+
+# Develop with persona review on each commit
+# ... implement features ...
+
+# Before merge: full test suite + battle test
+python -m pytest backend/tests -v
+
+# Merge when complete
+git checkout develop
+git merge feature/week4-aggregation
+git push origin develop
+```
 
 ### Milestones
 
