@@ -90,9 +90,9 @@
 - [x] Trade ingestion API endpoints (Wednesday)
 - [x] CSV/Excel file upload endpoint (Thursday)
 - [x] Column auto-detection for uploads (Thursday)
-- [ ] FIX message parsing (simplefix)
+- [x] FIX message parsing (simplefix) (Thursday)
 - [ ] Basic P&L calculation
-- [x] Unit tests for all endpoints (45 tests passing)
+- [x] Unit tests for all endpoints (64 tests passing)
 
 ### Acceptance Criteria
 
@@ -125,7 +125,8 @@
 | `backend/api/trades.py` | Trade endpoints (full CRUD + cancel) | ✅ Done |
 | `backend/services/trade_service.py` | Trade business logic (psycopg2) | ✅ Done |
 | `backend/api/upload.py` | File upload endpoint | ✅ Done |
-| `backend/services/fix_parser.py` | FIX message parser using simplefix | ⬜ Friday |
+| `backend/api/fix.py` | FIX protocol endpoints | ✅ Done |
+| `backend/services/fix_parser.py` | FIX message parser using simplefix | ✅ Done |
 | `backend/services/file_parser.py` | CSV/Excel parser with column detection | ✅ Done |
 | `backend/services/upload_service.py` | Upload business logic | ✅ Done |
 | `backend/models/__init__.py` | Model exports | ✅ Done |
@@ -135,6 +136,7 @@
 | `backend/models/upload.py` | Pydantic models for uploads | ✅ Done |
 | `backend/tests/test_trades.py` | Trade API tests | ⬜ Friday |
 | `backend/tests/test_upload.py` | Upload API tests (20 tests) | ✅ Done |
+| `backend/tests/test_fix.py` | FIX protocol tests (19 tests) | ✅ Done |
 | `backend/requirements.txt` | Python dependencies | ✅ Done |
 
 ### Technical Approach
@@ -388,4 +390,4 @@ After each CC work session:
 
 ---
 
-*Last milestone completed: Week 2 Day 4 - CSV/Excel Upload API (2026-01-12)*
+*Last milestone completed: Week 2 Day 4 - FIX Protocol Parser (2026-01-12)*
