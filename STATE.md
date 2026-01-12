@@ -13,13 +13,34 @@
 | **Status** | ✅ COMPLETE |
 | **Next** | Week 4 - Aggregation Engine |
 | **Tests** | 121 passing |
-| **Last Commit** | 56b74e7 |
+| **Last Commit** | c3c3948 |
 
 ---
 
 ## Session Log
 
-### 2026-01-12 Session 3 (Latest)
+### 2026-01-12 Session 4 (Latest)
+
+**Completed:**
+- Analyzed SpecKit/ralph-wiggum plugin from Anthropic
+- Adopted lightweight persona review workflow (without full plugin)
+- Created NEW_PROJECT_SETUP.md with complete workflow guide
+- Added pre-commit persona review checklist to CLAUDE.md
+- Added feature branch workflow for Week 4
+- Added quality gates and battle testing protocol
+- Created .claude/review-checklist.md template (local only)
+
+**Key Decisions:**
+- Adopted rotating persona review (Code Reviewer, QA, Architect, Docs)
+- Feature branches for complex features (Week 4 Aggregation)
+- Quality gates before marking weeks complete
+- Did NOT adopt: full SpecKit plugin, 1000s of tasks, spec-first workflow
+
+**Rationale:** SpecKit solves problems we don't have. Our ROADMAP + STATE workflow is simpler and working well. Added the review perspectives to catch more issues.
+
+---
+
+### 2026-01-12 Session 3
 
 **Completed:**
 - Battle-tested all 8 risk API endpoints
