@@ -307,6 +307,7 @@ class MockDataGenerator:
         self.pm_user_ids = []
         self.fund_ids = []
         self.book_ids = []
+        self.overlay_book_id = None  # CIO's overlay/hedge book
         self.security_ids = []
         self.position_ids = []
 
@@ -334,7 +335,12 @@ class MockDataGenerator:
             "securities",
             "factor_exposures",
             "correlation_matrices",
+            "correlation_cache",
+            "pm_daily_returns",
+            "book_daily_returns",
             "model_overrides",
+            "model_valuation_inputs",
+            "overlay_book_sources",
             "saved_views",
             "book_user_access",
             "books",
@@ -375,6 +381,7 @@ class MockDataGenerator:
         self._generate_risk_metrics()
         self._generate_limits()
         self._generate_limit_breaches()
+        self._generate_book_daily_returns()
         self._generate_book_user_access()
 
         self.conn.commit()
@@ -474,7 +481,7 @@ class MockDataGenerator:
         print(f"  Created {len(self.user_ids)} users ({len(self.pm_user_ids)} PMs)")
 
     def _generate_funds_and_books(self):
-        """Generate funds and books (one book per PM)."""
+        """Generate funds and books (one book per PM plus overlay book)."""
         print("Generating funds and books...")
         cur = self.conn.cursor()
 
@@ -496,8 +503,17 @@ class MockDataGenerator:
             ))
             self.fund_ids.append(fund_id)
 
+        # Get CIO user ID for overlay book
+        cur.execute("""
+            SELECT id FROM users WHERE tenant_id = %s AND role = 'cio' LIMIT 1
+        """, (self.tenant_id,))
+        cio_result = cur.fetchone()
+        cio_id = cio_result[0] if cio_result else None
+
         # Create one book per PM
         used_book_names = set()
+        trading_book_ids = []  # Track trading books for overlay linkage
+
         for idx, (pm_id, pm_name) in enumerate(self.pm_user_ids):
             book_id = str(uuid.uuid4())
             fund_id = self.fund_ids[idx % len(self.fund_ids)]
@@ -513,18 +529,49 @@ class MockDataGenerator:
             used_book_names.add(book_name)
 
             cur.execute("""
-                INSERT INTO books (id, tenant_id, fund_id, pm_id, name, description, strategy, is_active)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO books (id, tenant_id, fund_id, pm_id, name, description, strategy, is_active, book_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 book_id, self.tenant_id, fund_id, pm_id,
                 book_name,
                 f"Trading book managed by {pm_name}",
                 strategy,
-                True
+                True,
+                "trading"  # Explicitly set book_type
             ))
             self.book_ids.append((book_id, book_name, pm_id))
+            trading_book_ids.append(book_id)
 
-        print(f"  Created {len(self.fund_ids)} funds, {len(self.book_ids)} books")
+        # Create overlay book (CIO's hedge portfolio)
+        self.overlay_book_id = str(uuid.uuid4())
+        cur.execute("""
+            INSERT INTO books (id, tenant_id, fund_id, pm_id, name, description, strategy, is_active, book_type)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            self.overlay_book_id, self.tenant_id, self.fund_ids[0], cio_id,
+            "CIO Overlay Portfolio",
+            "Firm-wide hedge portfolio managed by CIO to offset aggregate PM risk",
+            "Risk Overlay",
+            True,
+            "overlay"  # This is the overlay book
+        ))
+        self.book_ids.append((self.overlay_book_id, "CIO Overlay Portfolio", cio_id))
+
+        # Create overlay_book_sources linking overlay to trading books
+        for trading_book_id in trading_book_ids:
+            source_id = str(uuid.uuid4())
+            cur.execute("""
+                INSERT INTO overlay_book_sources (id, tenant_id, overlay_book_id, source_book_id, hedge_weight, target_metric, is_active)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                source_id, self.tenant_id, self.overlay_book_id, trading_book_id,
+                1.0,  # Default hedge weight
+                "delta",  # Primary target metric
+                True
+            ))
+
+        print(f"  Created {len(self.fund_ids)} funds, {len(self.book_ids)} books (including overlay)")
+        print(f"  Created overlay book with {len(trading_book_ids)} source book links")
 
     def _generate_securities(self):
         """Generate securities with identifiers."""
@@ -899,6 +946,185 @@ class MockDataGenerator:
 
         print(f"  Created 2 limit breaches")
 
+    def _generate_book_daily_returns(self):
+        """Generate historical daily returns for books and PMs (for correlation analysis)."""
+        print("Generating historical returns...")
+        cur = self.conn.cursor()
+
+        today = date.today()
+        num_days = self.scale["days_of_history"]
+
+        # Check if tables exist (they may not if migration hasn't been applied)
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'book_daily_returns'
+            )
+        """)
+        if not cur.fetchone()[0]:
+            print("  Skipping - book_daily_returns table not found (run migration first)")
+            return
+
+        # Generate correlated returns for books
+        # Books with same PM should have higher correlation
+        # Books in same sector should have moderate correlation
+
+        book_returns_data = []
+        pm_returns_data = []
+
+        # Group books by PM for correlation
+        pm_to_books = {}
+        for book_id, book_name, pm_id in self.book_ids:
+            if pm_id not in pm_to_books:
+                pm_to_books[pm_id] = []
+            pm_to_books[pm_id].append((book_id, book_name))
+
+        # Generate market factor (affects all books)
+        market_returns = {}
+        for day_offset in range(num_days):
+            return_date = today - timedelta(days=day_offset)
+            if return_date.weekday() >= 5:  # Skip weekends
+                continue
+            market_returns[return_date] = random.gauss(0, 0.01)  # 1% daily vol
+
+        # Get book market values for NAV simulation
+        book_navs = {}
+        for book_id, book_name, pm_id in self.book_ids:
+            cur.execute("""
+                SELECT COALESCE(SUM(ABS(market_value_base)), 10000000)
+                FROM positions WHERE book_id = %s
+            """, (book_id,))
+            book_navs[book_id] = float(cur.fetchone()[0])
+
+        # Generate returns for each book
+        for book_id, book_name, pm_id in self.book_ids:
+            nav = book_navs[book_id]
+            cumulative_nav = nav
+
+            # Book-specific volatility (some books are more volatile)
+            book_vol = random.uniform(0.005, 0.025)  # 0.5% to 2.5% daily
+
+            # Sector tilt (equity-heavy books correlate more with market)
+            market_beta = random.uniform(0.5, 1.5)
+
+            for day_offset in range(num_days):
+                return_date = today - timedelta(days=day_offset)
+                if return_date.weekday() >= 5:  # Skip weekends
+                    continue
+
+                # Return = market_beta * market + idiosyncratic
+                market_component = market_beta * market_returns[return_date]
+                idio_component = random.gauss(0, book_vol)
+                daily_return_pct = market_component + idio_component
+
+                # Calculate P&L
+                daily_pnl = cumulative_nav * daily_return_pct
+                end_nav = cumulative_nav + daily_pnl
+                start_nav = cumulative_nav
+
+                # Simulate P&L by pod (rough allocation based on typical distribution)
+                pnl_equity = daily_pnl * random.uniform(0.5, 0.7)
+                pnl_rates = daily_pnl * random.uniform(0.1, 0.2)
+                pnl_credit = daily_pnl * random.uniform(0.05, 0.15)
+                pnl_fx = daily_pnl * random.uniform(0.02, 0.08)
+                pnl_other = daily_pnl - pnl_equity - pnl_rates - pnl_credit - pnl_fx
+
+                book_returns_data.append((
+                    str(uuid.uuid4()),
+                    self.tenant_id,
+                    book_id,
+                    return_date,
+                    round(daily_pnl, 2),
+                    round(daily_return_pct * 100, 6),  # As percentage
+                    round(start_nav, 2),
+                    round(end_nav, 2),
+                    round(pnl_equity, 2),
+                    round(pnl_rates, 2),
+                    round(pnl_credit, 2),
+                    round(pnl_fx, 2),
+                    round(pnl_other, 2),
+                ))
+
+                # Update running NAV
+                cumulative_nav = end_nav
+
+        # Batch insert book returns
+        if book_returns_data:
+            execute_values(cur, """
+                INSERT INTO book_daily_returns (
+                    id, tenant_id, book_id, return_date,
+                    daily_pnl, daily_return_pct,
+                    start_of_day_nav, end_of_day_nav,
+                    pnl_equity, pnl_rates, pnl_credit, pnl_fx, pnl_other
+                ) VALUES %s
+                ON CONFLICT (tenant_id, book_id, return_date) DO NOTHING
+            """, book_returns_data)
+            print(f"  Created {len(book_returns_data)} book return records")
+
+        # Aggregate to PM level
+        for pm_id, books in pm_to_books.items():
+            pm_nav = sum(book_navs.get(b[0], 0) for b in books)
+
+            for day_offset in range(num_days):
+                return_date = today - timedelta(days=day_offset)
+                if return_date.weekday() >= 5:
+                    continue
+
+                # Sum book returns for this PM on this date
+                cur.execute("""
+                    SELECT
+                        SUM(daily_pnl) as total_pnl,
+                        SUM(start_of_day_nav) as total_start_nav,
+                        SUM(end_of_day_nav) as total_end_nav,
+                        SUM(pnl_equity) as pnl_equity,
+                        SUM(pnl_rates) as pnl_rates,
+                        SUM(pnl_credit) as pnl_credit,
+                        SUM(pnl_fx) as pnl_fx,
+                        SUM(pnl_other) as pnl_other,
+                        COUNT(DISTINCT book_id) as book_count
+                    FROM book_daily_returns
+                    WHERE tenant_id = %s
+                      AND book_id IN %s
+                      AND return_date = %s
+                """, (self.tenant_id, tuple(b[0] for b in books), return_date))
+
+                result = cur.fetchone()
+                if result and result[0] is not None:
+                    daily_pnl = float(result[0])
+                    start_nav = float(result[1]) if result[1] else 0
+                    daily_return_pct = (daily_pnl / start_nav * 100) if start_nav > 0 else 0
+
+                    pm_returns_data.append((
+                        str(uuid.uuid4()),
+                        self.tenant_id,
+                        pm_id,
+                        return_date,
+                        round(daily_pnl, 2),
+                        round(daily_return_pct, 6),
+                        round(float(result[1] or 0), 2),
+                        round(float(result[2] or 0), 2),
+                        round(float(result[3] or 0), 2),
+                        round(float(result[4] or 0), 2),
+                        round(float(result[5] or 0), 2),
+                        round(float(result[6] or 0), 2),
+                        round(float(result[7] or 0), 2),
+                        int(result[8] or 0),
+                    ))
+
+        # Batch insert PM returns
+        if pm_returns_data:
+            execute_values(cur, """
+                INSERT INTO pm_daily_returns (
+                    id, tenant_id, pm_id, return_date,
+                    daily_pnl, daily_return_pct,
+                    start_of_day_nav, end_of_day_nav,
+                    pnl_equity, pnl_rates, pnl_credit, pnl_fx, pnl_other,
+                    book_count
+                ) VALUES %s
+                ON CONFLICT (tenant_id, pm_id, return_date) DO NOTHING
+            """, pm_returns_data)
+            print(f"  Created {len(pm_returns_data)} PM return records")
+
     def _generate_book_user_access(self):
         """Generate book access for PMs and analysts."""
         print("Generating book access...")
@@ -937,10 +1163,10 @@ class MockDataGenerator:
         print("="*50)
 
         tables = [
-            "tenants", "users", "funds", "books", "securities",
-            "security_identifiers", "security_prices", "positions",
+            "tenants", "users", "funds", "books", "overlay_book_sources",
+            "securities", "security_identifiers", "security_prices", "positions",
             "trades", "risk_metrics", "limits", "limit_breaches",
-            "book_user_access"
+            "book_daily_returns", "pm_daily_returns", "book_user_access"
         ]
 
         for table in tables:

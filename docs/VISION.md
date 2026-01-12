@@ -119,10 +119,41 @@ RiskCore doesn't care where data comes from. Adapters can be built for:
 - Database connections
 - Email attachments (yes, really)
 - Manual CSV uploads
+- Google Sheets (for solo traders)
 
 The only requirement: positions must include symbol, quantity, and price.
 
-**2. Unified Security Master**
+**2. File-Based Integration (No Vendor Lock-In)**
+
+Here's the key insight: **every OMS/EMS can export files**. We leverage this universal capability instead of chasing expensive API partnerships:
+
+| System | Export Method | Our Integration |
+|--------|---------------|-----------------|
+| Bloomberg AIM/PORT | CSV, FTP drop | Watched Folder |
+| Enfusion | Scheduled reports → SFTP | Watched Folder |
+| Eze Eclipse | Report scheduler → CSV | Watched Folder |
+| Charles River | Excel export | Manual or Watched |
+| Prime Brokers | Daily position files | Watched Folder |
+
+**Benefits:**
+- No vendor negotiations required
+- No API fees or partnership agreements
+- Works with ANY system that can export a file
+- Implementation takes days, not months
+- Clients keep using their existing systems unchanged
+
+This is how most hedge funds actually operate. File-based integration is the industry standard - we embrace it instead of fighting it.
+
+**Watched Folder approach:**
+1. Client configures their OMS to drop files to a folder (or SFTP)
+2. RISKCORE monitors the folder for new files
+3. New files are auto-imported using existing parsers
+4. Processed files move to an archive folder
+5. Errors trigger notifications
+
+No Bloomberg Terminal license. No Enfusion partnership. No SS&C relationship. Just files.
+
+**3. Unified Security Master**
 
 A central security master maps between identifier types:
 - CUSIP ↔ ISIN ↔ SEDOL ↔ Ticker
@@ -132,7 +163,7 @@ A central security master maps between identifier types:
 
 This enables proper aggregation even when sources use different identifiers.
 
-**3. Real-Time Aggregation Engine**
+**4. Real-Time Aggregation Engine**
 
 Positions flow into a calculation engine that maintains:
 - Firm-wide position totals
@@ -140,7 +171,7 @@ Positions flow into a calculation engine that maintains:
 - Cross-PM overlap detection
 - Aggregated risk metrics
 
-**4. Natural Language Interface**
+**5. Natural Language Interface**
 
 Using Claude AI, users can ask questions in plain English:
 

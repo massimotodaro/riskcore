@@ -14,6 +14,8 @@ from psycopg2.extras import RealDictCursor
 
 from .netting import NettingService, NetPosition
 from .overlap import OverlapDetectionService, OverlapSeverity
+from .riskpod import RiskPodService, RiskPod, get_riskpod
+from .correlation import CorrelationService
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +81,8 @@ class AggregationService:
         self.conn = conn
         self.netting_service = NettingService(conn)
         self.overlap_service = OverlapDetectionService(conn)
+        self.riskpod_service = RiskPodService(conn)
+        self.correlation_service = CorrelationService(conn)
 
     # =========================================================================
     # HIERARCHY NAVIGATION
@@ -665,3 +669,176 @@ class AggregationService:
     ) -> List[Dict[str, Any]]:
         """Get netting opportunities."""
         return self.overlap_service.detect_netting_opportunities(tenant_id)
+
+    # =========================================================================
+    # RISKPOD AGGREGATION
+    # =========================================================================
+
+    def get_riskpod_summary(
+        self,
+        tenant_id: UUID,
+        fund_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get exposure breakdown by RiskPod.
+
+        RiskPods organize assets by risk characteristics:
+        - EQUITY: Stocks, equity options, equity futures, ETFs
+        - RATES: Government bonds, swaps, rate futures
+        - CREDIT: CDS, corporate bonds (credit spread focus)
+        - FX: Spot, forwards, FX options
+        - OTHER: Commodities, crypto, alternatives
+
+        Args:
+            tenant_id: Tenant ID
+            fund_id: Optional fund filter
+
+        Returns:
+            Summary with exposure by pod and overall metrics
+        """
+        summaries = self.riskpod_service.get_all_pod_summaries(tenant_id, fund_id)
+
+        # Calculate totals
+        total_gross = sum(s.gross_total for s in summaries.values())
+        total_long = sum(s.gross_long for s in summaries.values())
+        total_short = sum(s.gross_short for s in summaries.values())
+        total_positions = sum(s.position_count for s in summaries.values())
+
+        # Get active pods (those with exposure)
+        active_pods = [s for s in summaries.values() if s.position_count > 0]
+
+        return {
+            "tenant_id": str(tenant_id),
+            "fund_id": str(fund_id) if fund_id else None,
+            "as_of": datetime.now(timezone.utc).isoformat(),
+
+            # Overall totals
+            "total_gross_exposure": float(total_gross),
+            "total_long_exposure": float(total_long),
+            "total_short_exposure": float(total_short),
+            "total_positions": total_positions,
+
+            # Pod breakdown
+            "active_pod_count": len(active_pods),
+            "pods": {
+                pod.value: summaries[pod].to_dict() for pod in RiskPod
+            },
+
+            # Top pods by exposure
+            "pod_ranking": [
+                {
+                    "pod": s.pod.value,
+                    "gross_exposure": float(s.gross_total),
+                    "pct_of_total": round(float(s.gross_total) / float(total_gross) * 100, 2) if total_gross > 0 else 0,
+                }
+                for s in sorted(active_pods, key=lambda x: x.gross_total, reverse=True)
+            ],
+        }
+
+    def get_riskpod_detail(
+        self,
+        tenant_id: UUID,
+        pod: str,
+        fund_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get detailed breakdown for a specific RiskPod.
+
+        Args:
+            tenant_id: Tenant ID
+            pod: RiskPod name (equity, rates, credit, fx, other)
+            fund_id: Optional fund filter
+
+        Returns:
+            Detailed breakdown with positions, PMs, and securities
+        """
+        try:
+            riskpod = RiskPod(pod.lower())
+        except ValueError:
+            raise ValueError(f"Invalid RiskPod: {pod}. Valid: {[p.value for p in RiskPod]}")
+
+        return self.riskpod_service.get_pod_detail(tenant_id, riskpod, fund_id)
+
+    def get_firm_var_correlated(
+        self,
+        tenant_id: UUID,
+        fund_id: Optional[UUID] = None,
+        crisis_mode: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Get correlation-adjusted firm VaR.
+
+        Calculates firm-level VaR accounting for cross-pod correlations:
+        - Shows VaR by pod
+        - Calculates correlation-adjusted firm VaR
+        - Shows diversification benefit (sum of pod VaRs - firm VaR)
+
+        Args:
+            tenant_id: Tenant ID
+            fund_id: Optional fund filter
+            crisis_mode: Use crisis correlations (higher) if True
+
+        Returns:
+            VaR breakdown with diversification benefit
+        """
+        result = self.correlation_service.calculate_firm_var_correlated(
+            tenant_id, fund_id, crisis_mode
+        )
+        return result.to_dict()
+
+    def get_correlation_matrix(
+        self,
+        tenant_id: UUID,
+        crisis_mode: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Get cross-pod correlation matrix.
+
+        Args:
+            tenant_id: Tenant ID
+            crisis_mode: Use crisis correlations if True
+
+        Returns:
+            Correlation matrix between all RiskPods
+        """
+        return self.correlation_service.get_correlation_matrix(tenant_id, crisis_mode)
+
+    def compare_normal_vs_crisis_var(
+        self,
+        tenant_id: UUID,
+        fund_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Compare firm VaR under normal vs crisis correlations.
+
+        Shows how much additional risk emerges when correlations spike
+        during market stress.
+
+        Args:
+            tenant_id: Tenant ID
+            fund_id: Optional fund filter
+
+        Returns:
+            Comparison showing normal VaR, crisis VaR, and crisis impact
+        """
+        return self.correlation_service.compare_normal_vs_crisis(tenant_id, fund_id)
+
+    def get_cross_pod_pm_exposure(
+        self,
+        tenant_id: UUID,
+        fund_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get PM exposure across RiskPods.
+
+        Shows which PMs have exposure across multiple pods,
+        contributing to diversification benefit.
+
+        Args:
+            tenant_id: Tenant ID
+            fund_id: Optional fund filter
+
+        Returns:
+            Matrix of PM exposure by pod
+        """
+        return self.correlation_service.get_cross_pod_exposure_matrix(tenant_id, fund_id)

@@ -3,8 +3,9 @@
 # Files processed locally, data stored in local database only
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query, status
+from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 import tempfile
 import os
@@ -19,9 +20,32 @@ from ..models.upload import (
 )
 from ..services.file_parser import FileParser
 from ..services.upload_service import UploadService
+from ..services.google_sheets import GoogleSheetsService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# =============================================================================
+# Google Sheets Models
+# =============================================================================
+
+class GoogleSheetsPreviewRequest(BaseModel):
+    """Request to preview a Google Sheet."""
+    url: str = Field(..., description="Google Sheets URL or ID")
+    sheet_name: Optional[str] = Field(None, description="Specific sheet/tab name")
+    file_type: str = Field("positions", description="'positions' or 'trades'")
+
+
+class GoogleSheetsImportRequest(BaseModel):
+    """Request to import from a Google Sheet."""
+    url: str = Field(..., description="Google Sheets URL or ID")
+    sheet_name: Optional[str] = Field(None, description="Specific sheet/tab name")
+    file_type: str = Field(..., description="'positions' or 'trades'")
+    mapping: Dict[str, str] = Field(..., description="Column mapping")
+    tenant_id: UUID = Field(..., description="Tenant ID")
+    book_id: UUID = Field(..., description="Target book ID")
+    uploaded_by: UUID = Field(..., description="User ID performing import")
 
 # Temporary storage for parsed file data (keyed by upload_id)
 # In production, this could be Redis or a database table
@@ -357,3 +381,238 @@ def cancel_upload(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cancel upload: {str(e)}",
         )
+
+
+# =============================================================================
+# Google Sheets Endpoints
+# =============================================================================
+
+@router.post("/google-sheets/preview", response_model=FilePreviewResponse)
+def preview_google_sheet(request: GoogleSheetsPreviewRequest):
+    """
+    Preview data from a public Google Sheet.
+
+    **Requirements:**
+    - Sheet must be shared as "Anyone with the link can view"
+    - Works with any Google Sheets URL format
+
+    **Parameters:**
+    - **url**: Google Sheets URL (e.g., https://docs.google.com/spreadsheets/d/{id}/edit)
+    - **sheet_name**: Optional specific sheet/tab name (defaults to first sheet)
+    - **file_type**: 'positions' or 'trades'
+
+    **Returns:**
+    - Column names from sheet
+    - Auto-detected column mapping
+    - First 10 rows as preview
+    - Total row count
+
+    **Example URL formats:**
+    - `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit`
+    - `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=123`
+    """
+    if request.file_type not in ["positions", "trades"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="file_type must be 'positions' or 'trades'",
+        )
+
+    # Fetch sheet data
+    sheets_service = GoogleSheetsService()
+    result = sheets_service.fetch_sheet_data(request.url, request.sheet_name)
+
+    if not result["success"]:
+        return FilePreviewResponse(
+            success=False,
+            error=result["error"],
+            filename=f"google-sheet-{result.get('sheet_id', 'unknown')}",
+            file_type=request.file_type,
+            columns=[],
+            mapping={},
+            unmapped_columns=[],
+            preview=[],
+            row_count=0,
+        )
+
+    # Auto-detect column mapping
+    parser = FileParser()
+    columns = result["columns"]
+
+    # Clean column names for mapping
+    cleaned_columns = [parser._clean_column_name(col) for col in columns]
+    mapping = parser._auto_detect_columns(cleaned_columns, request.file_type)
+
+    # Create preview (first 10 rows)
+    preview = result["data"][:10]
+
+    # Store parsed data for import step
+    import uuid
+    temp_id = str(uuid.uuid4())
+    _parsed_data_cache[temp_id] = {
+        "data": result["data"],
+        "url": request.url,
+        "sheet_name": request.sheet_name,
+        "file_type": request.file_type,
+    }
+
+    return FilePreviewResponse(
+        success=True,
+        error=None,
+        filename=f"google-sheet-{result.get('sheet_id', 'unknown')}",
+        file_type=request.file_type,
+        columns=columns,
+        mapping=mapping,
+        unmapped_columns=[c for c in cleaned_columns if c not in mapping.values()],
+        preview=preview,
+        row_count=result["row_count"],
+    )
+
+
+@router.post("/google-sheets/import", response_model=ImportResponse)
+def import_google_sheet(request: GoogleSheetsImportRequest):
+    """
+    Import positions or trades from a public Google Sheet.
+
+    **Requirements:**
+    - Sheet must be shared as "Anyone with the link can view"
+
+    **Parameters:**
+    - **url**: Google Sheets URL
+    - **sheet_name**: Optional specific sheet/tab name
+    - **file_type**: 'positions' or 'trades'
+    - **mapping**: Column mapping JSON (from preview or manual)
+    - **tenant_id**: Tenant UUID
+    - **book_id**: Target book/portfolio UUID
+    - **uploaded_by**: User UUID performing the import
+
+    **Example mapping:**
+    ```json
+    {
+        "ticker": "symbol",
+        "quantity": "qty",
+        "price": "price",
+        "direction": "side"
+    }
+    ```
+
+    **Returns:**
+    - Import results with counts
+    - List of errors (if any)
+    """
+    if request.file_type not in ["positions", "trades"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="file_type must be 'positions' or 'trades'",
+        )
+
+    # Fetch sheet data
+    sheets_service = GoogleSheetsService()
+    result = sheets_service.fetch_sheet_data(request.url, request.sheet_name)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["error"],
+        )
+
+    # Clean column names in data to match mapping
+    parser = FileParser()
+    cleaned_data = []
+    for row in result["data"]:
+        cleaned_row = {parser._clean_column_name(k): v for k, v in row.items()}
+        cleaned_data.append(cleaned_row)
+
+    try:
+        with get_db_connection() as conn:
+            service = UploadService(conn)
+
+            # Create upload record
+            upload = service.create_upload(
+                tenant_id=request.tenant_id,
+                uploaded_by=request.uploaded_by,
+                file_name=f"google-sheet-{result.get('sheet_id', 'import')}",
+                file_type=f"{request.file_type}_google_sheets",
+                file_size_bytes=None,
+                mime_type="application/vnd.google-apps.spreadsheet",
+                storage_path=request.url,
+                target_book_id=request.book_id,
+            )
+
+            upload_id = UUID(str(upload["id"]))
+
+            # Process import
+            if request.file_type == "positions":
+                import_result = service.process_positions_import(
+                    upload_id=upload_id,
+                    data=cleaned_data,
+                    mapping=request.mapping,
+                    tenant_id=request.tenant_id,
+                    book_id=request.book_id,
+                )
+            else:
+                import_result = service.process_trades_import(
+                    upload_id=upload_id,
+                    data=cleaned_data,
+                    mapping=request.mapping,
+                    tenant_id=request.tenant_id,
+                    book_id=request.book_id,
+                )
+
+            return ImportResponse(
+                success=import_result["success"],
+                upload_id=upload_id,
+                records_total=import_result["records_total"],
+                records_processed=import_result["records_processed"],
+                records_failed=import_result["records_failed"],
+                errors=import_result.get("errors"),
+                message=import_result["message"],
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Google Sheet: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to import Google Sheet: {str(e)}",
+        )
+
+
+@router.get("/google-sheets/validate")
+def validate_google_sheet_url(
+    url: str = Query(..., description="Google Sheets URL to validate"),
+):
+    """
+    Validate a Google Sheets URL and check if it's accessible.
+
+    **Parameters:**
+    - **url**: Google Sheets URL to validate
+
+    **Returns:**
+    - Whether the URL is valid
+    - Whether the sheet is accessible (publicly shared)
+    - Extracted sheet ID
+    """
+    sheets_service = GoogleSheetsService()
+
+    try:
+        sheet_id = sheets_service.extract_sheet_id(url)
+    except ValueError as e:
+        return {
+            "valid_url": False,
+            "accessible": False,
+            "sheet_id": None,
+            "error": str(e),
+        }
+
+    # Try to fetch the sheet
+    result = sheets_service.fetch_sheet_data(url)
+
+    return {
+        "valid_url": True,
+        "accessible": result["success"],
+        "sheet_id": sheet_id,
+        "row_count": result.get("row_count", 0),
+        "columns": result.get("columns", []),
+        "error": result.get("error"),
+    }

@@ -61,6 +61,46 @@ from .aggregation import (
     HierarchyNode,
 )
 
+from .riskpod import (
+    RiskPodService,
+    RiskPod,
+    RiskPodSummary,
+    get_riskpod,
+    get_pod_metrics,
+    ASSET_CLASS_TO_POD,
+    POD_RISK_METRICS,
+)
+
+from .correlation import (
+    CorrelationService,
+    FirmVaRResult,
+    get_correlation,
+    build_correlation_matrix,
+    DEFAULT_CORRELATIONS,
+    CRISIS_CORRELATIONS,
+)
+
+from .returns import (
+    ReturnsService,
+    ReturnWindow,
+    DailyReturn,
+    ReturnSeries,
+)
+
+from .realized_correlation import (
+    RealizedCorrelationService,
+    CorrelationEntityType,
+    CorrelationType,
+    CorrelationResult,
+    PMCorrelationMatrix,
+    calculate_pearson_correlation,
+)
+
+from .google_sheets import (
+    GoogleSheetsService,
+    get_sheets_service,
+)
+
 __all__ = [
     # OpenFIGI
     "OpenFIGIClient",
@@ -105,4 +145,34 @@ __all__ = [
     # Aggregation
     "AggregationService",
     "HierarchyNode",
+    # RiskPod
+    "RiskPodService",
+    "RiskPod",
+    "RiskPodSummary",
+    "get_riskpod",
+    "get_pod_metrics",
+    "ASSET_CLASS_TO_POD",
+    "POD_RISK_METRICS",
+    # Correlation (Pod-level)
+    "CorrelationService",
+    "FirmVaRResult",
+    "get_correlation",
+    "build_correlation_matrix",
+    "DEFAULT_CORRELATIONS",
+    "CRISIS_CORRELATIONS",
+    # Returns
+    "ReturnsService",
+    "ReturnWindow",
+    "DailyReturn",
+    "ReturnSeries",
+    # Realized Correlation
+    "RealizedCorrelationService",
+    "CorrelationEntityType",
+    "CorrelationType",
+    "CorrelationResult",
+    "PMCorrelationMatrix",
+    "calculate_pearson_correlation",
+    # Google Sheets
+    "GoogleSheetsService",
+    "get_sheets_service",
 ]

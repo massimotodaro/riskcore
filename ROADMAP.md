@@ -14,10 +14,10 @@
 | 2 | Data Ingestion | ✅ COMPLETE | Position/trade API, FIX adapter, CSV/Excel upload |
 | 3 | Risk Engine | ✅ COMPLETE | VaR/CVaR (numpy/scipy), exposures, Greeks (Black-Scholes) |
 | 4 | Aggregation | ✅ COMPLETE | Cross-PM netting, overlap detection, firm rollup |
-| 5 | Dashboard | ⬜ NOT STARTED | React + Tailwind, real-time, charts |
+| 5 | Dashboard | 🔄 IN PROGRESS | CIO Dashboard + Overlay Book, needs testing/polish |
 | 6 | AI + Polish | ⬜ NOT STARTED | Claude integration, NL queries, documentation |
 
-**Current Focus:** Week 5 - Dashboard (React + Tailwind)
+**Current Focus:** Week 5 - CIO Dashboard (testing, styling, PM view)
 
 ---
 
@@ -253,7 +253,7 @@ VERIFY-3.5: Test Suite ✅
 
 ## Week 4: Aggregation Engine ✅ COMPLETE
 
-**Target:** THE CORE - Cross-PM aggregation and overlap detection
+**Target:** THE CORE - Cross-PM aggregation, overlap detection, and correlation analysis
 **Dates:** 2026-01-12
 **Status:** All milestones complete and tested with mock data
 
@@ -287,6 +287,12 @@ git push origin develop
 - [x] Hierarchy navigation (Firm → Fund → PM → Strategy → Book)
 - [x] Overlap report generation
 - [x] Aggregation API endpoints
+- [x] **RiskPod mapping (5-pod model: Equity, Rates, Credit, FX, Other)**
+- [x] **Returns tracking (book-level and PM-level daily returns)**
+- [x] **PM-to-PM realized correlation (Pearson correlation from returns)**
+- [x] **PM correlation matrix with high-correlation flagging**
+- [x] **Implied correlation (from portfolio structure overlap)**
+- [x] **Comprehensive correlation analysis endpoint for AI queries**
 
 ### Acceptance Criteria
 
@@ -296,6 +302,9 @@ git push origin develop
 - [x] Aggregation handles different position dates correctly
 - [x] Currency conversion applied where needed
 - [x] Aggregation completes in <1 second for 1,003 positions (mock data)
+- [x] **PM correlations calculated from 21 days of return history**
+- [x] **Correlation matrix shows all PM pairs with strength classification**
+- [x] **High correlation pairs (|corr| >= 0.7) flagged as concerning**
 
 ### Verification Criteria (ALL PASSED)
 
@@ -325,6 +334,19 @@ VERIFY-4.5: Edge Cases ✅
   [x] Empty data handling (33 tests cover edge cases)
   [x] Zero quantity positions handled
   [x] Single position detection as non-overlap
+
+VERIFY-4.6: RiskPod Mapping ✅
+  [x] 5 pods implemented: Equity, Rates, Credit, FX, Other
+  [x] Asset class → pod mapping working
+  [x] Pod-specific risk metrics defined (DV01 for rates, Greeks for equity options, etc.)
+
+VERIFY-4.7: Returns & Correlation ✅
+  [x] Database tables created (book_daily_returns, pm_daily_returns, correlation_cache)
+  [x] Mock data generated with 420 book returns (21 days × 20 books)
+  [x] PM correlation endpoint tested: Matthew Davis vs Emily Davis = 0.455 (21d)
+  [x] Full 10x10 correlation matrix endpoint working
+  [x] Implied correlation calculated from pod weights (0.90 for similar portfolios)
+  [x] Analysis endpoint returns realized + implied + AI recommendation
 ```
 
 ### Dependencies
@@ -341,25 +363,76 @@ VERIFY-4.5: Edge Cases ✅
 | `backend/services/aggregation.py` | Main orchestrator, hierarchy navigation | ✅ Complete |
 | `backend/api/aggregation.py` | 14 aggregation API endpoints | ✅ Complete |
 | `backend/tests/test_aggregation.py` | 33 aggregation tests | ✅ Passing |
+| `backend/services/riskpod.py` | RiskPod enum, asset class → pod mapping | ✅ Complete |
+| `backend/services/correlation.py` | Pod-level correlations, firm VaR | ✅ Complete |
+| `backend/services/returns.py` | Return tracking and aggregation | ✅ Complete |
+| `backend/services/realized_correlation.py` | PM-to-PM Pearson correlation | ✅ Complete |
+| `backend/api/correlation.py` | 10 correlation API endpoints | ✅ Complete |
+| `backend/tests/test_correlation.py` | Correlation tests | ✅ Passing |
+| `supabase/migrations/20260112100000_add_returns_correlation_tables.sql` | Returns/correlation schema | ✅ Applied |
 
 ---
 
-## Week 5: Dashboard ⬜ NOT STARTED
+## Week 5: Dashboard 🔄 IN PROGRESS
 
-**Target:** Beautiful, responsive React dashboard
+**Target:** Beautiful, responsive React dashboard with CIO/PM role-based views
+**Status:** CIO Dashboard structure complete, needs testing and polish
 
 ### Milestones
 
-- [ ] React + Tailwind + Vite setup
+- [x] React + Tailwind + Vite setup
 - [ ] Authentication flow (Supabase Auth)
-- [ ] Dashboard layout (Riskboard)
-- [ ] RiskCards component library
-- [ ] Firm-wide view page
+- [x] Dashboard layout (Riskboard)
+- [x] RiskCards component library (AssetClassCard)
+- [x] Firm-wide view page (CIO Dashboard)
 - [ ] PM drill-down page
 - [ ] Correlation matrix heatmap
 - [ ] Real-time updates (Supabase subscriptions)
 - [ ] Charts (Recharts or Tremor)
 - [ ] Responsive design (desktop + tablet)
+- [x] **CIO Dashboard with Overlay Book support**
+- [x] **Portfolio comparison (side-by-side RiskPods)**
+- [x] **Underlying trades drill-down page**
+- [x] **Valuation transparency modal**
+
+### CIO Dashboard Feature (NEW - Session 8)
+
+**5-Row Layout:**
+1. **Firm-Wide RiskPods** - Aggregate risk by asset class across all portfolios
+2. **Overlay Portfolio** - CIO's hedge book to offset PM risk
+3. **Portfolio A** - Selectable portfolio for comparison
+4. **Portfolio B** - Second portfolio for comparison
+5. **Correlation View** - Correlation between selected portfolios
+
+**Components Created:**
+- `AssetClassCard.tsx` - Color-coded risk card per asset class
+- `RiskPodRow.tsx` - Horizontal row of asset class cards
+- `PortfolioSelector.tsx` - Searchable portfolio dropdown
+- `BookCorrelation.tsx` - Portfolio correlation visualization
+- `ValuationModal.tsx` - Price source and model input details
+
+**Pages Created:**
+- `CIODashboard.tsx` - Full 5-row CIO view
+- `UnderlyingTrades.tsx` - Trades table with drill-down
+
+**Backend Additions:**
+- `book_type` column on books ('trading' | 'overlay')
+- `overlay_book_sources` table
+- `model_valuation_inputs` table
+- Risk-by-asset-class views and API endpoints
+
+### Tomorrow's Agenda (2026-01-13)
+
+| Priority | Task | Notes |
+|----------|------|-------|
+| 1 | Test CIO Dashboard with live data | Verify API calls work end-to-end |
+| 2 | Style refinements | Polish colors, spacing, animations |
+| 3 | Loading/error states | Improve UX for slow/failed requests |
+| 4 | Test trades drill-down | Verify navigation and pagination |
+| 5 | Test valuation modal | Verify model inputs display |
+| 6 | Mobile responsiveness | Check tablet breakpoints |
+| 7 | PM Dashboard | Simpler view for PM role |
+| 8 | Chart visualizations | Add exposure charts if time |
 
 ### Acceptance Criteria
 
@@ -369,36 +442,55 @@ VERIFY-4.5: Edge Cases ✅
 - [ ] Charts render correctly with live data
 - [ ] Responsive on desktop (1920px) and tablet (768px)
 - [ ] RBAC enforced: PMs see only their books, CRO sees all
-- [ ] "Powered by RISKCORE" watermark visible (free tier)
+- [x] "Powered by RISKCORE" watermark visible (free tier)
+- [x] **CIO Dashboard shows firm-wide, overlay, and selected portfolios**
+- [x] **Portfolio selector allows comparison of any two books**
+- [x] **Underlying trades accessible from each RiskPod**
+- [ ] **Valuation modal shows price source and allows override (with auth)**
 
 ### Dependencies
 
-- Week 4 aggregation API (for firm-wide/PM views)
-- Week 3 risk API (for risk metrics display)
+- Week 4 aggregation API (for firm-wide/PM views) ✅
+- Week 3 risk API (for risk metrics display) ✅
 
-### Files to Create
+### Files Created (Session 8)
 
-| Directory | Purpose |
-|-----------|---------|
-| `frontend/src/components/` | React components |
-| `frontend/src/pages/` | Page components |
-| `frontend/src/hooks/` | Custom React hooks |
-| `frontend/src/services/` | API client services |
-| `frontend/src/styles/` | Tailwind configuration |
+| File | Purpose | Status |
+|------|---------|--------|
+| `frontend/src/components/riskboard/AssetClassCard.tsx` | Asset class risk card | ✅ Done |
+| `frontend/src/components/riskboard/RiskPodRow.tsx` | Row of asset class cards | ✅ Done |
+| `frontend/src/components/riskboard/PortfolioSelector.tsx` | Portfolio dropdown | ✅ Done |
+| `frontend/src/components/riskboard/BookCorrelation.tsx` | Correlation view | ✅ Done |
+| `frontend/src/components/riskboard/ValuationModal.tsx` | Valuation details | ✅ Done |
+| `frontend/src/pages/CIODashboard.tsx` | CIO Dashboard page | ✅ Done |
+| `frontend/src/pages/UnderlyingTrades.tsx` | Trades drill-down | ✅ Done |
+| `supabase/migrations/20260112110000_overlay_book_support.sql` | DB schema | ✅ Applied |
 
 ---
 
-## Week 6: AI + Polish ⬜ NOT STARTED
+## Week 6: AI + Polish + Auto-Import ⬜ NOT STARTED
 
-**Target:** Natural language queries and production readiness
+**Target:** Natural language queries, automated file imports, and production readiness
 
 ### Milestones
 
+**Watched Folder / Auto-Import:**
+- [ ] File watcher service (monitor directories for new files)
+- [ ] Auto-detect file type (CSV, Excel)
+- [ ] Import with existing parsers (FileParser)
+- [ ] Move processed files to archive folder
+- [ ] Error handling and notifications
+- [ ] SFTP server integration (optional)
+- [ ] Email attachment parsing (optional)
+
+**AI Integration:**
 - [ ] Claude API integration
 - [ ] Natural language query endpoint
 - [ ] Chat interface in dashboard
 - [ ] Query examples and suggestions
 - [ ] Rate limiting and caching
+
+**Production Readiness:**
 - [ ] Error handling and logging
 - [ ] API documentation (OpenAPI/Swagger)
 - [ ] User documentation
@@ -489,4 +581,4 @@ After each CC work session:
 
 ---
 
-*Last milestone completed: Week 3 - Risk Engine complete with 121 tests passing (2026-01-12)*
+*Last milestone completed: Week 5 - CIO Dashboard + Overlay Book feature structure (2026-01-12)*

@@ -9,17 +9,118 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 4 - Aggregation Engine |
-| **Status** | ✅ COMPLETE |
-| **Next** | Week 5 - Dashboard (React + Tailwind) |
-| **Tests** | 154 passing (121 + 33 aggregation) |
+| **Week** | 5 - Dashboard (CIO Dashboard Phase) |
+| **Status** | 🔄 IN PROGRESS - CIO Dashboard + Overlay Book |
+| **Next** | Continue UI work - styling, testing, polish |
+| **Tests** | 154+ passing (backend), frontend builds successfully |
 | **Branch** | develop |
 
 ---
 
 ## Session Log
 
-### 2026-01-12 Session 6 (Latest)
+### 2026-01-12 Session 8 (Latest)
+
+**Focus:** CIO Dashboard + Overlay Book Feature Implementation
+
+**Completed:**
+- Created database migration for overlay book support (`20260112110000_overlay_book_support.sql`)
+  - Added `book_type` column to books table ('trading' | 'overlay')
+  - Created `overlay_book_sources` table linking overlay to source books
+  - Created `model_valuation_inputs` table for valuation transparency
+  - Created views: `v_risk_by_asset_class`, `v_firm_risk_by_asset_class`, `v_overlay_risk_by_asset_class`
+- Updated mock data generator with overlay book (CIO Overlay Portfolio)
+- Extended `riskpod_service.py` with new methods for CIO Dashboard
+- Added 5 new API endpoints to `aggregation.py`:
+  - `GET /risk/by-asset-class` - Firm-wide risk by asset class
+  - `GET /risk/by-asset-class/{book_id}` - Single book risk
+  - `GET /risk/overlay` - Overlay book risk
+  - `GET /books` - List all books
+  - `GET /books/overlay` - Get overlay books with source links
+- Added new TypeScript types (AssetClassRisk, Book, OverlayBook, TradeDetail, ValuationDetail, etc.)
+- Updated frontend API service with new API functions
+- Created 5 new React components:
+  - `AssetClassCard.tsx` - Asset class-specific risk card with color coding
+  - `RiskPodRow.tsx` - Horizontal row of asset class cards
+  - `PortfolioSelector.tsx` - Searchable portfolio dropdown
+  - `BookCorrelation.tsx` - Portfolio correlation visualization
+  - `ValuationModal.tsx` - Price source and model input override modal
+- Created 2 new pages:
+  - `CIODashboard.tsx` - 5-row layout (firm-wide, overlay, portfolio A, portfolio B, correlation)
+  - `UnderlyingTrades.tsx` - Trades drill-down with pagination
+- Updated routing (App.tsx) and navigation (Sidebar.tsx)
+- Fixed TypeScript compilation errors
+- Frontend builds successfully
+
+**Tomorrow's Agenda (UI Work):**
+1. Test CIO Dashboard with live backend data
+2. Style refinements and polish
+3. Add loading/error states where missing
+4. Test trades drill-down flow
+5. Test valuation modal with mock data
+6. Mobile responsiveness check
+7. Add PM Dashboard view (simpler version for PM role)
+8. Consider adding more chart visualizations
+
+**Files Created:**
+- `supabase/migrations/20260112110000_overlay_book_support.sql`
+- `frontend/src/components/riskboard/AssetClassCard.tsx`
+- `frontend/src/components/riskboard/RiskPodRow.tsx`
+- `frontend/src/components/riskboard/PortfolioSelector.tsx`
+- `frontend/src/components/riskboard/BookCorrelation.tsx`
+- `frontend/src/components/riskboard/ValuationModal.tsx`
+- `frontend/src/pages/CIODashboard.tsx`
+- `frontend/src/pages/UnderlyingTrades.tsx`
+
+**Files Modified:**
+- `backend/services/riskpod.py` - Extended with CIO Dashboard methods
+- `backend/api/aggregation.py` - Added 5 new endpoints
+- `backend/config.py` - Added CORS origin
+- `scripts/generate_mock_data.py` - Added overlay book generation
+- `frontend/src/types/index.ts` - Added new TypeScript types
+- `frontend/src/services/api.ts` - Added new API functions
+- `frontend/src/App.tsx` - Added routes
+- `frontend/src/components/layout/Sidebar.tsx` - Added CIO View nav item
+
+---
+
+### 2026-01-12 Session 7
+
+**Completed:**
+- Applied returns/correlation database migration (manually via psycopg2)
+- Created 5 new tables: book_daily_returns, pm_daily_returns, correlation_cache, pod_daily_returns, benchmark_returns
+- Regenerated mock data with 420 book returns (21 days × 20 books)
+- Battle tested all 10 correlation API endpoints
+
+**Migration Notes:**
+- Partial migration existed from previous session (correlation_type already created)
+- Manually applied remaining types: correlation_entity_type, correlation_window
+- Renamed `window` column to `time_window` (reserved word in PostgreSQL)
+- Created calculate_correlation() helper function
+
+**Correlation API Test Results:**
+- `/correlation/pm/{pm1}/correlation/{pm2}` - Success! Matthew Davis & Emily Davis = 0.455
+- `/correlation/pm/matrix` - Full 10x10 PM correlation matrix working
+- `/correlation/pm/high-correlations` - No high correlations found (good diversification)
+- `/correlation/pm/{pm1}/correlation/{pm2}/analysis` - Comprehensive analysis working
+
+**Example Analysis (Matthew Davis vs Emily Davis):**
+- Pod weights: ~67% equity, ~26% rates, ~7% other (both similar)
+- Realized correlation: 0.455 (21d), 0.14 (63d), 0.05 (5d)
+- Implied correlation: 0.8985 (high - similar portfolio structure)
+- AI recommendation: "Portfolio overlap is high but realized correlation moderate. Watch for increase."
+
+**Week 4 Enhanced Quality Gate: PASSED**
+- [x] All aggregation milestones checked
+- [x] RiskPod mapping implemented (5 pods)
+- [x] Returns tracking with mock data (420 records)
+- [x] PM correlation endpoints working
+- [x] Correlation matrix endpoint working
+- [x] Documentation updated (ROADMAP + STATE)
+
+---
+
+### 2026-01-12 Session 6
 
 **Completed:**
 - Battle tested aggregation with real mock data (1,003 positions, 10 PMs)
@@ -215,6 +316,7 @@
 
 ## Verification Checklist (Week 4)
 
+### Aggregation
 - [x] Cross-PM netting calculates correctly (long 1000 + short 300 = net 700)
 - [x] Netting efficiency percentage calculated (45.15% with mock data)
 - [x] Overlap detection works (same-direction, opposing, mixed)
@@ -223,6 +325,18 @@
 - [x] All 14 aggregation API endpoints return 200 OK
 - [x] Battle tested with mock data (1,003 positions, 10 PMs)
 - [x] 154 tests passing (121 + 33 aggregation)
+
+### RiskPods & Correlation (Week 4 Enhancement)
+- [x] RiskPod mapping: 5 pods (Equity, Rates, Credit, FX, Other)
+- [x] Asset class → pod mapping working
+- [x] Returns tables created (book_daily_returns, pm_daily_returns)
+- [x] Mock data includes 420 book returns (21 days × 20 books)
+- [x] PM-to-PM correlation calculation working (Pearson)
+- [x] Correlation matrix endpoint returns 10x10 matrix
+- [x] High correlation flagging works (threshold 0.7)
+- [x] Implied correlation from pod weights working
+- [x] Analysis endpoint returns comprehensive report
+- [x] All 10 correlation API endpoints return 200 OK
 
 ## Verification Checklist (Week 3)
 
@@ -326,4 +440,4 @@ python -c "from backend.main import app; from fastapi.testclient import TestClie
 
 ---
 
-*Last updated: 2026-01-12*
+*Last updated: 2026-01-12 (Session 7 - RiskPods + Correlations complete)*

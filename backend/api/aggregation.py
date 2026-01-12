@@ -13,6 +13,7 @@ from backend.database import get_db_connection
 from backend.services.aggregation import AggregationService
 from backend.services.netting import NettingService
 from backend.services.overlap import OverlapDetectionService, OverlapSeverity
+from backend.services.riskpod import RiskPodService
 
 router = APIRouter()
 
@@ -470,3 +471,226 @@ def get_fund_summary(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=str(e)
             )
+
+
+# =============================================================================
+# RISKPOD ENDPOINTS
+# =============================================================================
+
+@router.get("/riskpods/summary")
+def get_riskpod_summary(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    fund_id: Optional[UUID] = Query(default=None, description="Optional fund filter"),
+):
+    """
+    Get exposure breakdown by RiskPod.
+
+    RiskPods organize assets by risk characteristics:
+    - EQUITY: Stocks, equity options, equity futures, ETFs
+    - RATES: Government bonds, swaps, rate futures
+    - CREDIT: CDS, corporate bonds (credit spread focus)
+    - FX: Spot, forwards, FX options
+    - OTHER: Commodities, crypto, alternatives
+
+    Returns summary with exposure by pod, pod ranking, and overall metrics.
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        return service.get_riskpod_summary(tenant_id, fund_id)
+
+
+@router.get("/riskpods/{pod}/detail")
+def get_riskpod_detail(
+    pod: str,
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    fund_id: Optional[UUID] = Query(default=None, description="Optional fund filter"),
+):
+    """
+    Get detailed breakdown for a specific RiskPod.
+
+    Valid pods: equity, rates, credit, fx, other
+
+    Returns positions, PM breakdown, and security breakdown for the pod.
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        try:
+            return service.get_riskpod_detail(tenant_id, pod, fund_id)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+
+
+@router.get("/firm/var-correlated")
+def get_firm_var_correlated(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    fund_id: Optional[UUID] = Query(default=None, description="Optional fund filter"),
+    crisis_mode: bool = Query(default=False, description="Use crisis correlations (higher)"),
+):
+    """
+    Get correlation-adjusted firm VaR.
+
+    Calculates firm-level VaR accounting for cross-pod correlations:
+    - Shows VaR by pod
+    - Calculates correlation-adjusted firm VaR using variance-covariance
+    - Shows diversification benefit (sum of pod VaRs - firm VaR)
+
+    The diversification benefit shows how much risk is "saved" by
+    having exposures across different asset classes that don't move
+    perfectly together.
+
+    Crisis mode uses elevated correlations typical of market stress,
+    showing reduced diversification benefit.
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        return service.get_firm_var_correlated(tenant_id, fund_id, crisis_mode)
+
+
+@router.get("/correlation/matrix")
+def get_correlation_matrix(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    crisis_mode: bool = Query(default=False, description="Use crisis correlations"),
+):
+    """
+    Get cross-pod correlation matrix.
+
+    Shows the correlation between each RiskPod pair:
+    - Positive correlation: assets move together
+    - Negative correlation: assets move opposite (hedging)
+    - Zero correlation: independent movement
+
+    Crisis mode shows how correlations spike during market stress
+    (correlations typically increase, reducing diversification).
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        return service.get_correlation_matrix(tenant_id, crisis_mode)
+
+
+@router.get("/firm/var-comparison")
+def get_var_comparison(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    fund_id: Optional[UUID] = Query(default=None, description="Optional fund filter"),
+):
+    """
+    Compare firm VaR under normal vs crisis correlations.
+
+    Shows how much additional risk emerges when correlations spike
+    during market stress. Key output includes:
+    - Normal mode VaR with diversification benefit
+    - Crisis mode VaR with reduced diversification
+    - Additional risk from correlation spike
+    - Diversification lost percentage
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        return service.compare_normal_vs_crisis_var(tenant_id, fund_id)
+
+
+@router.get("/riskpods/pm-exposure")
+def get_pm_pod_exposure(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    fund_id: Optional[UUID] = Query(default=None, description="Optional fund filter"),
+):
+    """
+    Get PM exposure across RiskPods.
+
+    Shows which PMs have exposure across multiple pods,
+    contributing to firm-level diversification benefit.
+
+    Returns matrix of PM x Pod exposure with diversity scores.
+    """
+    with get_db_connection() as conn:
+        service = AggregationService(conn)
+        return service.get_cross_pod_pm_exposure(tenant_id, fund_id)
+
+
+# =============================================================================
+# CIO DASHBOARD - ASSET CLASS BASED ENDPOINTS
+# =============================================================================
+
+@router.get("/risk/by-asset-class")
+def get_firm_risk_by_asset_class(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+):
+    """
+    Get firm-wide risk aggregated by asset class.
+
+    Used for CIO Dashboard Row 1: Firm-Wide Exposure.
+
+    Returns risk metrics (delta, dv01, cs01, etc.) for each asset class
+    across the entire firm.
+    """
+    with get_db_connection() as conn:
+        service = RiskPodService(conn)
+        return service.get_firm_risk_by_asset_class(tenant_id)
+
+
+@router.get("/risk/by-asset-class/{book_id}")
+def get_book_risk_by_asset_class(
+    book_id: UUID,
+):
+    """
+    Get single book risk aggregated by asset class.
+
+    Used for CIO Dashboard Rows 3-4: Portfolio comparison.
+
+    Returns risk metrics for each asset class in a specific book.
+    """
+    with get_db_connection() as conn:
+        service = RiskPodService(conn)
+        return service.get_book_risk_by_asset_class(book_id)
+
+
+@router.get("/risk/overlay")
+def get_overlay_risk_by_asset_class(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+):
+    """
+    Get overlay book risk aggregated by asset class.
+
+    Used for CIO Dashboard Row 2: Overlay Portfolio.
+
+    Returns risk metrics for the CIO's hedge book(s) that offset
+    aggregate PM risk.
+    """
+    with get_db_connection() as conn:
+        service = RiskPodService(conn)
+        return service.get_overlay_risk_by_asset_class(tenant_id)
+
+
+@router.get("/books")
+def get_all_books(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    book_type: Optional[str] = Query(default=None, description="Filter by type: 'trading' or 'overlay'"),
+):
+    """
+    Get all books for a tenant.
+
+    Used for portfolio selectors in CIO Dashboard.
+
+    Returns book list with PM and fund information.
+    """
+    with get_db_connection() as conn:
+        service = RiskPodService(conn)
+        return service.get_all_books(tenant_id, book_type)
+
+
+@router.get("/books/overlay")
+def get_overlay_books(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+):
+    """
+    Get overlay books for a tenant with source book links.
+
+    Returns overlay book(s) with:
+    - List of source books being hedged
+    - Hedge weights
+    - Target metrics
+    """
+    with get_db_connection() as conn:
+        service = RiskPodService(conn)
+        return service.get_overlay_books(tenant_id)
