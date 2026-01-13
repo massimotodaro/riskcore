@@ -647,7 +647,7 @@ async def get_riskboard():
 | SSO/SAML | 🔄 Planned |
 | EU data residency option | 🔄 Planned |
 | IP whitelisting | 🔄 Planned |
-| SOC 2 Type II audit | 🔄 Planned |
+| SOC 2 Type II audit | 🔄 Planned - See [SOC2_COMPLIANCE_PLAN.md](./SOC2_COMPLIANCE_PLAN.md) |
 
 ### 11.3 Phase 3 (12-24 months)
 
@@ -752,6 +752,7 @@ Treasury Risk module will require:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-10 | Claude | Initial version |
+| 1.1 | 2026-01-13 | Claude | Added SOC 2 compliance plan reference |
 
 ---
 

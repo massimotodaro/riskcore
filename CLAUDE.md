@@ -265,6 +265,7 @@ No Supabase client, no cloud storage, no REST API wrappers for database access.
 |-----|----------|----------|
 | **UI/Auth Architecture** | `/docs/UI_AUTH_ARCHITECTURE.md` | Riskboard, RiskCards, RBAC, multi-tenant |
 | **Security** | `/docs/SECURITY.md` | Auth, encryption, GDPR, audit logging, export controls |
+| **SOC 2 Compliance** | `/docs/SOC2_COMPLIANCE_PLAN.md` | SOC 2 Type II roadmap for Pro/Enterprise tiers |
 
 ### Research
 | Doc | Location | Contents |
