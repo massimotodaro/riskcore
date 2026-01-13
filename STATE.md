@@ -19,11 +19,40 @@
 
 ## Session Log
 
-### 2026-01-13 Session 11 (Latest)
+### 2026-01-13 Session 12 (Latest)
+
+**Focus:** Riskboard Expanded Card Modal Fixes
+
+**Issues Fixed:**
+1. **Expanded Card Proportions:**
+   - Fixed modal to scale ALL elements proportionally (not just fonts)
+   - Removed scrollbars (horizontal and vertical) from expanded view
+   - Card sized to fit screen without scrolling
+
+2. **Trades Button Styling:**
+   - Changed border color from asset-class colors to white (`rgba(255,255,255,0.4)`)
+   - Applies to both colored mode and accessibility mode
+
+3. **Table in Expanded Card:**
+   - Removed table scrollbar - all rows visible in one view
+   - Added `overflow: visible` to `.table-body` in expanded modal
+   - Table naturally expands to show all rows
+
+4. **Progress Bar Fix:**
+   - Added `overflow: hidden` and `max-width: 100%` to prevent bar overflow
+
+**Files Modified:**
+- `designs/Riskboard.html` - Expanded modal CSS improvements
+
+**Commit:** `c55a18b` - fix: Improve expanded card modal and Trades button styling
+
+---
+
+### 2026-01-13 Session 11
 
 **Focus:** Riskboard HTML Mockup Polish & New Features
 
-**Features Implemented Today:**
+**Features Implemented:**
 
 1. **Calculate/Refresh System:**
    - Added "Calculate" button to each Pod header (green in color mode, white in accessibility mode)
@@ -50,15 +79,6 @@
 
 **Files Modified:**
 - `designs/Riskboard.html` - Added all features above
-
-**Tomorrow's Agenda:**
-1. Review user manual and understand all Riskboard features
-2. Test each RiskCard and understand how numbers are calculated
-3. Walk through: Equity, Rates, Credit, FX, Commodities, Other cards
-4. Verify all metrics (Delta, DV01, CS01, Greeks, VAR, CVAR)
-5. Test Calculate/Refresh system behavior
-6. Test accessibility mode toggle
-7. Test manual price override workflow end-to-end
 
 ---
 
