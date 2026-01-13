@@ -1,0 +1,3052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISKCORE - Riskboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #e2e8f0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: rgba(15, 23, 42, 0.98);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-logo h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3CD574, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-section { padding: 0 8px; margin-bottom: 20px; }
+        .nav-section-title {
+            font-size: 9px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 10px;
+            margin-bottom: 2px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: rgba(51, 65, 85, 0.5); color: #e2e8f0; }
+        .nav-item.active { background: rgba(60, 213, 116, 0.15); color: #3CD574; }
+        .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            color: #475569;
+        }
+
+        /* Main Content */
+        .main-wrapper { margin-left: 200px; flex: 1; min-height: 100vh; }
+
+        /* Header */
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .page-title { font-size: 18px; font-weight: 600; color: #e2e8f0; }
+        .last-updated {
+            font-size: 10px;
+            color: #64748b;
+            background: rgba(51, 65, 85, 0.5);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .market-strip { display: flex; gap: 16px; }
+        .market-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .market-item .label { color: #94a3b8; font-weight: 600; }
+        .market-item .value { font-family: 'SF Mono', monospace; color: #f1f5f9; font-weight: 600; font-size: 15px; }
+        .market-item .change { font-size: 13px; font-weight: 500; }
+        .market-item .change.up { color: #22c55e; }
+        .market-item .change.down { color: #ef4444; }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 16px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            min-height: calc(100vh - 50px);
+        }
+
+        /* RiskPod */
+        .riskpod {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .pod-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pod-left { display: flex; align-items: center; gap: 12px; }
+        .pod-delete {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .pod-delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Market Data / Anchors Section - Aligned with Cards */
+        .market-anchors-section {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+        .market-anchors-title {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .anchors-grid {
+            display: flex;
+            gap: 16px;
+            min-width: max-content;
+        }
+        .anchor-column {
+            min-width: 440px;
+            width: 440px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 20px;
+        }
+        .anchor-column-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .anchor-column-title.equity { color: #579CF9; }
+        .anchor-column-title.rates { color: #3CD574; }
+        .anchor-column-title.credit { color: #a855f7; }
+        .anchor-column-title.fx { color: #06b6d4; }
+        .anchor-column-title.commodities { color: #eab308; }
+        .anchor-column-title.other { color: #94a3b8; }
+        .anchor-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            padding: 3px 0;
+        }
+        .anchor-row .ticker {
+            color: #e2e8f0;
+            font-weight: 600;
+            min-width: 75px;
+        }
+        .anchor-row .price {
+            font-family: 'SF Mono', monospace;
+            color: #94a3b8;
+            font-weight: 500;
+            min-width: 70px;
+        }
+        .anchor-row .change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .anchor-row .change.up { color: #22c55e; }
+        .anchor-row .change.down { color: #ef4444; }
+
+        /* Portfolio Dropdown */
+        .portfolio-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .portfolio-btn {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .portfolio-btn:hover { background: rgba(51, 65, 85, 1); }
+        .portfolio-btn .arrow { font-size: 10px; color: #94a3b8; }
+        .portfolio-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            min-width: 220px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .portfolio-menu.active { display: block; }
+        .portfolio-menu-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .portfolio-menu-header span { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .select-all-btn {
+            font-size: 10px;
+            color: #3b82f6;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .select-all-btn:hover { text-decoration: underline; }
+        .portfolio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .portfolio-item:hover { background: rgba(51, 65, 85, 0.5); }
+        .portfolio-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3CD574;
+            cursor: pointer;
+        }
+        .portfolio-item label {
+            font-size: 13px;
+            color: #e2e8f0;
+            cursor: pointer;
+            flex: 1;
+        }
+        .selected-portfolios {
+            font-size: 12px;
+            color: #94a3b8;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .selected-portfolios.all { color: #3CD574; font-weight: 600; }
+
+        /* Summary Strip */
+        .summary-strip {
+            display: flex;
+            gap: 24px;
+            padding: 12px 0;
+            margin-bottom: 12px;
+        }
+        .summary-strip-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-strip-item .label {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .summary-strip-item .value {
+            font-size: 16px;
+            font-family: 'SF Mono', monospace;
+            color: #f1f5f9;
+            font-weight: 700;
+        }
+        .summary-strip-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .refresh-all-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 6px;
+            color: #60a5fa;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .refresh-all-btn:hover {
+            background: rgba(59, 130, 246, 0.35);
+            border-color: #60a5fa;
+            transform: translateY(-1px);
+        }
+        .refresh-all-btn:active {
+            transform: translateY(0);
+        }
+        .refresh-all-btn .icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        .refresh-all-btn.refreshing .icon {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pod Calculate Button & Timestamp */
+        .pod-calculate-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 5px;
+            color: #22c55e;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pod-calculate-btn:hover {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: #22c55e;
+        }
+        .pod-calculate-btn:active {
+            transform: scale(0.98);
+        }
+        .pod-calculate-btn .icon {
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+        .pod-calculate-btn.calculating .icon {
+            animation: spin 1s linear infinite;
+        }
+        .pod-calculate-btn.stale {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: rgba(249, 115, 22, 0.5);
+            color: #f97316;
+            animation: pulse-stale 2s ease-in-out infinite;
+        }
+        @keyframes pulse-stale {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+            50% { box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.3); }
+        }
+        .pod-timestamp {
+            font-size: 11px;
+            color: #64748b;
+            font-family: 'SF Mono', monospace;
+        }
+        .pod-timestamp.stale {
+            color: #f97316;
+        }
+        .pod-timestamp .stale-indicator {
+            display: none;
+            margin-left: 6px;
+            color: #f97316;
+            font-weight: 600;
+        }
+        .pod-timestamp.stale .stale-indicator {
+            display: inline;
+        }
+
+        /* Color Blind / Accessibility Toggle */
+        .accessibility-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .accessibility-toggle .label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            cursor: pointer;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            background: conic-gradient(
+                #ef4444 0deg 60deg,
+                #eab308 60deg 120deg,
+                #22c55e 120deg 180deg,
+                #06b6d4 180deg 240deg,
+                #3b82f6 240deg 300deg,
+                #a855f7 300deg 360deg
+            );
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(28px);
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Accessibility Mode - Monochrome Colors */
+        body.accessibility-mode .card-title.equity,
+        body.accessibility-mode .card-title.rates,
+        body.accessibility-mode .card-title.credit,
+        body.accessibility-mode .card-title.fx,
+        body.accessibility-mode .card-title.commodities,
+        body.accessibility-mode .card-title.other {
+            color: #f1f5f9 !important;
+        }
+        body.accessibility-mode .btn-trades.equity,
+        body.accessibility-mode .btn-trades.rates,
+        body.accessibility-mode .btn-trades.credit,
+        body.accessibility-mode .btn-trades.fx,
+        body.accessibility-mode .btn-trades.commodities,
+        body.accessibility-mode .btn-trades {
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            color: #e2e8f0 !important;
+        }
+        body.accessibility-mode .btn-trades:hover {
+            border-color: rgba(255, 255, 255, 0.7) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        body.accessibility-mode .primary-bar-fill,
+        body.accessibility-mode .primary-bar-fill.equity,
+        body.accessibility-mode .primary-bar-fill.rates,
+        body.accessibility-mode .primary-bar-fill.credit,
+        body.accessibility-mode .primary-bar-fill.fx,
+        body.accessibility-mode .primary-bar-fill.commodities {
+            background: linear-gradient(90deg, #94a3b8, #e2e8f0) !important;
+        }
+        body.accessibility-mode .th-blue,
+        body.accessibility-mode .th-green,
+        body.accessibility-mode .th-purple,
+        body.accessibility-mode .th-cyan,
+        body.accessibility-mode .th-yellow,
+        body.accessibility-mode .th-gray {
+            color: #e2e8f0 !important;
+        }
+        body.accessibility-mode .row-label.blue,
+        body.accessibility-mode .row-label.green,
+        body.accessibility-mode .row-label.purple,
+        body.accessibility-mode .row-label.cyan,
+        body.accessibility-mode .row-label.yellow,
+        body.accessibility-mode .row-label.gray {
+            color: #f1f5f9 !important;
+        }
+        body.accessibility-mode .anchor-column-title.equity,
+        body.accessibility-mode .anchor-column-title.rates,
+        body.accessibility-mode .anchor-column-title.credit,
+        body.accessibility-mode .anchor-column-title.fx,
+        body.accessibility-mode .anchor-column-title.commodities,
+        body.accessibility-mode .anchor-column-title.other {
+            color: #f1f5f9 !important;
+            border-bottom-color: rgba(255, 255, 255, 0.3) !important;
+        }
+        body.accessibility-mode .card-change.up,
+        body.accessibility-mode .card-change.down {
+            color: #e2e8f0 !important;
+        }
+        body.accessibility-mode .pod-calculate-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            color: #f1f5f9 !important;
+        }
+        body.accessibility-mode .pod-calculate-btn:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+        }
+        body.accessibility-mode .pod-calculate-btn.stale {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+        body.accessibility-mode .refresh-all-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            color: #f1f5f9 !important;
+        }
+        body.accessibility-mode .refresh-all-btn:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* Add Pod Button */
+        .add-pod-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .add-pod-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 2px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 10px;
+            color: #3b82f6;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-pod-btn:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: rgba(59, 130, 246, 0.6);
+            transform: scale(1.02);
+        }
+        .add-pod-btn .plus {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .pod-number {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pod-selector select {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .books-badge {
+            background: rgba(60, 213, 116, 0.2);
+            color: #3CD574;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .pod-summary { display: flex; gap: 20px; font-size: 15px; }
+        .pod-summary-item .label { color: #94a3b8; font-weight: 500; }
+        .pod-summary-item .value {
+            font-family: 'SF Mono', monospace;
+            color: #f1f5f9;
+            font-weight: 700;
+            margin-left: 4px;
+            font-size: 16px;
+        }
+
+        /* Cards Row - Horizontal Scroll */
+        .cards-row {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            padding-bottom: 20px;
+        }
+
+        /* ============================================
+           RISKCARD - EXACT FORMAT FROM RiskCardRates
+           ============================================ */
+        .riskcard {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 440px;
+            width: 440px;
+            height: 580px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .riskcard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Anchor Strip (Top of Card) */
+        .anchor-strip {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 12px -20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .anchor-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+        }
+        .anchor-item .ticker {
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .anchor-item .price {
+            font-family: 'SF Mono', monospace;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .anchor-item .change {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .anchor-item .change.up { color: #22c55e; }
+        .anchor-item .change.down { color: #ef4444; }
+
+        /* Section 1: Header */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            height: 32px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .card-title.equity { color: #579CF9; }
+        .card-title.rates { color: #3CD574; }
+        .card-title.credit { color: #a855f7; }
+        .card-title.fx { color: #06b6d4; }
+        .card-title.commodities { color: #eab308; }
+        .card-title.other { color: #94a3b8; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .card-change { font-size: 12px; font-weight: 600; }
+        .card-change.up { color: #22c55e; }
+        .card-change.down { color: #ef4444; }
+        .card-change.neutral { color: #94a3b8; }
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(51, 65, 85, 0.5);
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(51, 65, 85, 0.8); color: #e2e8f0; }
+        .btn-trades {
+            padding: 6px 12px;
+            width: auto;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff !important;
+        }
+        .btn-trades.equity { border-color: #579CF9; }
+        .btn-trades.rates { border-color: #3CD574; }
+        .btn-trades.credit { border-color: #a855f7; }
+        .btn-trades.fx { border-color: #06b6d4; }
+        .btn-trades.commodities { border-color: #eab308; }
+        .btn-trades.other { border-color: #94a3b8; }
+        .btn-trades:hover { color: #ffffff !important; }
+
+        /* Section 2-3: Primary Metric */
+        .primary-metric {
+            background: rgba(30, 60, 50, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            height: 85px;
+        }
+        .primary-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .primary-value {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+            color: #f1f5f9;
+        }
+        .primary-bar {
+            height: 5px;
+            background: #334155;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .primary-bar-fill { height: 100%; border-radius: 3px; }
+        .primary-bar-fill.equity { background: linear-gradient(90deg, #579CF9, #7CB3FF); }
+        .primary-bar-fill.rates { background: linear-gradient(90deg, #3CD574, #6EE7A0); }
+        .primary-bar-fill.credit { background: linear-gradient(90deg, #a855f7, #c084fc); }
+        .primary-bar-fill.fx { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        .primary-bar-fill.commodities { background: linear-gradient(90deg, #eab308, #facc15); }
+        .primary-bar-fill.other { background: linear-gradient(90deg, #64748b, #94a3b8); }
+
+        /* Section 4: Three Metric Boxes */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            height: 55px;
+        }
+        .metric-box {
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 9px;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+            color: #f1f5f9;
+        }
+
+        /* Section 5: Table (FLEXIBLE HEIGHT) */
+        .table-container {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            flex: 1;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .table-header {
+            display: grid;
+            grid-template-columns: 75px repeat(6, 1fr);
+            background: rgba(59, 130, 246, 0.25);
+            padding: 10px 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .table-header span { text-align: center; }
+        .table-header span:first-child { text-align: left; }
+        .th-blue { color: #579CF9; }
+        .th-green { color: #3CD574; }
+        .th-purple { color: #a855f7; }
+        .th-cyan { color: #06b6d4; }
+        .th-yellow { color: #eab308; }
+        .th-gray { color: #94a3b8; }
+
+        .table-body { flex: 1; overflow-y: auto; }
+        .table-row {
+            display: grid;
+            grid-template-columns: 75px repeat(6, 1fr);
+            padding: 9px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            align-items: center;
+        }
+        .table-row:nth-child(odd) { background: rgba(59, 130, 246, 0.05); }
+        .table-row:last-child { border-bottom: none; }
+        .table-row:hover { background: rgba(59, 130, 246, 0.15); }
+        .row-label { font-weight: 600; font-size: 12px; }
+        .row-label.blue { color: #579CF9; }
+        .row-label.green { color: #3CD574; }
+        .row-label.purple { color: #a855f7; }
+        .row-label.cyan { color: #06b6d4; }
+        .row-label.yellow { color: #eab308; }
+        .row-label.gray { color: #94a3b8; }
+        .table-row span {
+            text-align: center;
+            font-family: 'SF Mono', monospace;
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+        .table-row span:first-child { text-align: left; font-family: inherit; }
+
+        /* Section 6: Bottom Metrics (FIXED POSITION) */
+        .bottom-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 10px;
+            height: 50px;
+        }
+        .bottom-metric { text-align: center; }
+        .bottom-label {
+            font-size: 9px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .bottom-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+            color: #e2e8f0;
+        }
+        .bottom-value.negative { color: #ef4444; }
+
+        /* Section 7: Gross/Net Footer (FIXED POSITION) */
+        .footer-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 10px;
+            height: 55px;
+        }
+        .footer-item {
+            background: rgba(51, 65, 85, 0.4);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .footer-label {
+            font-size: 9px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .footer-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1f5f9;
+            font-family: 'SF Mono', monospace;
+        }
+
+        /* Tooltips - JavaScript controlled */
+        [data-tooltip] { cursor: help; }
+
+        /* Global tooltip element - follows cursor */
+        #global-tooltip {
+            position: fixed;
+            background: #0f172a;
+            border: 2px solid #3b82f6;
+            color: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            z-index: 999999;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(59, 130, 246, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            max-width: 400px;
+            white-space: normal;
+            line-height: 1.5;
+            left: -9999px;
+            top: -9999px;
+        }
+        #global-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* Dark Scrollbar Styling */
+        .table-body::-webkit-scrollbar { width: 6px; }
+        .table-body::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 3px; }
+        .table-body::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
+        .table-body::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.9); }
+        .cards-row::-webkit-scrollbar { height: 6px; }
+        .cards-row::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 3px; }
+        .cards-row::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
+        .cards-row::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.9); }
+        .market-anchors-section::-webkit-scrollbar { height: 6px; }
+        .market-anchors-section::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 3px; }
+        .market-anchors-section::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
+        .market-anchors-section::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.9); }
+        .portfolio-menu::-webkit-scrollbar { width: 5px; }
+        .portfolio-menu::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        .portfolio-menu::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
+
+        /* Expand Modal - LARGER FONTS */
+        .expand-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        .expand-modal.active { display: flex; }
+        .expand-modal-content {
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+        }
+        /* Scale up ALL fonts in expanded card - minimum 16px */
+        .expand-modal-content .card-title { font-size: 32px !important; }
+        .expand-modal-content .card-change { font-size: 20px !important; }
+        .expand-modal-content .primary-label { font-size: 18px !important; }
+        .expand-modal-content .primary-value { font-size: 52px !important; }
+        .expand-modal-content .metric-label { font-size: 16px !important; }
+        .expand-modal-content .metric-value { font-size: 24px !important; }
+        .expand-modal-content .table-header { font-size: 16px !important; padding: 16px 18px !important; }
+        .expand-modal-content .table-row { font-size: 18px !important; padding: 16px 18px !important; }
+        .expand-modal-content .row-label { font-size: 18px !important; }
+        .expand-modal-content .table-row span { font-size: 18px !important; }
+        .expand-modal-content .bottom-label { font-size: 16px !important; }
+        .expand-modal-content .bottom-value { font-size: 22px !important; }
+        .expand-modal-content .footer-label { font-size: 16px !important; }
+        .expand-modal-content .footer-value { font-size: 24px !important; }
+        .expand-modal-content .btn-icon { font-size: 20px !important; width: 40px !important; height: 40px !important; }
+        .expand-modal-content .btn-trades { font-size: 18px !important; padding: 12px 20px !important; }
+        .expand-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: #94a3b8;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.2s;
+        }
+        .expand-modal-close:hover { color: #ef4444; }
+
+        /* Calculation Modal - LARGER FONTS */
+        .calc-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+        .calc-modal.active { display: flex; }
+        .calc-modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 16px;
+            padding: 32px 40px;
+            min-width: 450px;
+            max-width: 550px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .calc-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 24px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .calc-formula {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .calc-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 18px;
+        }
+        .calc-line:last-child { border-bottom: none; }
+        .calc-line .label { color: #94a3b8; }
+        .calc-line .value { color: #e2e8f0; font-weight: 500; }
+        .calc-line.result {
+            border-top: 2px solid rgba(59, 130, 246, 0.4);
+            margin-top: 12px;
+            padding-top: 16px;
+        }
+        .calc-line.result .label { color: #3b82f6; font-weight: 600; font-size: 20px; }
+        .calc-line.result .value { color: #22c55e; font-size: 24px; font-weight: 700; }
+        .calc-close {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 8px;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .calc-close:hover { background: rgba(59, 130, 246, 0.3); }
+
+        /* Trades Modal */
+        .trades-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .trades-modal.active { display: flex; }
+        .trades-modal-content {
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .trades-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .trades-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        .trades-modal-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .trades-modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(51, 65, 85, 0.5);
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .trades-modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        .trades-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .trades-table th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .trades-table td {
+            padding: 12px;
+            font-size: 13px;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'SF Mono', monospace;
+        }
+        .trades-table tr:hover {
+            background: rgba(51, 65, 85, 0.3);
+        }
+        .trades-table .ticker-cell {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        .trades-table .side-long { color: #22c55e; }
+        .trades-table .side-short { color: #ef4444; }
+        .price-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .price-input {
+            width: 90px;
+            padding: 6px 8px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            color: #f1f5f9;
+            font-family: 'SF Mono', monospace;
+            font-size: 13px;
+        }
+        .price-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(51, 65, 85, 0.8);
+        }
+        .price-input.modified {
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.15);
+        }
+        .price-edit-btn {
+            padding: 4px 8px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 4px;
+            color: #60a5fa;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .price-edit-btn:hover {
+            background: rgba(59, 130, 246, 0.35);
+        }
+        .price-edit-btn.save {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #22c55e;
+        }
+        .original-price {
+            font-size: 11px;
+            color: #64748b;
+            text-decoration: line-through;
+            margin-left: 8px;
+        }
+
+        /* Card Warning Icon for Manual Overrides */
+        .card-warning {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(249, 115, 22, 0.2);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            color: #f97316;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+        .card-warning.visible { display: flex; }
+        .card-warning:hover {
+            background: rgba(249, 115, 22, 0.35);
+            transform: scale(1.05);
+        }
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+            50% { box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.3); }
+        }
+
+        /* Overrides Modal */
+        .overrides-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2100;
+            align-items: center;
+            justify-content: center;
+        }
+        .overrides-modal.active { display: flex; }
+        .overrides-modal-content {
+            background: rgba(30, 41, 59, 0.98);
+            border: 2px solid rgba(249, 115, 22, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .overrides-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .overrides-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(249, 115, 22, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .overrides-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f97316;
+            margin-bottom: 6px;
+        }
+        .overrides-explanation {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .overrides-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .override-item {
+            background: rgba(51, 65, 85, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .override-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .override-ticker {
+            font-weight: 700;
+            color: #f1f5f9;
+            font-size: 15px;
+        }
+        .override-type {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            background: rgba(100, 116, 139, 0.2);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .override-values {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .override-original {
+            color: #64748b;
+        }
+        .override-original span {
+            text-decoration: line-through;
+        }
+        .override-current {
+            color: #f97316;
+            font-weight: 600;
+        }
+        .override-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .override-edit-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            color: #60a5fa;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .override-edit-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+        .override-reset-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .override-reset-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .overrides-close {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            border-radius: 8px;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .overrides-close:hover {
+            background: rgba(100, 116, 139, 0.35);
+            color: #e2e8f0;
+        }
+        .override-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .override-input {
+            flex: 1;
+            padding: 8px 10px;
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            border-radius: 6px;
+            color: #f1f5f9;
+            font-family: 'SF Mono', monospace;
+            font-size: 14px;
+        }
+        .override-input:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+        .override-save-btn {
+            padding: 8px 16px;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 6px;
+            color: #22c55e;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .override-save-btn:hover {
+            background: rgba(34, 197, 94, 0.35);
+        }
+        .no-overrides {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Clickable items for calculations */
+        .clickable-metric {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clickable-metric:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-radius: 4px;
+        }
+        .footer-item.clickable-metric:hover {
+            background: rgba(59, 130, 246, 0.3) !important;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-logo"><h1>RISKCORE</h1></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a class="nav-item active"><span class="icon">📊</span><span>Riskboard</span></a>
+                <a class="nav-item"><span class="icon">📋</span><span>Positions</span></a>
+                <a class="nav-item"><span class="icon">🔄</span><span>Overlaps</span></a>
+                <a class="nav-item"><span class="icon">📈</span><span>Correlation</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Data</div>
+                <a class="nav-item"><span class="icon">📤</span><span>Upload</span></a>
+                <a class="nav-item"><span class="icon">🔌</span><span>Integrations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Settings</div>
+                <a class="nav-item"><span class="icon">⚙️</span><span>Configuration</span></a>
+                <a class="nav-item"><span class="icon">👥</span><span>Users</span></a>
+            </div>
+        </div>
+        <div class="sidebar-footer">v1.0.0 | On-Premises</div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <header class="header">
+            <div class="header-left">
+                <span class="page-title">Riskboard</span>
+                <span class="last-updated">Updated: 14:32:15 UTC</span>
+            </div>
+            <div class="header-right">
+                <div class="accessibility-toggle">
+                    <span class="label">Color Mode</span>
+                    <label class="toggle-switch" title="Toggle color blind friendly mode">
+                        <input type="checkbox" id="accessibilityToggle" onchange="toggleAccessibilityMode()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Market Anchors Section -->
+            <div class="market-anchors-section">
+                <div class="market-anchors-title">Market Anchors</div>
+                <div class="anchors-grid">
+                    <div class="anchor-column">
+                        <div class="anchor-column-title equity">EQUITY</div>
+                        <div class="anchor-row"><span class="ticker">SPY</span><span class="price">584.20</span><span class="change up">+0.8%</span></div>
+                        <div class="anchor-row"><span class="ticker">QQQ</span><span class="price">498.50</span><span class="change up">+1.2%</span></div>
+                        <div class="anchor-row"><span class="ticker">VGK</span><span class="price">68.45</span><span class="change down">-0.3%</span></div>
+                        <div class="anchor-row"><span class="ticker">EWJ</span><span class="price">72.80</span><span class="change up">+0.4%</span></div>
+                        <div class="anchor-row"><span class="ticker">VWO</span><span class="price">44.25</span><span class="change up">+0.6%</span></div>
+                    </div>
+                    <div class="anchor-column">
+                        <div class="anchor-column-title rates">RATES</div>
+                        <div class="anchor-row"><span class="ticker">ZT (2Y)</span><span class="price">103.45</span><span class="change down">-0.1%</span></div>
+                        <div class="anchor-row"><span class="ticker">ZF (5Y)</span><span class="price">108.92</span><span class="change down">-0.2%</span></div>
+                        <div class="anchor-row"><span class="ticker">ZN (10Y)</span><span class="price">110.28</span><span class="change down">-0.4%</span></div>
+                        <div class="anchor-row"><span class="ticker">ZB (30Y)</span><span class="price">118.56</span><span class="change down">-0.6%</span></div>
+                    </div>
+                    <div class="anchor-column">
+                        <div class="anchor-column-title credit">CREDIT</div>
+                        <div class="anchor-row"><span class="ticker">CDX.IG</span><span class="price">52.8</span><span class="change down">+1.2bp</span></div>
+                        <div class="anchor-row"><span class="ticker">CDX.HY</span><span class="price">342.5</span><span class="change down">+3.5bp</span></div>
+                        <div class="anchor-row"><span class="ticker">LQD</span><span class="price">108.42</span><span class="change down">-0.3%</span></div>
+                        <div class="anchor-row"><span class="ticker">HYG</span><span class="price">78.25</span><span class="change up">+0.2%</span></div>
+                    </div>
+                    <div class="anchor-column">
+                        <div class="anchor-column-title fx">FX</div>
+                        <div class="anchor-row"><span class="ticker">DXY</span><span class="price">104.25</span><span class="change up">+0.2%</span></div>
+                        <div class="anchor-row"><span class="ticker">EUR/USD</span><span class="price">1.0842</span><span class="change down">-0.2%</span></div>
+                        <div class="anchor-row"><span class="ticker">USD/JPY</span><span class="price">157.85</span><span class="change up">+0.3%</span></div>
+                        <div class="anchor-row"><span class="ticker">GBP/USD</span><span class="price">1.2685</span><span class="change up">+0.1%</span></div>
+                    </div>
+                    <div class="anchor-column">
+                        <div class="anchor-column-title commodities">COMMODITIES</div>
+                        <div class="anchor-row"><span class="ticker">CL (Oil)</span><span class="price">78.45</span><span class="change up">+1.8%</span></div>
+                        <div class="anchor-row"><span class="ticker">GC (Gold)</span><span class="price">2,658</span><span class="change up">+0.4%</span></div>
+                        <div class="anchor-row"><span class="ticker">NG (Gas)</span><span class="price">2.85</span><span class="change down">-2.1%</span></div>
+                        <div class="anchor-row"><span class="ticker">HG (Copper)</span><span class="price">4.25</span><span class="change up">+0.8%</span></div>
+                    </div>
+                    <div class="anchor-column">
+                        <div class="anchor-column-title other">OTHER</div>
+                        <div class="anchor-row"><span class="ticker">VIX</span><span class="price">14.20</span><span class="change down">-3.2%</span></div>
+                        <div class="anchor-row"><span class="ticker">VVIX</span><span class="price">82.5</span><span class="change down">-1.8%</span></div>
+                        <div class="anchor-row"><span class="ticker">MOVE</span><span class="price">98.4</span><span class="change down">-1.2%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Strip -->
+            <div class="summary-strip">
+                <div class="summary-strip-item"><span class="label">Firm Gross:</span><span class="value">$2.09B</span></div>
+                <div class="summary-strip-item"><span class="label">Firm Net:</span><span class="value">$641M</span></div>
+                <div class="summary-strip-item"><span class="label">Total Positions:</span><span class="value">4,081</span></div>
+                <div class="summary-strip-right">
+                    <button class="refresh-all-btn" onclick="refreshAllPods()" title="Recalculate all pods">
+                        <span class="icon">↻</span> Refresh All Pods
+                    </button>
+                </div>
+            </div>
+
+            <!-- RiskPod 1 -->
+            <section class="riskpod" id="pod1">
+                <div class="pod-header">
+                    <div class="pod-left">
+                        <span class="pod-number">Pod 1</span>
+                        <div class="portfolio-dropdown" id="dropdown-pod1">
+                            <button class="portfolio-btn" onclick="toggleDropdown('pod1')">
+                                Portfolios <span class="arrow">▼</span>
+                            </button>
+                            <div class="portfolio-menu" id="menu-pod1">
+                                <div class="portfolio-menu-header">
+                                    <span>Select Portfolios</span>
+                                    <button class="select-all-btn" onclick="toggleAll('pod1')">Select All</button>
+                                </div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-alpha" checked onchange="updateSelection('pod1')"><label for="pod1-alpha">Alpha Fund</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-beta" checked onchange="updateSelection('pod1')"><label for="pod1-beta">Beta Fund</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-gamma" checked onchange="updateSelection('pod1')"><label for="pod1-gamma">Gamma Strategies</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-delta" checked onchange="updateSelection('pod1')"><label for="pod1-delta">Delta Partners</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-epsilon" checked onchange="updateSelection('pod1')"><label for="pod1-epsilon">Epsilon Capital</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-zeta" checked onchange="updateSelection('pod1')"><label for="pod1-zeta">Zeta Macro</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-eta" checked onchange="updateSelection('pod1')"><label for="pod1-eta">Eta Quant</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod1-theta" checked onchange="updateSelection('pod1')"><label for="pod1-theta">Theta Arbitrage</label></div>
+                            </div>
+                        </div>
+                        <span class="selected-portfolios all" id="selected-pod1">All</span>
+                        <button class="pod-calculate-btn" id="calc-btn-pod1" onclick="calculatePod('pod1')" title="Recalculate this pod">
+                            <span class="icon">↻</span> Calculate
+                        </button>
+                        <div class="pod-summary">
+                            <div class="pod-summary-item"><span class="label">Gross:</span><span class="value">$1.2B</span></div>
+                            <div class="pod-summary-item"><span class="label">Net:</span><span class="value">$485M</span></div>
+                            <div class="pod-summary-item"><span class="label">Positions:</span><span class="value">1,247</span></div>
+                        </div>
+                        <span class="pod-timestamp" id="timestamp-pod1">
+                            Last: <span class="time">09:42:15</span><span class="stale-indicator">STALE</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="cards-row">
+                    <!-- EQUITY CARD -->
+                    <div class="riskcard" id="card-equity-pod1">
+                        <div class="card-header">
+                            <span class="card-title equity" data-tooltip="Equity exposure across all stock positions">EQUITY</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-equity-pod1" onclick="openOverridesModal('equity', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +1.2%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades equity" title="View Trades" onclick="openTradesModal('equity', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Net delta exposure to equity markets">Net Delta</div>
+                            <div class="primary-value">$42.5M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill equity" style="width:65%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Portfolio beta to S&P 500">Beta</div><div class="metric-value">1.15</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Option vega exposure">Vega</div><div class="metric-value">$280K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Option gamma exposure">Gamma</div><div class="metric-value">$42K</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-blue" data-tooltip="% of total equity exposure">%</span>
+                                <span class="th-blue" data-tooltip="Net delta by region">DELTA</span>
+                                <span class="th-blue" data-tooltip="Regional beta vs SPX">BETA</span>
+                                <span class="th-blue" data-tooltip="Option vega by region">VEGA</span>
+                                <span class="th-blue" data-tooltip="Correlation to regional anchor">CORR.</span>
+                                <span class="th-blue" data-tooltip="Notional to zero exposure">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label blue" data-tooltip="US & Canada equities. Anchor: SPY">US+CAN</div><span>48%</span><span>$20.4M</span><span>1.08</span><span>$134K</span><span>0.96</span><span>-$19.6M</span></div>
+                                <div class="table-row"><div class="row-label blue" data-tooltip="European equities. Anchor: VGK">Europe</div><span>22%</span><span>$9.4M</span><span>0.95</span><span>$62K</span><span>0.88</span><span>-$8.3M</span></div>
+                                <div class="table-row"><div class="row-label blue" data-tooltip="Japanese equities. Anchor: EWJ">Japan</div><span>15%</span><span>$6.4M</span><span>0.82</span><span>$42K</span><span>0.85</span><span>-$5.4M</span></div>
+                                <div class="table-row"><div class="row-label blue" data-tooltip="Southeast Asia equities. Anchor: VWO">SE Asia</div><span>10%</span><span>$4.3M</span><span>1.15</span><span>$28K</span><span>0.78</span><span>-$3.4M</span></div>
+                                <div class="table-row"><div class="row-label blue" data-tooltip="Rest of World equities">RoW</div><span>5%</span><span>$2.0M</span><span>0.92</span><span>$14K</span><span>0.72</span><span>-$1.4M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total equity positions">Positions</div><div class="bottom-value">342</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$2.1M</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$3.4M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$320M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$42.5M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- RATES CARD -->
+                    <div class="riskcard" id="card-rates-pod1">
+                        <div class="card-header">
+                            <span class="card-title rates" data-tooltip="Interest rate risk across all bond and swap positions">RATES</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-rates-pod1" onclick="openOverridesModal('rates', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change down">▼ -0.8%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades rates" title="View Trades" onclick="openTradesModal('rates', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Dollar value of 01 - P&L from 1bp move">DV01</div>
+                            <div class="primary-value">$85,000</div>
+                            <div class="primary-bar"><div class="primary-bar-fill rates" style="width:55%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="DV01-weighted duration">Duration</div><div class="metric-value">4.2 yrs</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="DV01-weighted convexity">Convexity</div><div class="metric-value">0.45</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Notional-weighted yield">Yield</div><div class="metric-value">5.25%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-green" data-tooltip="% of total rates exposure">%</span>
+                                <span class="th-green" data-tooltip="Dollar Value of 01">DV01</span>
+                                <span class="th-green" data-tooltip="Modified duration">DUR</span>
+                                <span class="th-green" data-tooltip="Convexity adjustment">CONV</span>
+                                <span class="th-green" data-tooltip="Correlation to anchor">CORR.</span>
+                                <span class="th-green" data-tooltip="Notional to zero exposure">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label green" data-tooltip="0-3 years. Anchor: 2Y Treasury (ZT)">2Y</div><span>21%</span><span>$18K</span><span>1.9</span><span>0.08</span><span>0.92</span><span>-$16.5K</span></div>
+                                <div class="table-row"><div class="row-label green" data-tooltip="3-7 years. Anchor: 5Y Treasury (ZF)">5Y</div><span>38%</span><span>$32K</span><span>4.6</span><span>0.25</span><span>0.89</span><span>-$28.5K</span></div>
+                                <div class="table-row"><div class="row-label green" data-tooltip="7-15 years. Anchor: 10Y Treasury (ZN)">10Y</div><span>33%</span><span>$28K</span><span>8.2</span><span>0.72</span><span>0.85</span><span>-$23.8K</span></div>
+                                <div class="table-row"><div class="row-label green" data-tooltip="15+ years. Anchor: Ultra Bond (UB)">30Y</div><span>8%</span><span>$7K</span><span>18.5</span><span>3.80</span><span>0.78</span><span>-$5.5K</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total rates positions">Positions</div><div class="bottom-value">156</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$1.8M</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$2.9M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$180M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$120M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- CREDIT CARD -->
+                    <div class="riskcard" id="card-credit-pod1">
+                        <div class="card-header">
+                            <span class="card-title credit" data-tooltip="Credit spread risk across all corporate bonds and CDS">CREDIT</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-credit-pod1" onclick="openOverridesModal('credit', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change down">▼ -1.2%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades credit" title="View Trades" onclick="openTradesModal('credit', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Credit Spread 01 - P&L from 1bp spread move">CS01</div>
+                            <div class="primary-value">$42,000</div>
+                            <div class="primary-bar"><div class="primary-bar-fill credit" style="width:45%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Credit duration">Cr. Dur</div><div class="metric-value">3.8 yrs</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Average probability of default">Avg PD</div><div class="metric-value">2.4%</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Average loss given default">Avg LGD</div><div class="metric-value">40%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-purple" data-tooltip="% of total credit exposure">%</span>
+                                <span class="th-purple" data-tooltip="Credit Spread 01">CS01</span>
+                                <span class="th-purple" data-tooltip="Probability of default">PD</span>
+                                <span class="th-purple" data-tooltip="Loss given default">LGD</span>
+                                <span class="th-purple" data-tooltip="Correlation to CDX anchor">CORR.</span>
+                                <span class="th-purple" data-tooltip="Notional to zero exposure">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label purple" data-tooltip="Investment grade AAA-AA. Anchor: CDX.IG">AAA-AA</div><span>18%</span><span>$7.5K</span><span>0.1%</span><span>25%</span><span>0.85</span><span>-$6.4K</span></div>
+                                <div class="table-row"><div class="row-label purple" data-tooltip="Investment grade A. Anchor: CDX.IG">A</div><span>32%</span><span>$13.4K</span><span>0.5%</span><span>35%</span><span>0.88</span><span>-$11.8K</span></div>
+                                <div class="table-row"><div class="row-label purple" data-tooltip="Investment grade BBB. Anchor: CDX.IG">BBB</div><span>28%</span><span>$11.8K</span><span>1.8%</span><span>40%</span><span>0.82</span><span>-$9.7K</span></div>
+                                <div class="table-row"><div class="row-label purple" data-tooltip="High yield. Anchor: CDX.HY">HY</div><span>16%</span><span>$6.7K</span><span>4.2%</span><span>55%</span><span>0.74</span><span>-$5.0K</span></div>
+                                <div class="table-row"><div class="row-label purple" data-tooltip="Distressed credits. Idiosyncratic risk">Distress</div><span>6%</span><span>$2.6K</span><span>18.5%</span><span>65%</span><span>0.42</span><span>N/A</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total credit positions">Positions</div><div class="bottom-value">89</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$890K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$1.4M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$95M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$72M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- FX CARD -->
+                    <div class="riskcard" id="card-fx-pod1">
+                        <div class="card-header">
+                            <span class="card-title fx" data-tooltip="Foreign exchange exposure across all currency positions">FX</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-fx-pod1" onclick="openOverridesModal('fx', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +0.4%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades fx" title="View Trades" onclick="openTradesModal('fx', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Net FX delta exposure">FX Delta</div>
+                            <div class="primary-value">$18.2M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill fx" style="width:35%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="FX option vega">FX Vega</div><div class="metric-value">$320K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Average basis points cost">Basis</div><div class="metric-value">42 bps</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Number of currency pairs">Pairs</div><div class="metric-value">12</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-cyan" data-tooltip="% of total FX exposure">%</span>
+                                <span class="th-cyan" data-tooltip="Net delta by currency">DELTA</span>
+                                <span class="th-cyan" data-tooltip="Option vega by currency">VEGA</span>
+                                <span class="th-cyan" data-tooltip="Basis points cost">BASIS</span>
+                                <span class="th-cyan" data-tooltip="Correlation to DXY anchor">CORR.</span>
+                                <span class="th-cyan" data-tooltip="Notional to zero exposure">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label cyan" data-tooltip="Euro. Anchor: EUR/USD spot">EUR</div><span>38%</span><span>$6.9M</span><span>$122K</span><span>15bp</span><span>0.94</span><span>-$6.5M</span></div>
+                                <div class="table-row"><div class="row-label cyan" data-tooltip="Japanese Yen. Anchor: USD/JPY spot">JPY</div><span>25%</span><span>$4.5M</span><span>$80K</span><span>12bp</span><span>0.91</span><span>-$4.1M</span></div>
+                                <div class="table-row"><div class="row-label cyan" data-tooltip="British Pound. Anchor: GBP/USD spot">GBP</div><span>18%</span><span>$3.3M</span><span>$58K</span><span>8bp</span><span>0.89</span><span>-$2.9M</span></div>
+                                <div class="table-row"><div class="row-label cyan" data-tooltip="Crypto. Anchor: BTC/USD">Crypto</div><span>12%</span><span>$2.2M</span><span>$45K</span><span>5bp</span><span>0.72</span><span>-$1.6M</span></div>
+                                <div class="table-row"><div class="row-label cyan" data-tooltip="Other currencies combined">Other</div><span>7%</span><span>$1.3M</span><span>$15K</span><span>2bp</span><span>0.65</span><span>-$0.8M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total FX positions">Positions</div><div class="bottom-value">45</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$540K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$850K</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$65M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$18.2M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- COMMODITIES CARD -->
+                    <div class="riskcard" id="card-commodities-pod1">
+                        <div class="card-header">
+                            <span class="card-title commodities" data-tooltip="Commodity exposure across all futures and swaps">COMMODITIES</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-commodities-pod1" onclick="openOverridesModal('commodities', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +1.5%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades commodities" title="View Trades" onclick="openTradesModal('commodities', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Net commodity exposure">Net Exposure</div>
+                            <div class="primary-value">$28.5M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill commodities" style="width:40%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Price sensitivity per 1% move">P. Sens</div><div class="metric-value">$285K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Basis risk exposure">Basis</div><div class="metric-value">$45K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Roll yield impact">Roll</div><div class="metric-value">-0.8%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-yellow" data-tooltip="% of total commodity exposure">%</span>
+                                <span class="th-yellow" data-tooltip="Net exposure by commodity">EXP</span>
+                                <span class="th-yellow" data-tooltip="Price sensitivity">P.SENS</span>
+                                <span class="th-yellow" data-tooltip="Basis risk">BASIS</span>
+                                <span class="th-yellow" data-tooltip="Correlation to anchor">CORR.</span>
+                                <span class="th-yellow" data-tooltip="Notional to zero exposure">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label yellow" data-tooltip="Crude oil. Anchor: WTI Front Month (CL)">Crude</div><span>42%</span><span>$12M</span><span>$120K</span><span>$18K</span><span>0.92</span><span>-$11M</span></div>
+                                <div class="table-row"><div class="row-label yellow" data-tooltip="Gold. Anchor: COMEX Gold (GC)">Gold</div><span>28%</span><span>$8M</span><span>$80K</span><span>$8K</span><span>0.88</span><span>-$7M</span></div>
+                                <div class="table-row"><div class="row-label yellow" data-tooltip="Natural Gas. Anchor: Henry Hub (NG)">NatGas</div><span>15%</span><span>$4.3M</span><span>$43K</span><span>$12K</span><span>0.75</span><span>-$3.2M</span></div>
+                                <div class="table-row"><div class="row-label yellow" data-tooltip="Copper. Anchor: COMEX Copper (HG)">Copper</div><span>10%</span><span>$2.8M</span><span>$28K</span><span>$5K</span><span>0.82</span><span>-$2.3M</span></div>
+                                <div class="table-row"><div class="row-label yellow" data-tooltip="Other commodities">Other</div><span>5%</span><span>$1.4M</span><span>$14K</span><span>$2K</span><span>0.65</span><span>-$0.9M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total commodity positions">Positions</div><div class="bottom-value">67</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$1.2M</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$1.9M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$45M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$28.5M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- OTHER CARD -->
+                    <div class="riskcard" id="card-other-pod1">
+                        <div class="card-header">
+                            <span class="card-title other" data-tooltip="Other/unclassified risk exposures">OTHER</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-other-pod1" onclick="openOverridesModal('other', 'pod1')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change neutral">● 0.0%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades other" title="View Trades" onclick="openTradesModal('other', 'pod1')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label" data-tooltip="Net exposure in other categories">Net Exposure</div>
+                            <div class="primary-value">$5.8M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill other" style="width:20%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Price sensitivity">P. Sens</div><div class="metric-value">$58K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Volatility sensitivity">Vol Sens</div><div class="metric-value">$125K</div></div>
+                            <div class="metric-box"><div class="metric-label" data-tooltip="Portfolio complexity rating">Complx</div><div class="metric-value">Medium</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span>
+                                <span class="th-gray" data-tooltip="% of total other exposure">%</span>
+                                <span class="th-gray" data-tooltip="Net exposure by category">EXP</span>
+                                <span class="th-gray" data-tooltip="Price sensitivity">P.SENS</span>
+                                <span class="th-gray" data-tooltip="Volatility sensitivity">V.SENS</span>
+                                <span class="th-gray" data-tooltip="Correlation to VIX">CORR.</span>
+                                <span class="th-gray" data-tooltip="Hedge recommendation">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label gray" data-tooltip="Volatility products. Anchor: VIX">Volatility</div><span>55%</span><span>$3.2M</span><span>$32K</span><span>$95K</span><span>0.78</span><span>-$2.5M</span></div>
+                                <div class="table-row"><div class="row-label gray" data-tooltip="Structured products">Struct.</div><span>35%</span><span>$2.0M</span><span>$20K</span><span>$25K</span><span>0.65</span><span>-$1.3M</span></div>
+                                <div class="table-row"><div class="row-label gray" data-tooltip="Unclassified positions - needs manual review">Unclass.</div><span>10%</span><span>$0.6M</span><span>$6K</span><span>$5K</span><span>N/A</span><span>N/A</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Total other positions">Positions</div><div class="bottom-value">23</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Value at Risk 95%">VAR (95%)</div><div class="bottom-value negative">$280K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label" data-tooltip="Conditional VAR 95%">CVAR (95%)</div><div class="bottom-value negative">$450K</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$12M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$5.8M</div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RiskPod 2 -->
+            <section class="riskpod" id="pod2">
+                <button class="pod-delete" onclick="deletePod('pod2')" title="Delete Pod">🗑️</button>
+                <div class="pod-header">
+                    <div class="pod-left">
+                        <span class="pod-number">Pod 2</span>
+                        <div class="portfolio-dropdown" id="dropdown-pod2">
+                            <button class="portfolio-btn" onclick="toggleDropdown('pod2')">
+                                Portfolios <span class="arrow">▼</span>
+                            </button>
+                            <div class="portfolio-menu" id="menu-pod2">
+                                <div class="portfolio-menu-header">
+                                    <span>Select Portfolios</span>
+                                    <button class="select-all-btn" onclick="toggleAll('pod2')">Select All</button>
+                                </div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-alpha" onchange="updateSelection('pod2')"><label for="pod2-alpha">Alpha Fund</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-beta" onchange="updateSelection('pod2')"><label for="pod2-beta">Beta Fund</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-gamma" checked onchange="updateSelection('pod2')"><label for="pod2-gamma">Gamma Strategies</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-delta" onchange="updateSelection('pod2')"><label for="pod2-delta">Delta Partners</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-epsilon" onchange="updateSelection('pod2')"><label for="pod2-epsilon">Epsilon Capital</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-zeta" checked onchange="updateSelection('pod2')"><label for="pod2-zeta">Zeta Macro</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-eta" checked onchange="updateSelection('pod2')"><label for="pod2-eta">Eta Quant</label></div>
+                                <div class="portfolio-item"><input type="checkbox" id="pod2-theta" onchange="updateSelection('pod2')"><label for="pod2-theta">Theta Arbitrage</label></div>
+                            </div>
+                        </div>
+                        <span class="selected-portfolios" id="selected-pod2">Gamma Strategies, Zeta Macro, Eta Quant</span>
+                        <button class="pod-calculate-btn" id="calc-btn-pod2" onclick="calculatePod('pod2')" title="Recalculate this pod">
+                            <span class="icon">↻</span> Calculate
+                        </button>
+                        <div class="pod-summary">
+                            <div class="pod-summary-item"><span class="label">Gross:</span><span class="value">$890M</span></div>
+                            <div class="pod-summary-item"><span class="label">Net:</span><span class="value">$156M</span></div>
+                            <div class="pod-summary-item"><span class="label">Positions:</span><span class="value">2,834</span></div>
+                        </div>
+                        <span class="pod-timestamp" id="timestamp-pod2">
+                            Last: <span class="time">09:42:15</span><span class="stale-indicator">STALE</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="cards-row">
+                    <!-- Pod 2 EQUITY -->
+                    <div class="riskcard" id="card-equity-pod2">
+                        <div class="card-header">
+                            <span class="card-title equity" data-tooltip="Equity exposure - Quant Strategies">EQUITY</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-equity-pod2" onclick="openOverridesModal('equity', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +0.6%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades equity" onclick="openTradesModal('equity', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">Net Delta</div>
+                            <div class="primary-value">$12.8M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill equity" style="width:25%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">Beta</div><div class="metric-value">0.42</div></div>
+                            <div class="metric-box"><div class="metric-label">Vega</div><div class="metric-value">$450K</div></div>
+                            <div class="metric-box"><div class="metric-label">Gamma</div><div class="metric-value">$85K</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-blue">%</span><span class="th-blue">DELTA</span><span class="th-blue">BETA</span><span class="th-blue">VEGA</span><span class="th-blue">CORR.</span><span class="th-blue">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label blue">US+CAN</div><span>52%</span><span>$6.7M</span><span>0.48</span><span>$234K</span><span>0.92</span><span>-$6.2M</span></div>
+                                <div class="table-row"><div class="row-label blue">Europe</div><span>20%</span><span>$2.6M</span><span>0.38</span><span>$90K</span><span>0.86</span><span>-$2.2M</span></div>
+                                <div class="table-row"><div class="row-label blue">Japan</div><span>14%</span><span>$1.8M</span><span>0.32</span><span>$63K</span><span>0.82</span><span>-$1.5M</span></div>
+                                <div class="table-row"><div class="row-label blue">SE Asia</div><span>9%</span><span>$1.2M</span><span>0.52</span><span>$41K</span><span>0.75</span><span>-$0.9M</span></div>
+                                <div class="table-row"><div class="row-label blue">RoW</div><span>5%</span><span>$0.5M</span><span>0.42</span><span>$22K</span><span>0.68</span><span>-$0.4M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">1,842</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$980K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$1.5M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$580M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$12.8M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Pod 2 RATES -->
+                    <div class="riskcard" id="card-rates-pod2">
+                        <div class="card-header">
+                            <span class="card-title rates" data-tooltip="Rates exposure - Quant Strategies">RATES</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-rates-pod2" onclick="openOverridesModal('rates', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +0.3%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades rates" onclick="openTradesModal('rates', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">DV01</div>
+                            <div class="primary-value">$32,000</div>
+                            <div class="primary-bar"><div class="primary-bar-fill rates" style="width:30%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">Duration</div><div class="metric-value">2.8 yrs</div></div>
+                            <div class="metric-box"><div class="metric-label">Convexity</div><div class="metric-value">0.18</div></div>
+                            <div class="metric-box"><div class="metric-label">Yield</div><div class="metric-value">4.85%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-green">%</span><span class="th-green">DV01</span><span class="th-green">DUR</span><span class="th-green">CONV</span><span class="th-green">CORR.</span><span class="th-green">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label green">2Y</div><span>45%</span><span>$14.4K</span><span>1.8</span><span>0.05</span><span>0.95</span><span>-$13.7K</span></div>
+                                <div class="table-row"><div class="row-label green">5Y</div><span>35%</span><span>$11.2K</span><span>4.2</span><span>0.15</span><span>0.92</span><span>-$10.3K</span></div>
+                                <div class="table-row"><div class="row-label green">10Y</div><span>15%</span><span>$4.8K</span><span>7.5</span><span>0.42</span><span>0.88</span><span>-$4.2K</span></div>
+                                <div class="table-row"><div class="row-label green">30Y</div><span>5%</span><span>$1.6K</span><span>16.2</span><span>2.80</span><span>0.82</span><span>-$1.3K</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">248</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$650K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$1.0M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$95M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$45M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Pod 2 CREDIT -->
+                    <div class="riskcard" id="card-credit-pod2">
+                        <div class="card-header">
+                            <span class="card-title credit">CREDIT</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-credit-pod2" onclick="openOverridesModal('credit', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +0.5%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades credit" onclick="openTradesModal('credit', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">CS01</div>
+                            <div class="primary-value">$18,500</div>
+                            <div class="primary-bar"><div class="primary-bar-fill credit" style="width:25%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">Cr. Dur</div><div class="metric-value">2.1 yrs</div></div>
+                            <div class="metric-box"><div class="metric-label">Avg PD</div><div class="metric-value">1.2%</div></div>
+                            <div class="metric-box"><div class="metric-label">Avg LGD</div><div class="metric-value">35%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-purple">%</span><span class="th-purple">CS01</span><span class="th-purple">PD</span><span class="th-purple">LGD</span><span class="th-purple">CORR.</span><span class="th-purple">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label purple">AAA-AA</div><span>25%</span><span>$4.6K</span><span>0.1%</span><span>22%</span><span>0.88</span><span>-$4.1K</span></div>
+                                <div class="table-row"><div class="row-label purple">A</div><span>40%</span><span>$7.4K</span><span>0.4%</span><span>32%</span><span>0.92</span><span>-$6.8K</span></div>
+                                <div class="table-row"><div class="row-label purple">BBB</div><span>25%</span><span>$4.6K</span><span>1.2%</span><span>38%</span><span>0.85</span><span>-$3.9K</span></div>
+                                <div class="table-row"><div class="row-label purple">HY</div><span>10%</span><span>$1.9K</span><span>3.5%</span><span>48%</span><span>0.78</span><span>-$1.5K</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">156</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$420K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$680K</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$62M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$38M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Pod 2 FX -->
+                    <div class="riskcard" id="card-fx-pod2">
+                        <div class="card-header">
+                            <span class="card-title fx">FX</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-fx-pod2" onclick="openOverridesModal('fx', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change down">▼ -0.2%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades fx" onclick="openTradesModal('fx', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">FX Delta</div>
+                            <div class="primary-value">$8.4M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill fx" style="width:20%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">FX Vega</div><div class="metric-value">$180K</div></div>
+                            <div class="metric-box"><div class="metric-label">Basis</div><div class="metric-value">28 bps</div></div>
+                            <div class="metric-box"><div class="metric-label">Pairs</div><div class="metric-value">8</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-cyan">%</span><span class="th-cyan">DELTA</span><span class="th-cyan">VEGA</span><span class="th-cyan">BASIS</span><span class="th-cyan">CORR.</span><span class="th-cyan">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label cyan">EUR</div><span>42%</span><span>$3.5M</span><span>$76K</span><span>12bp</span><span>0.92</span><span>-$3.2M</span></div>
+                                <div class="table-row"><div class="row-label cyan">JPY</div><span>28%</span><span>$2.4M</span><span>$50K</span><span>8bp</span><span>0.89</span><span>-$2.1M</span></div>
+                                <div class="table-row"><div class="row-label cyan">GBP</div><span>20%</span><span>$1.7M</span><span>$36K</span><span>5bp</span><span>0.86</span><span>-$1.5M</span></div>
+                                <div class="table-row"><div class="row-label cyan">Other</div><span>10%</span><span>$0.8M</span><span>$18K</span><span>3bp</span><span>0.72</span><span>-$0.6M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">89</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$310K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$520K</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$42M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$8.4M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Pod 2 COMMODITIES -->
+                    <div class="riskcard" id="card-commodities-pod2">
+                        <div class="card-header">
+                            <span class="card-title commodities">COMMODITIES</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-commodities-pod2" onclick="openOverridesModal('commodities', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change up">▲ +2.1%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades commodities" onclick="openTradesModal('commodities', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">Net Exposure</div>
+                            <div class="primary-value">$15.2M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill commodities" style="width:28%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">P. Sens</div><div class="metric-value">$152K</div></div>
+                            <div class="metric-box"><div class="metric-label">Basis</div><div class="metric-value">$28K</div></div>
+                            <div class="metric-box"><div class="metric-label">Roll</div><div class="metric-value">-0.5%</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-yellow">%</span><span class="th-yellow">EXP</span><span class="th-yellow">P.SENS</span><span class="th-yellow">BASIS</span><span class="th-yellow">CORR.</span><span class="th-yellow">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label yellow">Crude</div><span>50%</span><span>$7.6M</span><span>$76K</span><span>$14K</span><span>0.94</span><span>-$7.1M</span></div>
+                                <div class="table-row"><div class="row-label yellow">Gold</div><span>25%</span><span>$3.8M</span><span>$38K</span><span>$7K</span><span>0.90</span><span>-$3.4M</span></div>
+                                <div class="table-row"><div class="row-label yellow">NatGas</div><span>15%</span><span>$2.3M</span><span>$23K</span><span>$5K</span><span>0.78</span><span>-$1.8M</span></div>
+                                <div class="table-row"><div class="row-label yellow">Other</div><span>10%</span><span>$1.5M</span><span>$15K</span><span>$2K</span><span>0.68</span><span>-$1.0M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">134</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$680K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$1.1M</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$28M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$15.2M</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Pod 2 OTHER -->
+                    <div class="riskcard" id="card-other-pod2">
+                        <div class="card-header">
+                            <span class="card-title other">OTHER</span>
+                            <div class="header-right">
+                                <button class="card-warning" id="warning-other-pod2" onclick="openOverridesModal('other', 'pod2')" title="Manual price overrides active">⚠</button>
+                                <span class="card-change neutral">● 0.0%</span>
+                                <button class="btn-icon" title="Enlarge">⛶</button>
+                                <button class="btn-icon btn-trades other" onclick="openTradesModal('other', 'pod2')">Trades</button>
+                            </div>
+                        </div>
+                        <div class="primary-metric">
+                            <div class="primary-label">Net Exposure</div>
+                            <div class="primary-value">$2.4M</div>
+                            <div class="primary-bar"><div class="primary-bar-fill other" style="width:12%"></div></div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-box"><div class="metric-label">P. Sens</div><div class="metric-value">$24K</div></div>
+                            <div class="metric-box"><div class="metric-label">Vol Sens</div><div class="metric-value">$65K</div></div>
+                            <div class="metric-box"><div class="metric-label">Complx</div><div class="metric-value">Low</div></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <span></span><span class="th-gray">%</span><span class="th-gray">EXP</span><span class="th-gray">P.SENS</span><span class="th-gray">V.SENS</span><span class="th-gray">CORR.</span><span class="th-gray">0HEDGE</span>
+                            </div>
+                            <div class="table-body">
+                                <div class="table-row"><div class="row-label gray">Volatility</div><span>60%</span><span>$1.4M</span><span>$14K</span><span>$39K</span><span>0.82</span><span>-$1.2M</span></div>
+                                <div class="table-row"><div class="row-label gray">Struct.</div><span>40%</span><span>$1.0M</span><span>$10K</span><span>$26K</span><span>0.68</span><span>-$0.7M</span></div>
+                            </div>
+                        </div>
+                        <div class="bottom-metrics">
+                            <div class="bottom-metric"><div class="bottom-label">Positions</div><div class="bottom-value">45</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">VAR (95%)</div><div class="bottom-value negative">$120K</div></div>
+                            <div class="bottom-metric"><div class="bottom-label">CVAR (95%)</div><div class="bottom-value negative">$195K</div></div>
+                        </div>
+                        <div class="footer-row">
+                            <div class="footer-item"><div class="footer-label">Gross Exposure</div><div class="footer-value">$8M</div></div>
+                            <div class="footer-item"><div class="footer-label">Net Exposure</div><div class="footer-value">$2.4M</div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add Pod Button -->
+            <div class="add-pod-container">
+                <button class="add-pod-btn" onclick="addNewPod()">
+                    <span class="plus">+</span>
+                    <span>Add RiskPod</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Expand Modal -->
+    <div class="expand-modal" id="expandModal">
+        <button class="expand-modal-close" onclick="closeExpandModal()">&times;</button>
+        <div class="expand-modal-content" id="expandModalContent">
+            <!-- Card content will be cloned here -->
+        </div>
+    </div>
+
+    <!-- Calculation Modal -->
+    <div class="calc-modal" id="calcModal">
+        <div class="calc-modal-content" id="calcModalContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <!-- Trades Modal -->
+    <div class="trades-modal" id="tradesModal">
+        <div class="trades-modal-content">
+            <div class="trades-modal-header">
+                <div>
+                    <div class="trades-modal-title" id="tradesModalTitle">EQUITY Positions</div>
+                    <div class="trades-modal-subtitle">Click on a price to manually override. Changes will be marked with ⚠</div>
+                </div>
+                <button class="trades-modal-close" onclick="closeTradesModal()">×</button>
+            </div>
+            <table class="trades-table">
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Side</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Market Value</th>
+                        <th>P&L</th>
+                    </tr>
+                </thead>
+                <tbody id="tradesTableBody">
+                    <!-- Dynamic content -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Overrides Modal -->
+    <div class="overrides-modal" id="overridesModal">
+        <div class="overrides-modal-content">
+            <div class="overrides-header">
+                <div class="overrides-icon">⚠</div>
+                <div>
+                    <div class="overrides-title">Manual Price Overrides</div>
+                    <div class="overrides-explanation">
+                        This card contains securities with manually overridden prices. These overrides replace the system prices from the database.
+                        Risk calculations use your manual values until you reset them.
+                    </div>
+                </div>
+            </div>
+            <div class="overrides-list" id="overridesList">
+                <!-- Dynamic content -->
+            </div>
+            <button class="overrides-close" onclick="closeOverridesModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Global Tooltip -->
+    <div id="global-tooltip"></div>
+
+    <script>
+        // =============================================
+        // ACCESSIBILITY / COLOR BLIND MODE
+        // =============================================
+        function toggleAccessibilityMode() {
+            const toggle = document.getElementById('accessibilityToggle');
+            if (toggle.checked) {
+                document.body.classList.add('accessibility-mode');
+                localStorage.setItem('accessibilityMode', 'true');
+            } else {
+                document.body.classList.remove('accessibility-mode');
+                localStorage.setItem('accessibilityMode', 'false');
+            }
+        }
+
+        // Restore accessibility mode preference on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedMode = localStorage.getItem('accessibilityMode');
+            if (savedMode === 'true') {
+                document.getElementById('accessibilityToggle').checked = true;
+                document.body.classList.add('accessibility-mode');
+            }
+        });
+
+        // =============================================
+        // TOOLTIP SYSTEM - Shows tooltips at mouse position
+        // =============================================
+        const tooltip = document.getElementById('global-tooltip');
+        let tooltipTimeout;
+
+        document.addEventListener('mouseover', function(e) {
+            const target = e.target.closest('[data-tooltip]');
+            if (target) {
+                clearTimeout(tooltipTimeout);
+                const text = target.getAttribute('data-tooltip');
+                tooltip.textContent = text;
+                tooltip.classList.add('visible');
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (tooltip.classList.contains('visible')) {
+                // Position tooltip below and to the right of cursor
+                let x = e.clientX + 15;
+                let y = e.clientY + 20;
+
+                // Keep tooltip within viewport
+                const rect = tooltip.getBoundingClientRect();
+                const tooltipWidth = tooltip.offsetWidth || 200;
+                const tooltipHeight = tooltip.offsetHeight || 50;
+
+                // Adjust if would go off right edge
+                if (x + tooltipWidth > window.innerWidth - 20) {
+                    x = e.clientX - tooltipWidth - 15;
+                }
+                // Adjust if would go off bottom edge
+                if (y + tooltipHeight > window.innerHeight - 20) {
+                    y = e.clientY - tooltipHeight - 15;
+                }
+
+                tooltip.style.left = x + 'px';
+                tooltip.style.top = y + 'px';
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            const target = e.target.closest('[data-tooltip]');
+            if (target) {
+                tooltipTimeout = setTimeout(() => {
+                    tooltip.classList.remove('visible');
+                }, 100);
+            }
+        });
+
+        // =============================================
+        // POD MANAGEMENT
+        // =============================================
+        let podCount = 2;
+
+        function deletePod(podId) {
+            if (confirm('Are you sure you want to delete this RiskPod?')) {
+                const pod = document.getElementById(podId);
+                if (pod) {
+                    pod.style.opacity = '0';
+                    pod.style.transform = 'translateX(-100%)';
+                    pod.style.transition = 'all 0.3s ease';
+                    setTimeout(() => pod.remove(), 300);
+                }
+            }
+        }
+
+        // Portfolio Dropdown Functions
+        function toggleDropdown(podId) {
+            const menu = document.getElementById(`menu-${podId}`);
+            // Close all other dropdowns first
+            document.querySelectorAll('.portfolio-menu').forEach(m => {
+                if (m.id !== `menu-${podId}`) m.classList.remove('active');
+            });
+            menu.classList.toggle('active');
+        }
+
+        function toggleAll(podId) {
+            const menu = document.getElementById(`menu-${podId}`);
+            const checkboxes = menu.querySelectorAll('input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+            updateSelection(podId);
+        }
+
+        function updateSelection(podId) {
+            const menu = document.getElementById(`menu-${podId}`);
+            const checkboxes = menu.querySelectorAll('input[type="checkbox"]');
+            const selectedSpan = document.getElementById(`selected-${podId}`);
+            const selected = [];
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    const label = cb.nextElementSibling.textContent;
+                    selected.push(label);
+                }
+            });
+
+            const totalCount = checkboxes.length;
+
+            if (selected.length === 0) {
+                selectedSpan.textContent = 'None selected';
+                selectedSpan.classList.remove('all');
+            } else if (selected.length === totalCount) {
+                selectedSpan.textContent = 'All';
+                selectedSpan.classList.add('all');
+            } else {
+                selectedSpan.textContent = selected.join(', ');
+                selectedSpan.classList.remove('all');
+            }
+
+            // Mark pod as stale when selection changes
+            markPodStale(podId);
+        }
+
+        // =============================================
+        // CALCULATE / REFRESH SYSTEM
+        // =============================================
+
+        function markPodStale(podId) {
+            const calcBtn = document.getElementById(`calc-btn-${podId}`);
+            const timestamp = document.getElementById(`timestamp-${podId}`);
+
+            if (calcBtn) {
+                calcBtn.classList.add('stale');
+            }
+            if (timestamp) {
+                timestamp.classList.add('stale');
+            }
+        }
+
+        function markPodFresh(podId) {
+            const calcBtn = document.getElementById(`calc-btn-${podId}`);
+            const timestamp = document.getElementById(`timestamp-${podId}`);
+
+            if (calcBtn) {
+                calcBtn.classList.remove('stale');
+            }
+            if (timestamp) {
+                timestamp.classList.remove('stale');
+                // Update timestamp to current time
+                const timeSpan = timestamp.querySelector('.time');
+                if (timeSpan) {
+                    const now = new Date();
+                    timeSpan.textContent = now.toTimeString().split(' ')[0];
+                }
+            }
+        }
+
+        function calculatePod(podId) {
+            const calcBtn = document.getElementById(`calc-btn-${podId}`);
+
+            if (calcBtn.classList.contains('calculating')) return; // Prevent double-click
+
+            // Add calculating animation
+            calcBtn.classList.add('calculating');
+            calcBtn.disabled = true;
+
+            // Simulate calculation (in real app, this would call the backend)
+            setTimeout(() => {
+                calcBtn.classList.remove('calculating');
+                calcBtn.disabled = false;
+                markPodFresh(podId);
+
+                // Show brief success feedback
+                calcBtn.style.background = 'rgba(34, 197, 94, 0.4)';
+                setTimeout(() => {
+                    calcBtn.style.background = '';
+                }, 500);
+            }, 1500); // Simulate 1.5s calculation time
+        }
+
+        function refreshAllPods() {
+            const refreshBtn = document.querySelector('.refresh-all-btn');
+
+            if (refreshBtn.classList.contains('refreshing')) return; // Prevent double-click
+
+            // Add refreshing animation
+            refreshBtn.classList.add('refreshing');
+            refreshBtn.disabled = true;
+
+            // Get all pod IDs
+            const pods = document.querySelectorAll('.riskpod');
+            const podIds = Array.from(pods).map(p => p.id);
+
+            // Calculate all pods (in real app, this would be a batch API call)
+            setTimeout(() => {
+                podIds.forEach(podId => markPodFresh(podId));
+
+                refreshBtn.classList.remove('refreshing');
+                refreshBtn.disabled = false;
+
+                // Show brief success feedback
+                refreshBtn.style.background = 'rgba(34, 197, 94, 0.3)';
+                refreshBtn.style.borderColor = '#22c55e';
+                refreshBtn.style.color = '#22c55e';
+                setTimeout(() => {
+                    refreshBtn.style.background = '';
+                    refreshBtn.style.borderColor = '';
+                    refreshBtn.style.color = '';
+                }, 800);
+            }, 2000); // Simulate 2s calculation time for all pods
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.portfolio-dropdown')) {
+                document.querySelectorAll('.portfolio-menu').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        function addNewPod() {
+            podCount++;
+            const newPodHtml = `
+                <section class="riskpod" id="pod${podCount}" style="opacity: 0; transform: translateY(20px);">
+                    <button class="pod-delete" onclick="deletePod('pod${podCount}')" title="Delete Pod">🗑️</button>
+                    <div class="pod-header">
+                        <div class="pod-left">
+                            <span class="pod-number">Pod ${podCount}</span>
+                            <div class="portfolio-dropdown" id="dropdown-pod${podCount}">
+                                <button class="portfolio-btn" onclick="toggleDropdown('pod${podCount}')">
+                                    Portfolios <span class="arrow">▼</span>
+                                </button>
+                                <div class="portfolio-menu" id="menu-pod${podCount}">
+                                    <div class="portfolio-menu-header">
+                                        <span>Select Portfolios</span>
+                                        <button class="select-all-btn" onclick="toggleAll('pod${podCount}')">Select All</button>
+                                    </div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-alpha" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-alpha">Alpha Fund</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-beta" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-beta">Beta Fund</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-gamma" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-gamma">Gamma Strategies</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-delta" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-delta">Delta Partners</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-epsilon" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-epsilon">Epsilon Capital</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-zeta" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-zeta">Zeta Macro</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-eta" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-eta">Eta Quant</label></div>
+                                    <div class="portfolio-item"><input type="checkbox" id="pod${podCount}-theta" onchange="updateSelection('pod${podCount}')"><label for="pod${podCount}-theta">Theta Arbitrage</label></div>
+                                </div>
+                            </div>
+                            <span class="selected-portfolios" id="selected-pod${podCount}">None selected</span>
+                            <button class="pod-calculate-btn stale" id="calc-btn-pod${podCount}" onclick="calculatePod('pod${podCount}')" title="Recalculate this pod">
+                                <span class="icon">↻</span> Calculate
+                            </button>
+                            <div class="pod-summary">
+                                <div class="pod-summary-item"><span class="label">Gross:</span><span class="value">$0</span></div>
+                                <div class="pod-summary-item"><span class="label">Net:</span><span class="value">$0</span></div>
+                                <div class="pod-summary-item"><span class="label">Positions:</span><span class="value">0</span></div>
+                            </div>
+                            <span class="pod-timestamp stale" id="timestamp-pod${podCount}">
+                                Last: <span class="time">--:--:--</span><span class="stale-indicator">STALE</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="cards-row">
+                        <div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 40px; color: #64748b; font-size: 14px;">
+                            Select portfolios to view risk cards
+                        </div>
+                    </div>
+                </section>
+            `;
+            const addButton = document.querySelector('.add-pod-container');
+            addButton.insertAdjacentHTML('beforebegin', newPodHtml);
+
+            // Animate in
+            setTimeout(() => {
+                const newPod = document.getElementById(`pod${podCount}`);
+                newPod.style.transition = 'all 0.3s ease';
+                newPod.style.opacity = '1';
+                newPod.style.transform = 'translateY(0)';
+            }, 50);
+        }
+
+        // Expand Modal Functionality
+        function openExpandModal(cardElement) {
+            const modal = document.getElementById('expandModal');
+            const content = document.getElementById('expandModalContent');
+            const clone = cardElement.cloneNode(true);
+            clone.style.width = '600px';
+            clone.style.height = 'auto';
+            clone.style.minHeight = '600px';
+            clone.style.transform = 'none';
+            content.innerHTML = '';
+            content.appendChild(clone);
+            modal.classList.add('active');
+        }
+
+        function closeExpandModal() {
+            document.getElementById('expandModal').classList.remove('active');
+        }
+
+        // Calculation Modal Functionality
+        const calculations = {
+            'Net Delta': {
+                title: 'NET DELTA CALCULATION',
+                lines: [
+                    { label: 'Long Delta Positions', value: '$68.2M' },
+                    { label: 'Short Delta Positions', value: '-$25.7M' },
+                    { label: 'Options Delta (Adj)', value: '+$2.8M' },
+                    { label: 'FX Hedge Impact', value: '-$2.8M' }
+                ],
+                result: { label: 'Net Delta', value: '$42.5M' }
+            },
+            'DV01': {
+                title: 'DV01 CALCULATION',
+                lines: [
+                    { label: 'Bond Notional', value: '$180M' },
+                    { label: 'Avg Modified Duration', value: '4.72 yrs' },
+                    { label: 'DV01 = Notional × Dur × 0.0001', value: '' }
+                ],
+                result: { label: 'DV01', value: '$85,000' }
+            },
+            'CS01': {
+                title: 'CS01 CALCULATION',
+                lines: [
+                    { label: 'Credit Notional', value: '$95M' },
+                    { label: 'Avg Spread Duration', value: '3.8 yrs' },
+                    { label: 'CS01 = Notional × SpDur × 0.0001', value: '' }
+                ],
+                result: { label: 'CS01', value: '$42,000' }
+            },
+            'FX Delta': {
+                title: 'FX DELTA CALCULATION',
+                lines: [
+                    { label: 'Spot FX Positions', value: '$22.5M' },
+                    { label: 'Forward Contracts', value: '-$8.2M' },
+                    { label: 'FX Options Delta', value: '+$3.9M' }
+                ],
+                result: { label: 'FX Delta', value: '$18.2M' }
+            },
+            'Net Exposure': {
+                title: 'NET EXPOSURE CALCULATION',
+                lines: [
+                    { label: 'Long Positions', value: '$38.5M' },
+                    { label: 'Short Positions', value: '-$10.0M' }
+                ],
+                result: { label: 'Net Exposure', value: '$28.5M' }
+            },
+            'Beta': {
+                title: 'PORTFOLIO BETA',
+                lines: [
+                    { label: 'Covariance (Port, SPX)', value: '0.0245' },
+                    { label: 'Variance (SPX)', value: '0.0213' },
+                    { label: 'Beta = Cov / Var', value: '' }
+                ],
+                result: { label: 'Beta', value: '1.15' }
+            },
+            'Vega': {
+                title: 'VEGA CALCULATION',
+                lines: [
+                    { label: 'Call Options Vega', value: '$185K' },
+                    { label: 'Put Options Vega', value: '$95K' }
+                ],
+                result: { label: 'Total Vega', value: '$280K' }
+            },
+            'Gamma': {
+                title: 'GAMMA CALCULATION',
+                lines: [
+                    { label: 'Call Options Gamma', value: '$28K' },
+                    { label: 'Put Options Gamma', value: '$14K' }
+                ],
+                result: { label: 'Total Gamma', value: '$42K' }
+            },
+            'Duration': {
+                title: 'DURATION CALCULATION',
+                lines: [
+                    { label: 'DV01-Weighted Sum', value: '756,000' },
+                    { label: 'Total DV01', value: '$85,000' },
+                    { label: 'Duration = Sum / DV01 / 100', value: '' }
+                ],
+                result: { label: 'Duration', value: '4.2 yrs' }
+            },
+            'Convexity': {
+                title: 'CONVEXITY CALCULATION',
+                lines: [
+                    { label: 'Σ(Notional × Convexity)', value: '81,000' },
+                    { label: 'Total Notional', value: '$180M' },
+                    { label: 'Wtd Convexity = Σ / Notional', value: '' }
+                ],
+                result: { label: 'Convexity', value: '0.45' }
+            },
+            'Yield': {
+                title: 'YIELD CALCULATION',
+                lines: [
+                    { label: 'Σ(Notional × YTM)', value: '$9.45M' },
+                    { label: 'Total Notional', value: '$180M' },
+                    { label: 'Wtd Yield = Σ / Notional', value: '' }
+                ],
+                result: { label: 'Avg Yield', value: '5.25%' }
+            },
+            'Gross Exposure': {
+                title: 'GROSS EXPOSURE',
+                lines: [
+                    { label: 'Long Market Value', value: '$181.2M' },
+                    { label: 'Short Market Value', value: '$138.8M' },
+                    { label: 'Gross = |Long| + |Short|', value: '' }
+                ],
+                result: { label: 'Gross Exposure', value: '$320M' }
+            },
+            'Net Exposure (footer)': {
+                title: 'NET EXPOSURE',
+                lines: [
+                    { label: 'Long Market Value', value: '$181.2M' },
+                    { label: 'Short Market Value', value: '-$138.8M' },
+                    { label: 'Net = Long + Short', value: '' }
+                ],
+                result: { label: 'Net Exposure', value: '$42.5M' }
+            }
+        };
+
+        function openCalcModal(metricName) {
+            const calc = calculations[metricName];
+            if (!calc) return;
+
+            const modal = document.getElementById('calcModal');
+            const content = document.getElementById('calcModalContent');
+
+            let html = `<div class="calc-modal-title">${calc.title}</div>`;
+            html += '<div class="calc-formula">';
+            calc.lines.forEach(line => {
+                html += `<div class="calc-line"><span class="label">${line.label}</span><span class="value">${line.value}</span></div>`;
+            });
+            html += `<div class="calc-line result"><span class="label">${calc.result.label}</span><span class="value">${calc.result.value}</span></div>`;
+            html += '</div>';
+            html += '<button class="calc-close" onclick="closeCalcModal()">Close</button>';
+
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeCalcModal() {
+            document.getElementById('calcModal').classList.remove('active');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Expand buttons
+            document.querySelectorAll('.btn-icon[title="Enlarge"]').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const card = this.closest('.riskcard');
+                    openExpandModal(card);
+                });
+            });
+
+            // Primary metrics (clickable)
+            document.querySelectorAll('.primary-metric').forEach(metric => {
+                metric.classList.add('clickable-metric');
+                metric.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const label = this.querySelector('.primary-label').textContent.trim();
+                    openCalcModal(label);
+                });
+            });
+
+            // Metric boxes (clickable)
+            document.querySelectorAll('.metric-box').forEach(box => {
+                box.classList.add('clickable-metric');
+                box.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const label = this.querySelector('.metric-label').textContent.trim();
+                    openCalcModal(label);
+                });
+            });
+
+            // Footer items (Gross/Net clickable)
+            document.querySelectorAll('.footer-item').forEach(item => {
+                item.classList.add('clickable-metric');
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const label = this.querySelector('.footer-label').textContent.trim();
+                    if (label.includes('Gross')) {
+                        openCalcModal('Gross Exposure');
+                    } else if (label.includes('Net')) {
+                        openCalcModal('Net Exposure (footer)');
+                    }
+                });
+            });
+        });
+
+        // Close modals on background click
+        document.getElementById('expandModal').addEventListener('click', function(e) {
+            if (e.target === this) closeExpandModal();
+        });
+        document.getElementById('calcModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCalcModal();
+        });
+
+        // Close modals on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeExpandModal();
+                closeCalcModal();
+                closeTradesModal();
+                closeOverridesModal();
+            }
+        });
+
+        // =============================================
+        // MANUAL PRICE OVERRIDES SYSTEM
+        // =============================================
+
+        // Store for manual overrides: { 'equity-pod1': { 'AAPL': { original: 185.50, override: 190.00 }, ... } }
+        const manualOverrides = {};
+
+        // Sample trade data for demonstration
+        const sampleTrades = {
+            'equity': [
+                { ticker: 'AAPL', side: 'Long', qty: 15000, price: 185.50, pnl: 125000 },
+                { ticker: 'MSFT', side: 'Long', qty: 8500, price: 378.20, pnl: 89000 },
+                { ticker: 'GOOGL', side: 'Long', qty: 3200, price: 141.80, pnl: -23000 },
+                { ticker: 'NVDA', side: 'Long', qty: 5000, price: 495.20, pnl: 340000 },
+                { ticker: 'TSLA', side: 'Short', qty: 2500, price: 248.50, pnl: 67000 },
+                { ticker: 'META', side: 'Long', qty: 4200, price: 505.30, pnl: 156000 },
+                { ticker: 'AMZN', side: 'Long', qty: 6800, price: 178.90, pnl: 45000 },
+                { ticker: 'JPM', side: 'Short', qty: 3500, price: 198.40, pnl: -28000 },
+            ],
+            'rates': [
+                { ticker: 'TLT', side: 'Long', qty: 25000, price: 92.50, pnl: -180000 },
+                { ticker: 'IEF', side: 'Long', qty: 18000, price: 98.20, pnl: -45000 },
+                { ticker: 'SHY', side: 'Short', qty: 12000, price: 82.10, pnl: 23000 },
+            ],
+            'credit': [
+                { ticker: 'LQD', side: 'Long', qty: 15000, price: 108.50, pnl: 67000 },
+                { ticker: 'HYG', side: 'Long', qty: 22000, price: 76.80, pnl: -34000 },
+                { ticker: 'JNK', side: 'Short', qty: 8000, price: 92.30, pnl: 45000 },
+            ],
+            'fx': [
+                { ticker: 'FXE', side: 'Long', qty: 30000, price: 103.20, pnl: 89000 },
+                { ticker: 'FXY', side: 'Short', qty: 25000, price: 64.50, pnl: 120000 },
+                { ticker: 'FXB', side: 'Long', qty: 18000, price: 122.40, pnl: -56000 },
+            ],
+            'commodities': [
+                { ticker: 'GLD', side: 'Long', qty: 12000, price: 192.80, pnl: 234000 },
+                { ticker: 'USO', side: 'Long', qty: 35000, price: 78.50, pnl: -89000 },
+                { ticker: 'SLV', side: 'Short', qty: 8000, price: 22.30, pnl: 34000 },
+            ],
+            'other': [
+                { ticker: 'VXX', side: 'Long', qty: 5000, price: 18.20, pnl: -45000 },
+                { ticker: 'UVXY', side: 'Short', qty: 2500, price: 28.40, pnl: 67000 },
+            ]
+        };
+
+        let currentTradesAsset = '';
+        let currentTradesPod = '';
+
+        function openTradesModal(asset, pod) {
+            currentTradesAsset = asset;
+            currentTradesPod = pod;
+            const key = `${asset}-${pod}`;
+
+            // Set title
+            document.getElementById('tradesModalTitle').textContent = `${asset.toUpperCase()} Positions`;
+
+            // Build table
+            const tbody = document.getElementById('tradesTableBody');
+            const trades = sampleTrades[asset] || [];
+            const overrides = manualOverrides[key] || {};
+
+            tbody.innerHTML = trades.map(trade => {
+                const hasOverride = overrides[trade.ticker];
+                const displayPrice = hasOverride ? hasOverride.override : trade.price;
+                const marketValue = trade.qty * displayPrice;
+
+                return `
+                    <tr>
+                        <td class="ticker-cell">${trade.ticker}</td>
+                        <td class="${trade.side === 'Long' ? 'side-long' : 'side-short'}">${trade.side}</td>
+                        <td>${trade.qty.toLocaleString()}</td>
+                        <td>
+                            <div class="price-input-wrapper">
+                                <input type="number"
+                                       class="price-input ${hasOverride ? 'modified' : ''}"
+                                       id="price-${trade.ticker}"
+                                       value="${displayPrice.toFixed(2)}"
+                                       data-original="${trade.price}"
+                                       data-ticker="${trade.ticker}"
+                                       step="0.01">
+                                <button class="price-edit-btn save" onclick="savePrice('${trade.ticker}')">Save</button>
+                                ${hasOverride ? `<span class="original-price">$${trade.price.toFixed(2)}</span>` : ''}
+                            </div>
+                        </td>
+                        <td>$${marketValue.toLocaleString()}</td>
+                        <td style="color: ${trade.pnl >= 0 ? '#22c55e' : '#ef4444'}">
+                            ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toLocaleString()}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('tradesModal').classList.add('active');
+        }
+
+        function closeTradesModal() {
+            document.getElementById('tradesModal').classList.remove('active');
+        }
+
+        function savePrice(ticker) {
+            const input = document.getElementById(`price-${ticker}`);
+            const newPrice = parseFloat(input.value);
+            const originalPrice = parseFloat(input.dataset.original);
+            const key = `${currentTradesAsset}-${currentTradesPod}`;
+
+            if (!manualOverrides[key]) {
+                manualOverrides[key] = {};
+            }
+
+            if (Math.abs(newPrice - originalPrice) < 0.001) {
+                // Price reset to original - remove override
+                delete manualOverrides[key][ticker];
+                input.classList.remove('modified');
+            } else {
+                // Price changed - save override
+                manualOverrides[key][ticker] = {
+                    original: originalPrice,
+                    override: newPrice
+                };
+                input.classList.add('modified');
+            }
+
+            // Update warning icon visibility
+            updateWarningIcon(currentTradesAsset, currentTradesPod);
+
+            // Refresh the modal to show updated state
+            openTradesModal(currentTradesAsset, currentTradesPod);
+        }
+
+        function updateWarningIcon(asset, pod) {
+            const key = `${asset}-${pod}`;
+            const warningBtn = document.getElementById(`warning-${asset}-${pod}`);
+            if (!warningBtn) return;
+
+            const overrides = manualOverrides[key];
+            const hasOverrides = overrides && Object.keys(overrides).length > 0;
+
+            if (hasOverrides) {
+                warningBtn.classList.add('visible');
+            } else {
+                warningBtn.classList.remove('visible');
+            }
+        }
+
+        function openOverridesModal(asset, pod) {
+            const key = `${asset}-${pod}`;
+            const overrides = manualOverrides[key] || {};
+            const overridesList = document.getElementById('overridesList');
+
+            currentTradesAsset = asset;
+            currentTradesPod = pod;
+
+            const entries = Object.entries(overrides);
+
+            if (entries.length === 0) {
+                overridesList.innerHTML = '<div class="no-overrides">No manual overrides for this card.</div>';
+            } else {
+                overridesList.innerHTML = entries.map(([ticker, data]) => `
+                    <div class="override-item" id="override-item-${ticker}">
+                        <div class="override-item-header">
+                            <span class="override-ticker">${ticker}</span>
+                            <span class="override-type">Price Override</span>
+                        </div>
+                        <div class="override-input-row">
+                            <input type="number"
+                                   class="override-input"
+                                   id="override-input-${ticker}"
+                                   value="${data.override.toFixed(2)}"
+                                   step="0.01">
+                            <button class="override-save-btn" onclick="updateOverride('${ticker}')">Update</button>
+                        </div>
+                        <div class="override-values">
+                            <div class="override-original">Original: <span>$${data.original.toFixed(2)}</span></div>
+                            <div class="override-current">Current: $${data.override.toFixed(2)}</div>
+                        </div>
+                        <div class="override-actions">
+                            <button class="override-reset-btn" onclick="resetOverride('${ticker}')">
+                                Reset to System Price
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('overridesModal').classList.add('active');
+        }
+
+        function closeOverridesModal() {
+            document.getElementById('overridesModal').classList.remove('active');
+        }
+
+        function updateOverride(ticker) {
+            const input = document.getElementById(`override-input-${ticker}`);
+            const newPrice = parseFloat(input.value);
+            const key = `${currentTradesAsset}-${currentTradesPod}`;
+
+            if (manualOverrides[key] && manualOverrides[key][ticker]) {
+                manualOverrides[key][ticker].override = newPrice;
+                // Refresh modal
+                openOverridesModal(currentTradesAsset, currentTradesPod);
+            }
+        }
+
+        function resetOverride(ticker) {
+            const key = `${currentTradesAsset}-${currentTradesPod}`;
+
+            if (manualOverrides[key]) {
+                delete manualOverrides[key][ticker];
+
+                // If no more overrides, remove the key
+                if (Object.keys(manualOverrides[key]).length === 0) {
+                    delete manualOverrides[key];
+                }
+            }
+
+            // Update warning icon
+            updateWarningIcon(currentTradesAsset, currentTradesPod);
+
+            // Refresh or close modal
+            const remaining = manualOverrides[key];
+            if (!remaining || Object.keys(remaining).length === 0) {
+                closeOverridesModal();
+            } else {
+                openOverridesModal(currentTradesAsset, currentTradesPod);
+            }
+        }
+
+        // Close trades modal on background click
+        document.getElementById('tradesModal').addEventListener('click', function(e) {
+            if (e.target === this) closeTradesModal();
+        });
+
+        // Close overrides modal on background click
+        document.getElementById('overridesModal').addEventListener('click', function(e) {
+            if (e.target === this) closeOverridesModal();
+        });
+    </script>
+</body>
+</html>

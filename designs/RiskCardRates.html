@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RiskCard - RATES</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            width: 640px;
+            color: #e2e8f0;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3CD574;
+            letter-spacing: 1px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .change-indicator {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .change-indicator.up { color: #22c55e; }
+        .change-indicator.down { color: #ef4444; }
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(51, 65, 85, 0.5);
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+        }
+        .btn-trades {
+            padding: 6px 12px;
+            width: auto;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .primary-metric {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .primary-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .primary-value {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #f1f5f9;
+        }
+        .primary-bar {
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+        .primary-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3CD574, #6EE7A0);
+            border-radius: 3px;
+            width: 55%;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .metric-box {
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 10px;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #f1f5f9;
+        }
+
+        .table-container {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            position: relative;
+        }
+        .table-header {
+            display: grid;
+            grid-template-columns: 60px repeat(6, 1fr);
+            background: rgba(59, 130, 246, 0.25);
+            padding: 12px 16px;
+            font-size: 11px;
+            color: #3CD574;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            z-index: 10;
+        }
+        .table-header span {
+            display: inline-flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 2px;
+            white-space: nowrap;
+            position: relative;
+        }
+        .table-header span:first-child {
+            justify-content: flex-start;
+        }
+        .table-row {
+            display: grid;
+            grid-template-columns: 60px repeat(6, 1fr);
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            font-size: 13px;
+            align-items: center;
+            position: relative;
+        }
+        .table-row:nth-child(odd) {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .table-row:nth-child(even) {
+            background: rgba(30, 41, 59, 0.3);
+        }
+        .table-row:last-child { border-bottom: none; }
+        .row-label {
+            color: #3CD574;
+            font-weight: 600;
+            position: relative;
+        }
+        .table-row span {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #cbd5e1;
+            text-align: center;
+        }
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        [data-tooltip]:hover {
+            z-index: 500;
+        }
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            border: 1px solid #3b82f6;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 400;
+            white-space: nowrap;
+            z-index: 9999;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+        [data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #3b82f6;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .table-row:hover {
+            background: rgba(59, 130, 246, 0.15);
+            z-index: 100;
+        }
+
+        .bottom-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .bottom-metric { text-align: center; }
+        .bottom-label {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .bottom-value {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #e2e8f0;
+        }
+        .bottom-value.negative { color: #ef4444; }
+
+        .footer-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .footer-item {
+            background: rgba(51, 65, 85, 0.4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .footer-item:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .footer-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .footer-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* Clickable metrics */
+        .clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clickable:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .primary-metric.clickable:hover {
+            background: rgba(60, 213, 116, 0.1);
+        }
+
+        /* Calculation Modal */
+        .calc-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .calc-modal-overlay.active {
+            display: flex;
+        }
+        .calc-modal {
+            background: #1e293b;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        .calc-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .calc-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3CD574;
+        }
+        .calc-modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .calc-modal-close:hover {
+            color: #e2e8f0;
+        }
+        .calc-formula {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #60a5fa;
+        }
+        .calc-breakdown {
+            margin-bottom: 16px;
+        }
+        .calc-breakdown-title {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .calc-breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+        }
+        .calc-breakdown-row:last-child {
+            border-bottom: none;
+        }
+        .calc-breakdown-label {
+            color: #cbd5e1;
+        }
+        .calc-breakdown-value {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #f1f5f9;
+        }
+        .calc-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            margin-top: 8px;
+            border-top: 2px solid rgba(60, 213, 116, 0.3);
+            font-weight: 600;
+        }
+        .calc-total-label {
+            color: #3CD574;
+        }
+        .calc-total-value {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #3CD574;
+            font-size: 16px;
+        }
+        .calc-timestamp {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title" data-tooltip="Interest rate risk across all bond and swap positions">RATES</span>
+            <div class="header-right">
+                <span class="change-indicator down">▼ -0.8%</span>
+                <button class="btn-icon" title="Enlarge">⛶</button>
+                <button class="btn-icon btn-trades" title="View Trades">Trades</button>
+            </div>
+        </div>
+
+        <div class="primary-metric clickable" onclick="showCalcModal('dv01')">
+            <div class="primary-label">DV01</div>
+            <div class="primary-value">$85,000</div>
+            <div class="primary-bar">
+                <div class="primary-bar-fill"></div>
+            </div>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-box clickable" onclick="showCalcModal('duration')">
+                <div class="metric-label">Duration</div>
+                <div class="metric-value">4.2 yrs</div>
+            </div>
+            <div class="metric-box clickable" onclick="showCalcModal('convexity')">
+                <div class="metric-label">Convexity</div>
+                <div class="metric-value">0.45</div>
+            </div>
+            <div class="metric-box clickable" onclick="showCalcModal('yield')">
+                <div class="metric-label">Yield</div>
+                <div class="metric-value">5.25%</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <span></span>
+                <span data-tooltip="Percentage of total rates exposure">%</span>
+                <span data-tooltip="Dollar Value of 01 - P&L from 1bp move">DV01</span>
+                <span data-tooltip="Modified duration in years">DUR</span>
+                <span data-tooltip="Convexity adjustment for large moves">CONV</span>
+                <span data-tooltip="1-month rolling correlation to Anchor">CORR.</span>
+                <span data-tooltip="Notional to trade for zero exposure">0HEDGE</span>
+            </div>
+            <div class="table-row">
+                <div class="row-label" data-tooltip="0-3 years. Anchor: 2Y Treasury Future (ZT)">2Y</div>
+                <span>21%</span>
+                <span>$18K</span>
+                <span>1.9</span>
+                <span>0.08</span>
+                <span>0.92</span>
+                <span>-$16.5K</span>
+            </div>
+            <div class="table-row">
+                <div class="row-label" data-tooltip="3-7 years. Anchor: 5Y Treasury Future (ZF)">5Y</div>
+                <span>38%</span>
+                <span>$32K</span>
+                <span>4.6</span>
+                <span>0.25</span>
+                <span>0.89</span>
+                <span>-$28.5K</span>
+            </div>
+            <div class="table-row">
+                <div class="row-label" data-tooltip="7-15 years. Anchor: 10Y Treasury Future (ZN)">10Y</div>
+                <span>33%</span>
+                <span>$28K</span>
+                <span>8.2</span>
+                <span>0.72</span>
+                <span>0.85</span>
+                <span>-$23.8K</span>
+            </div>
+            <div class="table-row">
+                <div class="row-label" data-tooltip="15+ years. Anchor: Ultra Bond Future (UB)">30Y</div>
+                <span>8%</span>
+                <span>$7K</span>
+                <span>18.5</span>
+                <span>3.80</span>
+                <span>0.78</span>
+                <span>-$5.5K</span>
+            </div>
+        </div>
+
+        <div class="bottom-metrics">
+            <div class="bottom-metric">
+                <div class="bottom-label" data-tooltip="Total number of positions in rates">Positions</div>
+                <div class="bottom-value">156</div>
+            </div>
+            <div class="bottom-metric">
+                <div class="bottom-label" data-tooltip="Max 1-day loss with 95% confidence">VAR (95%)</div>
+                <div class="bottom-value negative">$1.8M</div>
+            </div>
+            <div class="bottom-metric">
+                <div class="bottom-label" data-tooltip="Expected loss when VAR is exceeded">CVAR (95%)</div>
+                <div class="bottom-value negative">$2.9M</div>
+            </div>
+        </div>
+
+        <div class="footer-row">
+            <div class="footer-item" onclick="showCalcModal('gross')">
+                <div class="footer-label">Gross Exposure</div>
+                <div class="footer-value">$180M</div>
+            </div>
+            <div class="footer-item" onclick="showCalcModal('net')">
+                <div class="footer-label">Net Exposure</div>
+                <div class="footer-value">$120M</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculation Modal -->
+    <div class="calc-modal-overlay" id="calcModal" onclick="hideCalcModal(event)">
+        <div class="calc-modal" onclick="event.stopPropagation()">
+            <div class="calc-modal-header">
+                <span class="calc-modal-title" id="calcModalTitle">DV01 Calculation</span>
+                <button class="calc-modal-close" onclick="hideCalcModal()">&times;</button>
+            </div>
+            <div id="calcModalContent">
+                <!-- Content injected by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const calcData = {
+            dv01: {
+                title: 'DV01 Calculation',
+                formula: 'Total DV01 = Σ (Position DV01)',
+                breakdown: [
+                    { label: '2Y Bucket (21%)', value: '$18,000' },
+                    { label: '5Y Bucket (38%)', value: '$32,000' },
+                    { label: '10Y Bucket (33%)', value: '$28,000' },
+                    { label: '30Y Bucket (8%)', value: '$7,000' }
+                ],
+                total: { label: 'Total DV01', value: '$85,000' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            },
+            duration: {
+                title: 'Duration Calculation',
+                formula: 'Weighted Duration = Σ (DV01ᵢ × Durationᵢ) / Total DV01',
+                breakdown: [
+                    { label: '2Y Bucket: $18K × 1.9 yrs', value: '34,200' },
+                    { label: '5Y Bucket: $32K × 4.6 yrs', value: '147,200' },
+                    { label: '10Y Bucket: $28K × 8.2 yrs', value: '229,600' },
+                    { label: '30Y Bucket: $7K × 18.5 yrs', value: '129,500' },
+                    { label: 'Sum of weighted durations', value: '540,500' },
+                    { label: 'Divided by Total DV01', value: '÷ $85,000' }
+                ],
+                total: { label: 'Weighted Duration', value: '4.2 yrs' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            },
+            convexity: {
+                title: 'Convexity Calculation',
+                formula: 'Weighted Convexity = Σ (DV01ᵢ × Convexityᵢ) / Total DV01',
+                breakdown: [
+                    { label: '2Y Bucket: $18K × 0.08', value: '1,440' },
+                    { label: '5Y Bucket: $32K × 0.25', value: '8,000' },
+                    { label: '10Y Bucket: $28K × 0.72', value: '20,160' },
+                    { label: '30Y Bucket: $7K × 3.80', value: '26,600' },
+                    { label: 'Sum of weighted convexity', value: '56,200' },
+                    { label: 'Divided by Total DV01', value: '÷ $85,000' }
+                ],
+                total: { label: 'Weighted Convexity', value: '0.45' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            },
+            yield: {
+                title: 'Yield Calculation',
+                formula: 'Weighted Yield = Σ (Notionalᵢ × Yieldᵢ) / Total Notional',
+                breakdown: [
+                    { label: '2Y Bucket: $37.8M × 4.85%', value: '$1.83M' },
+                    { label: '5Y Bucket: $68.4M × 5.12%', value: '$3.50M' },
+                    { label: '10Y Bucket: $59.4M × 5.45%', value: '$3.24M' },
+                    { label: '30Y Bucket: $14.4M × 5.72%', value: '$0.82M' },
+                    { label: 'Total Yield Income', value: '$9.39M' },
+                    { label: 'Divided by Total Notional', value: '÷ $180M' }
+                ],
+                total: { label: 'Weighted Avg Yield', value: '5.25%' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            },
+            gross: {
+                title: 'Gross Exposure Calculation',
+                formula: 'Gross Exposure = Σ |Long Notional| + Σ |Short Notional|',
+                breakdown: [
+                    { label: '2Y Bucket - Long', value: '$25.2M' },
+                    { label: '2Y Bucket - Short', value: '$12.6M' },
+                    { label: '5Y Bucket - Long', value: '$45.6M' },
+                    { label: '5Y Bucket - Short', value: '$22.8M' },
+                    { label: '10Y Bucket - Long', value: '$39.6M' },
+                    { label: '10Y Bucket - Short', value: '$19.8M' },
+                    { label: '30Y Bucket - Long', value: '$9.6M' },
+                    { label: '30Y Bucket - Short', value: '$4.8M' }
+                ],
+                total: { label: 'Total Gross Exposure', value: '$180M' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            },
+            net: {
+                title: 'Net Exposure Calculation',
+                formula: 'Net Exposure = Σ Long Notional - Σ Short Notional',
+                breakdown: [
+                    { label: '2Y Bucket (Long - Short)', value: '$25.2M - $12.6M = $12.6M' },
+                    { label: '5Y Bucket (Long - Short)', value: '$45.6M - $22.8M = $22.8M' },
+                    { label: '10Y Bucket (Long - Short)', value: '$39.6M - $19.8M = $19.8M' },
+                    { label: '30Y Bucket (Long - Short)', value: '$9.6M - $4.8M = $4.8M' },
+                    { label: '', value: '' },
+                    { label: 'Total Long Exposure', value: '$120M' },
+                    { label: 'Total Short Exposure', value: '$60M' }
+                ],
+                total: { label: 'Total Net Exposure', value: '$120M' },
+                timestamp: '2026-01-13 14:30:00 UTC'
+            }
+        };
+
+        function showCalcModal(metric) {
+            const data = calcData[metric];
+            if (!data) return;
+
+            document.getElementById('calcModalTitle').textContent = data.title;
+
+            let html = `<div class="calc-formula">${data.formula}</div>`;
+            html += '<div class="calc-breakdown">';
+            html += '<div class="calc-breakdown-title">Breakdown</div>';
+
+            data.breakdown.forEach(item => {
+                html += `<div class="calc-breakdown-row">
+                    <span class="calc-breakdown-label">${item.label}</span>
+                    <span class="calc-breakdown-value">${item.value}</span>
+                </div>`;
+            });
+
+            html += `<div class="calc-total">
+                <span class="calc-total-label">${data.total.label}</span>
+                <span class="calc-total-value">${data.total.value}</span>
+            </div>`;
+            html += '</div>';
+
+            html += `<div class="calc-timestamp">Last calculated: ${data.timestamp}</div>`;
+
+            document.getElementById('calcModalContent').innerHTML = html;
+            document.getElementById('calcModal').classList.add('active');
+        }
+
+        function hideCalcModal(event) {
+            if (!event || event.target.id === 'calcModal') {
+                document.getElementById('calcModal').classList.remove('active');
+            }
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') hideCalcModal();
+        });
+    </script>
+</body>
+</html>

@@ -874,3 +874,604 @@ class RiskPodService:
             return float(row.get('total_cs01') or 0)
         else:
             return float(row.get('net_exposure') or 0)
+
+    # =========================================================================
+    # Riskboard Dashboard Methods (Multi-Book Aggregation)
+    # =========================================================================
+
+    def get_risk_by_asset_class_multi_book(
+        self,
+        book_ids: List[UUID],
+    ) -> List[Dict[str, Any]]:
+        """
+        Get risk aggregated by asset class for multiple selected books.
+        This is the core method for RiskPod cards in the dashboard.
+
+        Args:
+            book_ids: List of book IDs to aggregate
+
+        Returns:
+            List of asset class risk summaries aggregated across selected books
+        """
+        if not book_ids:
+            return []
+
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        # Convert UUIDs to strings for query
+        book_id_strs = [str(bid) for bid in book_ids]
+
+        cur.execute("""
+            SELECT
+                s.asset_class,
+                COUNT(*) as position_count,
+                COUNT(DISTINCT p.book_id) as book_count,
+                SUM(ABS(p.market_value)) as gross_exposure,
+                SUM(CASE WHEN p.direction = 'long' THEN p.market_value ELSE -p.market_value END) as net_exposure,
+                SUM(CASE WHEN p.direction = 'long' THEN p.market_value ELSE 0 END) as long_exposure,
+                SUM(CASE WHEN p.direction = 'short' THEN ABS(p.market_value) ELSE 0 END) as short_exposure,
+                SUM(COALESCE(p.delta, 0)) as total_delta,
+                SUM(COALESCE(p.gamma, 0)) as total_gamma,
+                SUM(COALESCE(p.vega, 0)) as total_vega,
+                SUM(COALESCE(p.theta, 0)) as total_theta,
+                SUM(COALESCE(p.rho, 0)) as total_rho,
+                SUM(COALESCE(p.dv01, 0)) as total_dv01,
+                SUM(COALESCE(p.cs01, 0)) as total_cs01,
+                SUM(COALESCE(p.convexity, 0)) as total_convexity
+            FROM positions p
+            JOIN securities s ON p.security_id = s.id
+            WHERE p.book_id = ANY(%s::uuid[])
+              AND p.quantity != 0
+            GROUP BY s.asset_class
+            ORDER BY gross_exposure DESC
+        """, (book_id_strs,))
+
+        results = cur.fetchall()
+
+        return [
+            {
+                'asset_class': r['asset_class'],
+                'asset_class_display': self._format_asset_class(r['asset_class']),
+                'position_count': r['position_count'],
+                'book_count': r['book_count'],
+                'gross_exposure': float(r['gross_exposure'] or 0),
+                'net_exposure': float(r['net_exposure'] or 0),
+                'long_exposure': float(r['long_exposure'] or 0),
+                'short_exposure': float(r['short_exposure'] or 0),
+                'delta': float(r['total_delta'] or 0),
+                'gamma': float(r['total_gamma'] or 0),
+                'vega': float(r['total_vega'] or 0),
+                'theta': float(r['total_theta'] or 0),
+                'rho': float(r['total_rho'] or 0),
+                'dv01': float(r['total_dv01'] or 0),
+                'cs01': float(r['total_cs01'] or 0),
+                'convexity': float(r['total_convexity'] or 0),
+                'primary_risk_metric': self._get_primary_metric(r['asset_class']),
+                'primary_risk_value': self._get_primary_value(r),
+            }
+            for r in results
+        ]
+
+    def get_risk_summary(
+        self,
+        tenant_id: UUID,
+        book_ids: Optional[List[UUID]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get risk summary for the Riskboard top bar.
+        Uses v_risk_summary view or calculates from selected books.
+
+        Args:
+            tenant_id: Tenant ID
+            book_ids: Optional list of book IDs to aggregate (None = all books)
+
+        Returns:
+            Summary with NAV, gross, net exposures, position counts
+        """
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        if book_ids:
+            # Calculate from selected books
+            book_id_strs = [str(bid) for bid in book_ids]
+
+            cur.execute("""
+                SELECT
+                    SUM(CASE WHEN direction = 'long' THEN market_value ELSE -market_value END) as nav,
+                    SUM(ABS(market_value)) as gross_exposure,
+                    SUM(CASE WHEN direction = 'long' THEN market_value ELSE -market_value END) as net_exposure,
+                    SUM(CASE WHEN direction = 'long' THEN market_value ELSE 0 END) as long_exposure,
+                    SUM(CASE WHEN direction = 'short' THEN ABS(market_value) ELSE 0 END) as short_exposure,
+                    COUNT(*) as position_count,
+                    COUNT(DISTINCT security_id) as security_count,
+                    COUNT(DISTINCT book_id) as book_count,
+                    SUM(COALESCE(delta, 0)) as total_delta,
+                    SUM(COALESCE(dv01, 0)) as total_dv01,
+                    SUM(COALESCE(cs01, 0)) as total_cs01
+                FROM positions
+                WHERE book_id = ANY(%s::uuid[])
+                  AND quantity != 0
+            """, (book_id_strs,))
+        else:
+            # Use the view for all tenant positions
+            cur.execute("""
+                SELECT
+                    nav,
+                    gross_exposure,
+                    net_exposure,
+                    long_exposure,
+                    short_exposure,
+                    position_count,
+                    security_count,
+                    book_count,
+                    total_delta,
+                    total_dv01,
+                    total_cs01
+                FROM v_risk_summary
+                WHERE tenant_id = %s
+            """, (str(tenant_id),))
+
+        result = cur.fetchone()
+
+        if not result or result['gross_exposure'] is None:
+            return {
+                'nav': 0.0,
+                'gross_exposure': 0.0,
+                'net_exposure': 0.0,
+                'long_exposure': 0.0,
+                'short_exposure': 0.0,
+                'position_count': 0,
+                'security_count': 0,
+                'book_count': 0,
+                'total_delta': 0.0,
+                'total_dv01': 0.0,
+                'total_cs01': 0.0,
+                'last_priced': None,
+            }
+
+        # Get last pricing run timestamp
+        cur.execute("""
+            SELECT completed_at
+            FROM pricing_runs
+            WHERE tenant_id = %s
+              AND status = 'completed'
+            ORDER BY completed_at DESC
+            LIMIT 1
+        """, (str(tenant_id),))
+
+        pricing_result = cur.fetchone()
+        last_priced = pricing_result['completed_at'].isoformat() if pricing_result and pricing_result['completed_at'] else None
+
+        return {
+            'nav': float(result['nav'] or 0),
+            'gross_exposure': float(result['gross_exposure'] or 0),
+            'net_exposure': float(result['net_exposure'] or 0),
+            'long_exposure': float(result['long_exposure'] or 0),
+            'short_exposure': float(result['short_exposure'] or 0),
+            'position_count': result['position_count'] or 0,
+            'security_count': result['security_count'] or 0,
+            'book_count': result['book_count'] or 0,
+            'total_delta': float(result['total_delta'] or 0),
+            'total_dv01': float(result['total_dv01'] or 0),
+            'total_cs01': float(result['total_cs01'] or 0),
+            'last_priced': last_priced,
+        }
+
+    def get_position_overlap(
+        self,
+        tenant_id: UUID,
+        book_ids: Optional[List[UUID]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get position overlaps for correlation analysis.
+        Uses v_position_overlap view.
+
+        Args:
+            tenant_id: Tenant ID
+            book_ids: Optional filter to only show overlaps involving these books
+
+        Returns:
+            List of securities held by multiple books with netting opportunities
+        """
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        if book_ids:
+            # Filter overlaps to only those involving selected books
+            book_id_strs = [str(bid) for bid in book_ids]
+
+            cur.execute("""
+                SELECT
+                    security_id,
+                    ticker,
+                    security_name,
+                    asset_class,
+                    book_count,
+                    books,
+                    book_ids,
+                    net_quantity,
+                    gross_exposure,
+                    net_exposure,
+                    netting_opportunity,
+                    net_delta,
+                    net_dv01,
+                    net_cs01
+                FROM v_position_overlap
+                WHERE tenant_id = %s
+                  AND book_ids && %s::uuid[]
+                ORDER BY netting_opportunity DESC
+                LIMIT 50
+            """, (str(tenant_id), book_id_strs))
+        else:
+            # All overlaps for tenant
+            cur.execute("""
+                SELECT
+                    security_id,
+                    ticker,
+                    security_name,
+                    asset_class,
+                    book_count,
+                    books,
+                    book_ids,
+                    net_quantity,
+                    gross_exposure,
+                    net_exposure,
+                    netting_opportunity,
+                    net_delta,
+                    net_dv01,
+                    net_cs01
+                FROM v_position_overlap
+                WHERE tenant_id = %s
+                ORDER BY netting_opportunity DESC
+                LIMIT 50
+            """, (str(tenant_id),))
+
+        results = cur.fetchall()
+
+        return [
+            {
+                'security_id': str(r['security_id']),
+                'ticker': r['ticker'],
+                'security_name': r['security_name'],
+                'asset_class': r['asset_class'],
+                'book_count': r['book_count'],
+                'books': r['books'],
+                'book_ids': [str(bid) for bid in r['book_ids']] if r['book_ids'] else [],
+                'net_quantity': float(r['net_quantity'] or 0),
+                'gross_exposure': float(r['gross_exposure'] or 0),
+                'net_exposure': float(r['net_exposure'] or 0),
+                'netting_opportunity': float(r['netting_opportunity'] or 0),
+                'net_delta': float(r['net_delta'] or 0),
+                'net_dv01': float(r['net_dv01'] or 0),
+                'net_cs01': float(r['net_cs01'] or 0),
+            }
+            for r in results
+        ]
+
+    def get_concentration_by_sector(
+        self,
+        tenant_id: UUID,
+        book_ids: Optional[List[UUID]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get sector concentration for correlation panel.
+        Uses v_concentration_by_sector view or calculates from selected books.
+
+        Args:
+            tenant_id: Tenant ID
+            book_ids: Optional list of book IDs to analyze
+
+        Returns:
+            List of sectors with exposure percentages and warning flags
+        """
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        if book_ids:
+            # Calculate from selected books
+            book_id_strs = [str(bid) for bid in book_ids]
+
+            # Get total for percentage calculation
+            cur.execute("""
+                SELECT SUM(ABS(market_value)) as total
+                FROM positions
+                WHERE book_id = ANY(%s::uuid[]) AND quantity != 0
+            """, (book_id_strs,))
+
+            total_result = cur.fetchone()
+            total = float(total_result['total'] or 0) if total_result else 0
+
+            if total == 0:
+                return []
+
+            cur.execute("""
+                SELECT
+                    s.sector,
+                    COUNT(DISTINCT p.security_id) as security_count,
+                    COUNT(DISTINCT p.book_id) as book_count,
+                    SUM(ABS(p.market_value)) as gross_exposure,
+                    SUM(CASE WHEN p.direction = 'long' THEN p.market_value ELSE -p.market_value END) as net_exposure
+                FROM positions p
+                JOIN securities s ON p.security_id = s.id
+                WHERE p.book_id = ANY(%s::uuid[])
+                  AND p.quantity != 0
+                  AND s.sector IS NOT NULL
+                GROUP BY s.sector
+                ORDER BY gross_exposure DESC
+            """, (book_id_strs,))
+
+            results = cur.fetchall()
+
+            return [
+                {
+                    'sector': r['sector'],
+                    'security_count': r['security_count'],
+                    'book_count': r['book_count'],
+                    'gross_exposure': float(r['gross_exposure'] or 0),
+                    'net_exposure': float(r['net_exposure'] or 0),
+                    'percentage': round((float(r['gross_exposure'] or 0) / total) * 100, 2),
+                    'is_warning': (float(r['gross_exposure'] or 0) / total) > 0.40,
+                }
+                for r in results
+            ]
+        else:
+            # Use the view
+            cur.execute("""
+                SELECT
+                    sector,
+                    security_count,
+                    book_count,
+                    gross_exposure,
+                    net_exposure,
+                    percentage,
+                    is_warning
+                FROM v_concentration_by_sector
+                WHERE tenant_id = %s
+                ORDER BY gross_exposure DESC
+            """, (str(tenant_id),))
+
+            results = cur.fetchall()
+
+            return [
+                {
+                    'sector': r['sector'],
+                    'security_count': r['security_count'],
+                    'book_count': r['book_count'],
+                    'gross_exposure': float(r['gross_exposure'] or 0),
+                    'net_exposure': float(r['net_exposure'] or 0),
+                    'percentage': float(r['percentage'] or 0),
+                    'is_warning': r['is_warning'],
+                }
+                for r in results
+            ]
+
+    def get_concentration_by_security(
+        self,
+        tenant_id: UUID,
+        book_ids: Optional[List[UUID]] = None,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get single-name concentration for correlation panel.
+        Uses v_concentration_by_security view or calculates from selected books.
+
+        Args:
+            tenant_id: Tenant ID
+            book_ids: Optional list of book IDs to analyze
+            limit: Max number of results
+
+        Returns:
+            List of securities with exposure percentages and warning flags
+        """
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+
+        if book_ids:
+            # Calculate from selected books
+            book_id_strs = [str(bid) for bid in book_ids]
+
+            # Get total for percentage calculation
+            cur.execute("""
+                SELECT SUM(ABS(market_value)) as total
+                FROM positions
+                WHERE book_id = ANY(%s::uuid[]) AND quantity != 0
+            """, (book_id_strs,))
+
+            total_result = cur.fetchone()
+            total = float(total_result['total'] or 0) if total_result else 0
+
+            if total == 0:
+                return []
+
+            cur.execute("""
+                SELECT
+                    p.security_id,
+                    COALESCE(si.identifier_value, s.figi) as ticker,
+                    s.name as security_name,
+                    s.sector,
+                    s.asset_class,
+                    COUNT(DISTINCT p.book_id) as book_count,
+                    SUM(ABS(p.market_value)) as gross_exposure,
+                    SUM(CASE WHEN p.direction = 'long' THEN p.market_value ELSE -p.market_value END) as net_exposure
+                FROM positions p
+                JOIN securities s ON p.security_id = s.id
+                LEFT JOIN security_identifiers si ON p.security_id = si.security_id
+                    AND si.identifier_type = 'ticker'
+                WHERE p.book_id = ANY(%s::uuid[])
+                  AND p.quantity != 0
+                GROUP BY p.security_id, si.identifier_value, s.figi, s.name, s.sector, s.asset_class
+                ORDER BY gross_exposure DESC
+                LIMIT %s
+            """, (book_id_strs, limit))
+
+            results = cur.fetchall()
+
+            return [
+                {
+                    'security_id': str(r['security_id']),
+                    'ticker': r['ticker'],
+                    'security_name': r['security_name'],
+                    'sector': r['sector'],
+                    'asset_class': r['asset_class'],
+                    'book_count': r['book_count'],
+                    'gross_exposure': float(r['gross_exposure'] or 0),
+                    'net_exposure': float(r['net_exposure'] or 0),
+                    'percentage': round((float(r['gross_exposure'] or 0) / total) * 100, 2),
+                    'is_warning': (float(r['gross_exposure'] or 0) / total) > 0.10,
+                }
+                for r in results
+            ]
+        else:
+            # Use the view
+            cur.execute("""
+                SELECT
+                    security_id,
+                    ticker,
+                    security_name,
+                    sector,
+                    asset_class,
+                    book_count,
+                    gross_exposure,
+                    net_exposure,
+                    percentage,
+                    is_warning
+                FROM v_concentration_by_security
+                WHERE tenant_id = %s
+                ORDER BY gross_exposure DESC
+                LIMIT %s
+            """, (str(tenant_id), limit))
+
+            results = cur.fetchall()
+
+            return [
+                {
+                    'security_id': str(r['security_id']),
+                    'ticker': r['ticker'],
+                    'security_name': r['security_name'],
+                    'sector': r['sector'],
+                    'asset_class': r['asset_class'],
+                    'book_count': r['book_count'],
+                    'gross_exposure': float(r['gross_exposure'] or 0),
+                    'net_exposure': float(r['net_exposure'] or 0),
+                    'percentage': float(r['percentage'] or 0),
+                    'is_warning': r['is_warning'],
+                }
+                for r in results
+            ]
+
+    def get_positions_by_asset_class(
+        self,
+        book_ids: List[UUID],
+        asset_class: str,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> Dict[str, Any]:
+        """
+        Get positions filtered by books and asset class.
+        Used for the Trades drill-down page.
+
+        Args:
+            book_ids: List of book IDs
+            asset_class: Asset class filter
+            page: Page number (1-indexed)
+            page_size: Items per page
+
+        Returns:
+            Paginated list of positions with valuation info
+        """
+        if not book_ids:
+            return {'positions': [], 'total': 0, 'page': page, 'page_size': page_size}
+
+        cur = self.conn.cursor(cursor_factory=RealDictCursor)
+        book_id_strs = [str(bid) for bid in book_ids]
+        offset = (page - 1) * page_size
+
+        # Get total count
+        cur.execute("""
+            SELECT COUNT(*)
+            FROM positions p
+            JOIN securities s ON p.security_id = s.id
+            WHERE p.book_id = ANY(%s::uuid[])
+              AND p.quantity != 0
+              AND s.asset_class = %s
+        """, (book_id_strs, asset_class))
+
+        total = cur.fetchone()['count']
+
+        # Get positions with details
+        cur.execute("""
+            SELECT
+                p.id as position_id,
+                p.book_id,
+                b.name as book_name,
+                p.security_id,
+                COALESCE(si.identifier_value, s.figi) as ticker,
+                s.name as security_name,
+                s.asset_class,
+                p.direction,
+                p.quantity,
+                p.cost_basis,
+                p.price as current_price,
+                p.market_value,
+                p.unrealized_pnl,
+                p.delta,
+                p.gamma,
+                p.vega,
+                p.theta,
+                p.dv01,
+                p.cs01,
+                COALESCE(p.price_source::text, sp.price_source) as price_source,
+                COALESCE(p.price_as_of, sp.price_date) as price_date,
+                sp.model_id IS NOT NULL as has_model_details
+            FROM positions p
+            JOIN securities s ON p.security_id = s.id
+            JOIN books b ON p.book_id = b.id
+            LEFT JOIN security_identifiers si ON p.security_id = si.security_id
+                AND si.identifier_type = 'ticker'
+            LEFT JOIN LATERAL (
+                SELECT source::text as price_source, price_date, model_id
+                FROM security_prices
+                WHERE security_id = p.security_id
+                ORDER BY price_date DESC
+                LIMIT 1
+            ) sp ON true
+            WHERE p.book_id = ANY(%s::uuid[])
+              AND p.quantity != 0
+              AND s.asset_class = %s
+            ORDER BY ABS(p.market_value) DESC
+            LIMIT %s OFFSET %s
+        """, (book_id_strs, asset_class, page_size, offset))
+
+        results = cur.fetchall()
+
+        positions = [
+            {
+                'position_id': str(r['position_id']),
+                'book_id': str(r['book_id']),
+                'book_name': r['book_name'],
+                'security_id': str(r['security_id']),
+                'ticker': r['ticker'],
+                'security_name': r['security_name'],
+                'asset_class': r['asset_class'],
+                'direction': r['direction'],
+                'quantity': float(r['quantity'] or 0),
+                'cost_basis': float(r['cost_basis'] or 0),
+                'current_price': float(r['current_price'] or 0),
+                'market_value': float(r['market_value'] or 0),
+                'unrealized_pnl': float(r['unrealized_pnl'] or 0),
+                'delta': float(r['delta'] or 0),
+                'gamma': float(r['gamma'] or 0),
+                'vega': float(r['vega'] or 0),
+                'theta': float(r['theta'] or 0),
+                'dv01': float(r['dv01'] or 0),
+                'cs01': float(r['cs01'] or 0),
+                'price_source': r['price_source'] or 'unknown',
+                'price_date': r['price_date'].isoformat() if r['price_date'] else None,
+                'has_model_details': r['has_model_details'] or False,
+            }
+            for r in results
+        ]
+
+        return {
+            'positions': positions,
+            'total': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total + page_size - 1) // page_size,
+        }

@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (CIO Dashboard Phase) |
-| **Status** | 🔄 IN PROGRESS - CIO Dashboard + Overlay Book |
-| **Next** | Continue UI work - styling, testing, polish |
+| **Week** | 5 - Dashboard (Riskboard Polish) |
+| **Status** | ✅ HTML Mockup Complete with Calculate, Accessibility, Price Override |
+| **Next** | Tomorrow: Review User Manual, Test all card calculations |
 | **Tests** | 154+ passing (backend), frontend builds successfully |
 | **Branch** | develop |
 
@@ -19,7 +19,124 @@
 
 ## Session Log
 
-### 2026-01-13 Session 9 (Latest)
+### 2026-01-13 Session 11 (Latest)
+
+**Focus:** Riskboard HTML Mockup Polish & New Features
+
+**Features Implemented Today:**
+
+1. **Calculate/Refresh System:**
+   - Added "Calculate" button to each Pod header (green in color mode, white in accessibility mode)
+   - Added "Last calculated" timestamp per Pod
+   - Added "Refresh All Pods" button at top summary strip
+   - Visual stale indicator when portfolio selection changes (orange pulse animation)
+   - Pod header layout: Portfolio selector → Selected → Calculate → Gross → Net → Positions → Timestamp
+
+2. **Accessibility/Color Blind Mode:**
+   - Added toggle switch in top header (multicolored circle ↔ white circle)
+   - Rainbow gradient `conic-gradient` for color mode indicator
+   - When toggled, all card colors become white/monochrome
+   - Affects: card titles, trade buttons, table headers, row labels, progress bars
+   - Persisted to localStorage for user preference
+
+3. **Manual Price Override System (CRITICAL FEATURE):**
+   - Trades button opens modal showing all underlying positions
+   - Price inputs are editable - user can manually override prices for illiquid securities
+   - Modified prices highlighted with orange border
+   - Warning icon (⚠) appears on card header when overrides exist (orange pulse animation)
+   - Clicking warning icon opens Overrides modal showing all manual changes
+   - Each override can be: edited (change value) or reset (return to system price)
+   - Implemented for all 12 cards (6 asset classes × 2 pods)
+
+**Files Modified:**
+- `designs/Riskboard.html` - Added all features above
+
+**Tomorrow's Agenda:**
+1. Review user manual and understand all Riskboard features
+2. Test each RiskCard and understand how numbers are calculated
+3. Walk through: Equity, Rates, Credit, FX, Commodities, Other cards
+4. Verify all metrics (Delta, DV01, CS01, Greeks, VAR, CVAR)
+5. Test Calculate/Refresh system behavior
+6. Test accessibility mode toggle
+7. Test manual price override workflow end-to-end
+
+---
+
+### 2026-01-13 Session 10
+
+**Focus:** Complete Riskboard Dashboard with Unified UI
+
+**Key Design Decisions (User Confirmed):**
+1. **NO P&L Display** - Focus on Risk Metrics and Correlation only (can't accurately track P&L between file imports)
+2. **Unified UI** - Same dashboard for all roles (CIO, PM, Analyst), permissions control data access
+3. **Multi-Select Portfolio Aggregation** - Each RiskPod can aggregate multiple books
+4. **5 Asset Class RiskCards** - Equity, Rates, Credit, FX, Other
+5. **Pricing Hierarchy** - Client Override → Market Feed (OpenBB) → Model-Derived (FinancePy) → Stale
+
+**Backend Completed:**
+- Fixed `source` vs `price_source` column name issue in `pricing_service.py` and `riskpod.py`
+- Created `market_data_service.py` - Market indices snapshot service with demo data
+- Created `market.py` API - `/market/snapshot`, `/market/quote/{symbol}`, `/market/symbols`
+- All pricing and market APIs tested and working
+
+**Frontend Completed:**
+- Created `MarketSnapshot.tsx` - Live market indices with sparklines (SPX, VIX, US10Y, EURUSD)
+- Created `TopBar.tsx` - Risk summary bar with NAV, Gross, Net, Long/Short, Positions, Delta, DV01, CS01, Reprice button
+- Created `CorrelationPanel.tsx` - Position overlap, sector concentration, single-name concentration
+- Created `Riskboard.tsx` - Main unified dashboard page with dynamic RiskPods
+- Updated `api.ts` with new API types and methods (riskboardApi, pricingApi, marketApi)
+- Updated `App.tsx` with new routes (default to /riskboard)
+- Fixed tenant ID to match mock data (`b95fbd3b-e6f0-41f8-9c0c-5337e469cf50`)
+
+**API Endpoints Added:**
+- `GET /market/snapshot` - Market indices for dashboard
+- `GET /market/quote/{symbol}` - Single market quote
+- `GET /market/symbols` - Available market symbols
+
+**Files Created:**
+- `backend/services/market_data_service.py`
+- `backend/api/market.py`
+- `frontend/src/components/riskboard/MarketSnapshot.tsx`
+- `frontend/src/components/riskboard/TopBar.tsx`
+- `frontend/src/components/riskboard/CorrelationPanel.tsx`
+- `frontend/src/pages/Riskboard.tsx`
+
+**Files Modified:**
+- `backend/services/pricing_service.py` - Fixed `source` column name
+- `backend/services/riskpod.py` - Fixed `source` column name
+- `backend/api/__init__.py` - Added market router
+- `frontend/src/services/api.ts` - Added new API types and methods
+- `frontend/src/App.tsx` - Added Riskboard route
+
+**Riskboard Features:**
+- Dynamic RiskPods - Add/remove portfolio aggregations
+- Multi-select portfolio dropdown - Select any combination of books
+- Market snapshot bar with live indices and sparklines
+- Risk summary bar with key metrics and Reprice All button
+- Position overlap analysis with netting opportunities
+- Sector concentration with >40% warning
+- Single-name concentration with >10% warning
+- Drill-down to positions by asset class
+
+**Test Results:**
+- Risk Summary: NAV $585.8M, Gross $1.49B, Net $585.8M, 1,075 positions
+- 5 asset class categories working: equity, fixed_income, other, option, future
+- Market snapshot: SPX, VIX, US10Y, EURUSD with change percentages
+- All pricing status, valuation, and market APIs tested and passing
+
+**Week 5 Quality Gate: PASSED**
+- [x] All dashboard components created
+- [x] Backend APIs working with correct data
+- [x] Frontend builds and routes correctly
+- [x] Multi-select portfolio aggregation working
+- [x] Market snapshot with sparklines
+- [x] Correlation panel with overlap/concentration
+- [x] Pricing status and Reprice All button
+- [x] Documentation updated
+
+---
+
+### 2026-01-13 Session 9
 
 **Focus:** Comprehensive Compliance Architecture (SOC 2, GDPR, Privacy)
 

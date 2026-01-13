@@ -338,6 +338,8 @@ class MockDataGenerator:
             "correlation_cache",
             "pm_daily_returns",
             "book_daily_returns",
+            "pod_daily_returns",
+            "pricing_runs",
             "model_overrides",
             "model_valuation_inputs",
             "overlay_book_sources",
