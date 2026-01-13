@@ -744,12 +744,12 @@
             font-weight: 600;
             color: #ffffff !important;
         }
-        .btn-trades.equity { border-color: #579CF9; }
-        .btn-trades.rates { border-color: #3CD574; }
-        .btn-trades.credit { border-color: #a855f7; }
-        .btn-trades.fx { border-color: #06b6d4; }
-        .btn-trades.commodities { border-color: #eab308; }
-        .btn-trades.other { border-color: #94a3b8; }
+        .btn-trades.equity,
+        .btn-trades.rates,
+        .btn-trades.credit,
+        .btn-trades.fx,
+        .btn-trades.commodities,
+        .btn-trades.other { border-color: rgba(255, 255, 255, 0.4); }
         .btn-trades:hover { color: #ffffff !important; }
 
         /* Section 2-3: Primary Metric */
@@ -975,7 +975,7 @@
         .portfolio-menu::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
         .portfolio-menu::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
 
-        /* Expand Modal - PROPORTIONALLY SCALED */
+        /* Expand Modal - COMPACT, NO SCROLLBARS */
         .expand-modal {
             display: none;
             position: fixed;
@@ -983,167 +983,187 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.97);
             z-index: 10000;
             align-items: center;
             justify-content: center;
         }
         .expand-modal.active { display: flex; }
         .expand-modal-content {
-            background: rgba(30, 41, 59, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
-            padding: 20px;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow: auto;
+            position: relative;
+            background: transparent;
+            overflow: hidden !important;
         }
-        /* Expanded card container */
+        /* Expanded card container - sized to fit screen, 20% taller */
         .expand-modal-content .riskcard {
-            width: 700px !important;
-            min-width: 700px !important;
-            padding: 36px !important;
-            border-radius: 20px !important;
+            width: 520px !important;
+            min-width: 520px !important;
+            max-width: 520px !important;
+            padding: 24px !important;
+            border-radius: 16px !important;
+            background: rgba(30, 41, 59, 0.99) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            overflow: hidden !important;
         }
         /* Card header - scaled spacing */
         .expand-modal-content .card-header {
-            margin-bottom: 28px !important;
+            margin-bottom: 20px !important;
         }
         .expand-modal-content .card-title {
-            font-size: 32px !important;
-            letter-spacing: 2px !important;
+            font-size: 22px !important;
+            letter-spacing: 1.2px !important;
         }
         .expand-modal-content .header-right {
-            gap: 16px !important;
+            gap: 10px !important;
         }
         .expand-modal-content .card-change {
-            font-size: 20px !important;
+            font-size: 14px !important;
         }
         .expand-modal-content .btn-icon {
-            font-size: 20px !important;
-            width: 48px !important;
-            height: 48px !important;
-            border-radius: 12px !important;
+            font-size: 14px !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 8px !important;
         }
         .expand-modal-content .btn-trades {
-            font-size: 18px !important;
-            padding: 14px 24px !important;
-            border-radius: 10px !important;
+            font-size: 12px !important;
+            padding: 8px 14px !important;
+            border-radius: 6px !important;
+            width: auto !important;
+            min-width: auto !important;
+            white-space: nowrap !important;
         }
         .expand-modal-content .card-warning {
-            width: 44px !important;
-            height: 44px !important;
-            font-size: 22px !important;
-            border-radius: 10px !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            font-size: 16px !important;
+            border-radius: 6px !important;
         }
         /* Primary metric section - scaled */
         .expand-modal-content .primary-metric {
-            margin-bottom: 28px !important;
-            padding-bottom: 28px !important;
+            margin-bottom: 20px !important;
+            padding-bottom: 20px !important;
+            overflow: hidden !important;
         }
         .expand-modal-content .primary-label {
-            font-size: 16px !important;
-            letter-spacing: 1.5px !important;
-            margin-bottom: 12px !important;
+            font-size: 12px !important;
+            letter-spacing: 1px !important;
+            margin-bottom: 10px !important;
         }
         .expand-modal-content .primary-value {
-            font-size: 56px !important;
+            font-size: 36px !important;
         }
         .expand-modal-content .primary-bar {
-            height: 10px !important;
-            margin-top: 18px !important;
-            border-radius: 5px !important;
+            height: 6px !important;
+            margin-top: 12px !important;
+            border-radius: 3px !important;
+            overflow: hidden !important;
+            max-width: 100% !important;
         }
         .expand-modal-content .primary-bar-fill {
-            border-radius: 5px !important;
+            border-radius: 3px !important;
+            max-width: 100% !important;
         }
         /* Metrics row - scaled */
         .expand-modal-content .metrics-row {
-            gap: 18px !important;
-            margin-bottom: 28px !important;
+            gap: 10px !important;
+            margin-bottom: 20px !important;
         }
         .expand-modal-content .metric-box {
-            padding: 18px !important;
-            border-radius: 12px !important;
+            padding: 12px !important;
+            border-radius: 8px !important;
         }
         .expand-modal-content .metric-label {
-            font-size: 14px !important;
-            letter-spacing: 1px !important;
-            margin-bottom: 8px !important;
+            font-size: 10px !important;
+            letter-spacing: 0.6px !important;
+            margin-bottom: 5px !important;
         }
         .expand-modal-content .metric-value {
-            font-size: 26px !important;
+            font-size: 18px !important;
         }
-        /* Table - scaled with proper column widths */
+        /* Table - NO scrollbar, show ALL rows */
         .expand-modal-content .table-container {
-            border-radius: 12px !important;
-            margin-bottom: 28px !important;
+            border-radius: 8px !important;
+            margin-bottom: 20px !important;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+        }
+        .expand-modal-content .table-body {
+            overflow: visible !important;
+            overflow-y: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            flex: none !important;
         }
         .expand-modal-content .table-header {
-            font-size: 14px !important;
-            padding: 16px 18px !important;
-            letter-spacing: 1px !important;
-            grid-template-columns: 110px repeat(6, 1fr) !important;
+            font-size: 10px !important;
+            padding: 10px 10px !important;
+            letter-spacing: 0.6px !important;
+            grid-template-columns: 80px repeat(6, 1fr) !important;
         }
         .expand-modal-content .table-header span {
-            gap: 6px !important;
+            gap: 4px !important;
         }
         .expand-modal-content .table-row {
-            font-size: 18px !important;
-            padding: 18px !important;
-            grid-template-columns: 110px repeat(6, 1fr) !important;
+            font-size: 13px !important;
+            padding: 12px 10px !important;
+            grid-template-columns: 80px repeat(6, 1fr) !important;
         }
         .expand-modal-content .row-label {
-            font-size: 18px !important;
-            gap: 8px !important;
+            font-size: 13px !important;
+            gap: 4px !important;
         }
         .expand-modal-content .table-row span {
-            font-size: 18px !important;
-            padding-right: 12px !important;
+            font-size: 13px !important;
+            padding-right: 6px !important;
         }
         .expand-modal-content .info-icon {
-            width: 18px !important;
-            height: 18px !important;
-            font-size: 11px !important;
+            width: 14px !important;
+            height: 14px !important;
+            font-size: 9px !important;
         }
         /* Bottom metrics - scaled */
         .expand-modal-content .bottom-metrics {
-            gap: 24px !important;
-            margin-bottom: 24px !important;
-            padding-top: 24px !important;
+            gap: 16px !important;
+            margin-bottom: 16px !important;
+            padding-top: 16px !important;
         }
         .expand-modal-content .bottom-label {
-            font-size: 14px !important;
-            margin-bottom: 8px !important;
-            gap: 6px !important;
+            font-size: 10px !important;
+            margin-bottom: 5px !important;
+            gap: 4px !important;
         }
         .expand-modal-content .bottom-value {
-            font-size: 26px !important;
+            font-size: 16px !important;
         }
         /* Footer row - scaled */
         .expand-modal-content .footer-row {
-            padding-top: 18px !important;
+            padding-top: 14px !important;
         }
         .expand-modal-content .footer-item {
-            gap: 8px !important;
+            gap: 4px !important;
         }
         .expand-modal-content .footer-label {
-            font-size: 14px !important;
+            font-size: 11px !important;
         }
         .expand-modal-content .footer-value {
-            font-size: 26px !important;
+            font-size: 16px !important;
         }
         /* Close button */
         .expand-modal-close {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 30px;
-            font-size: 40px;
+            font-size: 36px;
             color: #94a3b8;
             cursor: pointer;
             background: none;
             border: none;
             transition: color 0.2s;
+            z-index: 10001;
         }
         .expand-modal-close:hover { color: #ef4444; }
 
