@@ -975,7 +975,7 @@
         .portfolio-menu::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
         .portfolio-menu::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 3px; }
 
-        /* Expand Modal - LARGER FONTS */
+        /* Expand Modal - PROPORTIONALLY SCALED */
         .expand-modal {
             display: none;
             position: fixed;
@@ -992,29 +992,148 @@
         .expand-modal-content {
             background: rgba(30, 41, 59, 0.98);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 24px;
+            padding: 20px;
             max-width: 90vw;
             max-height: 90vh;
             overflow: auto;
         }
-        /* Scale up ALL fonts in expanded card - minimum 16px */
-        .expand-modal-content .card-title { font-size: 32px !important; }
-        .expand-modal-content .card-change { font-size: 20px !important; }
-        .expand-modal-content .primary-label { font-size: 18px !important; }
-        .expand-modal-content .primary-value { font-size: 52px !important; }
-        .expand-modal-content .metric-label { font-size: 16px !important; }
-        .expand-modal-content .metric-value { font-size: 24px !important; }
-        .expand-modal-content .table-header { font-size: 16px !important; padding: 16px 18px !important; }
-        .expand-modal-content .table-row { font-size: 18px !important; padding: 16px 18px !important; }
-        .expand-modal-content .row-label { font-size: 18px !important; }
-        .expand-modal-content .table-row span { font-size: 18px !important; }
-        .expand-modal-content .bottom-label { font-size: 16px !important; }
-        .expand-modal-content .bottom-value { font-size: 22px !important; }
-        .expand-modal-content .footer-label { font-size: 16px !important; }
-        .expand-modal-content .footer-value { font-size: 24px !important; }
-        .expand-modal-content .btn-icon { font-size: 20px !important; width: 40px !important; height: 40px !important; }
-        .expand-modal-content .btn-trades { font-size: 18px !important; padding: 12px 20px !important; }
+        /* Expanded card container */
+        .expand-modal-content .riskcard {
+            width: 700px !important;
+            min-width: 700px !important;
+            padding: 36px !important;
+            border-radius: 20px !important;
+        }
+        /* Card header - scaled spacing */
+        .expand-modal-content .card-header {
+            margin-bottom: 28px !important;
+        }
+        .expand-modal-content .card-title {
+            font-size: 32px !important;
+            letter-spacing: 2px !important;
+        }
+        .expand-modal-content .header-right {
+            gap: 16px !important;
+        }
+        .expand-modal-content .card-change {
+            font-size: 20px !important;
+        }
+        .expand-modal-content .btn-icon {
+            font-size: 20px !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 12px !important;
+        }
+        .expand-modal-content .btn-trades {
+            font-size: 18px !important;
+            padding: 14px 24px !important;
+            border-radius: 10px !important;
+        }
+        .expand-modal-content .card-warning {
+            width: 44px !important;
+            height: 44px !important;
+            font-size: 22px !important;
+            border-radius: 10px !important;
+        }
+        /* Primary metric section - scaled */
+        .expand-modal-content .primary-metric {
+            margin-bottom: 28px !important;
+            padding-bottom: 28px !important;
+        }
+        .expand-modal-content .primary-label {
+            font-size: 16px !important;
+            letter-spacing: 1.5px !important;
+            margin-bottom: 12px !important;
+        }
+        .expand-modal-content .primary-value {
+            font-size: 56px !important;
+        }
+        .expand-modal-content .primary-bar {
+            height: 10px !important;
+            margin-top: 18px !important;
+            border-radius: 5px !important;
+        }
+        .expand-modal-content .primary-bar-fill {
+            border-radius: 5px !important;
+        }
+        /* Metrics row - scaled */
+        .expand-modal-content .metrics-row {
+            gap: 18px !important;
+            margin-bottom: 28px !important;
+        }
+        .expand-modal-content .metric-box {
+            padding: 18px !important;
+            border-radius: 12px !important;
+        }
+        .expand-modal-content .metric-label {
+            font-size: 14px !important;
+            letter-spacing: 1px !important;
+            margin-bottom: 8px !important;
+        }
+        .expand-modal-content .metric-value {
+            font-size: 26px !important;
+        }
+        /* Table - scaled with proper column widths */
+        .expand-modal-content .table-container {
+            border-radius: 12px !important;
+            margin-bottom: 28px !important;
+        }
+        .expand-modal-content .table-header {
+            font-size: 14px !important;
+            padding: 16px 18px !important;
+            letter-spacing: 1px !important;
+            grid-template-columns: 110px repeat(6, 1fr) !important;
+        }
+        .expand-modal-content .table-header span {
+            gap: 6px !important;
+        }
+        .expand-modal-content .table-row {
+            font-size: 18px !important;
+            padding: 18px !important;
+            grid-template-columns: 110px repeat(6, 1fr) !important;
+        }
+        .expand-modal-content .row-label {
+            font-size: 18px !important;
+            gap: 8px !important;
+        }
+        .expand-modal-content .table-row span {
+            font-size: 18px !important;
+            padding-right: 12px !important;
+        }
+        .expand-modal-content .info-icon {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 11px !important;
+        }
+        /* Bottom metrics - scaled */
+        .expand-modal-content .bottom-metrics {
+            gap: 24px !important;
+            margin-bottom: 24px !important;
+            padding-top: 24px !important;
+        }
+        .expand-modal-content .bottom-label {
+            font-size: 14px !important;
+            margin-bottom: 8px !important;
+            gap: 6px !important;
+        }
+        .expand-modal-content .bottom-value {
+            font-size: 26px !important;
+        }
+        /* Footer row - scaled */
+        .expand-modal-content .footer-row {
+            padding-top: 18px !important;
+        }
+        .expand-modal-content .footer-item {
+            gap: 8px !important;
+        }
+        .expand-modal-content .footer-label {
+            font-size: 14px !important;
+        }
+        .expand-modal-content .footer-value {
+            font-size: 26px !important;
+        }
+        /* Close button */
         .expand-modal-close {
             position: absolute;
             top: 20px;
@@ -2591,9 +2710,7 @@
             const modal = document.getElementById('expandModal');
             const content = document.getElementById('expandModalContent');
             const clone = cardElement.cloneNode(true);
-            clone.style.width = '600px';
-            clone.style.height = 'auto';
-            clone.style.minHeight = '600px';
+            // Don't set inline styles - let CSS handle the scaling
             clone.style.transform = 'none';
             content.innerHTML = '';
             content.appendChild(clone);
