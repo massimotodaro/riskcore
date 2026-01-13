@@ -51,25 +51,102 @@ The most common model for developer tools (GitLab, Supabase, n8n, Metabase).
 - CSV/Excel upload
 - Single-user dashboard
 - Community support (GitHub issues)
+- Enterprise-grade security foundations (see below)
 
 **Pro Tier Adds:**
 - Multi-user access (up to 10)
-- API access
+- API access with rate limiting
 - FIX protocol adapter
 - Email support (48hr response)
 - Basic integrations
+- Multi-factor authentication (TOTP)
+- Extended audit logs (1-year retention)
+- Security questionnaire response
 
 **Enterprise Tier Adds:**
 - Unlimited users
 - SSO/SAML authentication
+- Hardware MFA support
 - Correlation Framework
 - Hedge Overlay Suggestions
 - Custom integrations
 - Dedicated support (4hr response)
 - SLA (99.9% uptime)
 - Regulatory reporting templates
-- Audit logs
+- Comprehensive audit logs
 - On-premise deployment option
+- IP whitelisting
+- Annual penetration test report
+- SOC 2 report (when available)
+- Security architecture review
+
+---
+
+### Security Features by Tier
+
+**RISKCORE is built following SOC 2 Trust Services Criteria from day 1.**
+
+| Security Feature | Free | Pro | Enterprise |
+|------------------|------|-----|------------|
+| **Architecture** ||||
+| Self-hosted / on-premises | ✅ | ✅ | ✅ |
+| Air-gapped deployment option | ✅ | ✅ | ✅ |
+| Data stays on your network | ✅ | ✅ | ✅ |
+| Read-only (no write-back) | ✅ | ✅ | ✅ |
+| **Access Control** ||||
+| Role-based access (6 roles) | ✅ | ✅ | ✅ |
+| Row Level Security (RLS) | ✅ | ✅ | ✅ |
+| Book-level permissions | ✅ | ✅ | ✅ |
+| Multi-tenant isolation | ✅ | ✅ | ✅ |
+| **Authentication** ||||
+| Password authentication | ✅ | ✅ | ✅ |
+| Secure password hashing (bcrypt) | ✅ | ✅ | ✅ |
+| Session management | ✅ | ✅ | ✅ |
+| Multi-factor authentication (TOTP) | ❌ | ✅ | ✅ |
+| Hardware MFA (YubiKey, etc.) | ❌ | ❌ | ✅ |
+| SSO/SAML integration | ❌ | ❌ | ✅ |
+| IP whitelisting | ❌ | ❌ | ✅ |
+| **Encryption** ||||
+| TLS 1.3 in transit | ✅ | ✅ | ✅ |
+| Encryption at rest (client-managed) | ✅ | ✅ | ✅ |
+| **Data Protection** ||||
+| Input validation (11-rule pipeline) | ✅ | ✅ | ✅ |
+| SQL injection prevention | ✅ | ✅ | ✅ |
+| XSS prevention | ✅ | ✅ | ✅ |
+| Rate limiting | Standard | Enhanced | Custom |
+| **Audit & Compliance** ||||
+| Basic audit logging | ✅ | ✅ | ✅ |
+| Extended audit logs | ❌ | 1 year | Custom |
+| Security questionnaire | ❌ | ✅ | ✅ |
+| Penetration test report | ❌ | ❌ | Annual |
+| SOC 2 Type II report | ❌ | ❌ | When available |
+| Compliance documentation | ❌ | ✅ | ✅ |
+| **Support** ||||
+| Security incident response | GitHub | 48hr | 4hr |
+| Vulnerability notifications | GitHub | Email | Immediate |
+
+**Self-Hosted Advantage:**
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                   RISKCORE DEPLOYMENT                             │
+│                                                                   │
+│   ✓ Your data NEVER leaves your network                         │
+│   ✓ No cloud storage of positions or trades                     │
+│   ✓ RISKCORE team has ZERO access to your data                  │
+│   ✓ Air-gapped deployment available                              │
+│   ✓ Full control over security configuration                    │
+│   ✓ Integrate with your existing security infrastructure        │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Built Following SOC 2 Trust Services Criteria:**
+- **Security:** Access controls, encryption, audit logging
+- **Availability:** Health monitoring, graceful degradation
+- **Processing Integrity:** Validation pipeline, calculation verification
+- **Confidentiality:** Multi-tenant isolation, export controls
+- **Privacy:** Minimal PII, data subject rights support
 
 ---
 

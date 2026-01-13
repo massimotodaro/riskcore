@@ -21,39 +21,55 @@
 
 ### 2026-01-13 Session 9 (Latest)
 
-**Focus:** SOC 2 Compliance Planning + Documentation
+**Focus:** Comprehensive Compliance Architecture (SOC 2, GDPR, Privacy)
+
+**Strategic Decisions:**
+- SOC 2 certification deferred to post-revenue ($500K+ ARR)
+- Build following all SOC 2 principles from day 1
+- Emphasize self-hosted architecture as security/privacy advantage
 
 **Completed:**
-- Created comprehensive SOC 2 compliance plan (`docs/SOC2_COMPLIANCE_PLAN.md`)
-  - Covers all 5 Trust Services Criteria (Security, Availability, Processing Integrity, Confidentiality, Privacy)
-  - Gap analysis between current state and SOC 2 requirements
-  - 14-month implementation roadmap (Type I at Month 8, Type II at Month 14)
-  - Budget estimates ($55K-90K Year 1)
-  - Technical implementation checklist (MFA, encryption, logging, etc.)
-  - GRC platform recommendations (Vanta, Drata)
-  - Auditor selection criteria
-  - Policy documents required (14 policies)
-  - Tier-specific requirements (Pro vs Enterprise)
+- Created comprehensive compliance architecture (`docs/COMPLIANCE_ARCHITECTURE.md`)
+  - Full SOC 2 Trust Services Criteria implementation
+  - GDPR analysis for self-hosted software
+  - Global privacy regulations overview
+  - Financial services regulations (SEC, MiFID II, AIFMD)
+  - Security features by tier (Free/Pro/Enterprise)
+  - Compliance roadmap (Foundation → Documentation → Validation → Certification)
+- Updated SOC 2 compliance plan with post-revenue certification strategy
+- Updated BUSINESS_MODEL.md with detailed security features matrix
+- Created Word documents for Notion storage:
+  - `docs/SOC2_Findings_and_Recommendations.docx`
+  - `docs/GDPR_Privacy_Findings_and_Recommendations.docx`
 - Created RiskPods and Metrics documentation (`docs/RISKPODS_AND_METRICS.docx`)
-- Updated SECURITY.md with SOC 2 compliance plan reference
-- Updated CLAUDE.md documentation index
+
+**Key Findings:**
+1. **SOC 2 requires external audit** - Cannot self-certify, costs $55K-90K/year
+2. **Self-hosted = reduced compliance burden** - We don't store/access client data
+3. **GDPR: We're NOT a data processor** for client positions (they control their own data)
+4. **DPA only needed** when we actually access client data (support sessions)
 
 **Files Created:**
-- `docs/SOC2_COMPLIANCE_PLAN.md` - Complete SOC 2 compliance roadmap
-- `docs/RISKPODS_AND_METRICS.docx` - RiskPods reference document
+- `docs/COMPLIANCE_ARCHITECTURE.md` - Master compliance document
+- `docs/SOC2_COMPLIANCE_PLAN.md` - SOC 2 roadmap (updated)
+- `docs/SOC2_Findings_and_Recommendations.docx` - For Notion
+- `docs/GDPR_Privacy_Findings_and_Recommendations.docx` - For Notion
+- `docs/RISKPODS_AND_METRICS.docx` - RiskPods reference
+- `scripts/create_compliance_docs.py` - Document generator
 
 **Files Modified:**
+- `docs/BUSINESS_MODEL.md` - Added security features by tier
 - `docs/SECURITY.md` - Added SOC 2 plan reference
-- `CLAUDE.md` - Added SOC 2 to documentation index
+- `CLAUDE.md` - Added documentation index entries
 
-**Today's Agenda (UI Work):**
+**Next (UI Work when ready):**
 1. Test CIO Dashboard with live backend data
 2. Style refinements and polish
 3. Add loading/error states where missing
 4. Test trades drill-down flow
 5. Test valuation modal with mock data
 6. Mobile responsiveness check
-7. Add PM Dashboard view (simpler version for PM role)
+7. Add PM Dashboard view
 8. Consider adding more chart visualizations
 
 ---
@@ -479,4 +495,4 @@ python -c "from backend.main import app; from fastapi.testclient import TestClie
 
 ---
 
-*Last updated: 2026-01-13 (Session 9 - SOC 2 Compliance Plan)*
+*Last updated: 2026-01-13 (Session 9 - Compliance Architecture: SOC 2 + GDPR + Privacy)*
