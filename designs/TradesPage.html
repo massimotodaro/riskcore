@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISKCORE - Trades Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: rgba(15, 23, 42, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Time Selector */
+        .time-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-selector:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .time-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .time-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Book Selector */
+        .book-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .book-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .book-pill {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .book-pill.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .book-pill:not(.active) {
+            color: #64748b;
+        }
+
+        .book-pill:not(.active):hover {
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Asset Class Filter */
+        .asset-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .filter-pill.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-pill:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+        }
+
+        .filter-pill:not(.active):hover {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .filter-dot.equity { background: #3b82f6; }
+        .filter-dot.rates { background: #10b981; }
+        .filter-dot.credit { background: #f59e0b; }
+        .filter-dot.fx { background: #8b5cf6; }
+        .filter-dot.other { background: #64748b; }
+
+        /* Tables Container */
+        .tables-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* RiskPod Table */
+        .riskpod-table {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-title-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .table-title.equity { color: #3b82f6; }
+        .table-title.rates { color: #10b981; }
+        .table-title.credit { color: #f59e0b; }
+        .table-title.fx { color: #8b5cf6; }
+        .table-title.other { color: #64748b; }
+
+        .position-count {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .table-metrics {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-size: 13px;
+        }
+
+        .metric-label {
+            color: #64748b;
+        }
+
+        .metric-value {
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .metric-value.positive { color: #34d399; }
+        .metric-value.negative { color: #f87171; }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+        }
+
+        th.right { text-align: right; }
+        th.center { text-align: center; }
+
+        tbody tr {
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tbody tr.expanded {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        td {
+            padding: 14px 16px;
+            font-size: 13px;
+        }
+
+        td.right { text-align: right; }
+        td.center { text-align: center; }
+
+        /* Expand Button */
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.2s;
+        }
+
+        .expand-btn:hover {
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .expand-btn.expanded {
+            transform: rotate(90deg);
+        }
+
+        /* Instrument Cell */
+        .instrument-cell {
+            cursor: pointer;
+        }
+
+        .instrument-cell:hover .ticker {
+            color: #3b82f6;
+        }
+
+        .ticker {
+            font-weight: 600;
+            color: #e2e8f0;
+            transition: color 0.2s;
+        }
+
+        .security-name {
+            font-size: 11px;
+            color: #64748b;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Direction Badge */
+        .direction-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .direction-badge.long {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .direction-badge.short {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Reprice Button */
+        .reprice-btn {
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reprice-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        /* Expanded Trades Section */
+        .expanded-trades {
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .expanded-trades td {
+            padding: 0;
+        }
+
+        .trades-inner {
+            padding: 12px 16px 12px 48px;
+        }
+
+        .trades-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .trades-header span {
+            flex: 1;
+        }
+
+        .trades-header span:first-child { flex: 0 0 80px; }
+        .trades-header span:nth-child(2) { flex: 0 0 80px; }
+        .trades-header span:nth-child(3) { flex: 0 0 60px; }
+        .trades-header span:nth-child(4) { flex: 0 0 80px; text-align: right; }
+        .trades-header span:nth-child(5) { flex: 0 0 80px; text-align: right; }
+        .trades-header span:nth-child(6) { flex: 0 0 100px; text-align: right; }
+        .trades-header span:nth-child(7) { flex: 1; }
+        .trades-header span:nth-child(8) { flex: 0 0 100px; }
+
+        .trade-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .trade-row:last-child {
+            border-bottom: none;
+        }
+
+        .trade-row span {
+            flex: 1;
+        }
+
+        .trade-row span:first-child { flex: 0 0 80px; color: #64748b; font-family: monospace; }
+        .trade-row span:nth-child(2) { flex: 0 0 80px; color: #64748b; }
+        .trade-row span:nth-child(3) { flex: 0 0 60px; }
+        .trade-row span:nth-child(4) { flex: 0 0 80px; text-align: right; color: #e2e8f0; }
+        .trade-row span:nth-child(5) { flex: 0 0 80px; text-align: right; color: #94a3b8; }
+        .trade-row span:nth-child(6) { flex: 0 0 100px; text-align: right; color: #e2e8f0; }
+        .trade-row span:nth-child(7) { flex: 1; color: #fbbf24; font-weight: 500; }
+        .trade-row span:nth-child(8) { flex: 0 0 100px; color: #64748b; }
+
+        .side-buy { color: #34d399; font-weight: 500; }
+        .side-sell { color: #f87171; font-weight: 500; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        /* Monospace numbers */
+        .mono {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">R</div>
+                <span class="logo-text">RISKCORE</span>
+            </div>
+            <nav>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M4 6h4v4H4zM14 6h4v4h-4zM4 14h4v4H4zM14 14h4v4h-4z"/>
+                    </svg>
+                    Riskboard
+                </a>
+                <a href="#" class="nav-item active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    Trades
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    CIO View
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Dashboard
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-top">
+                    <div class="header-left">
+                        <h1 class="page-title">Trades</h1>
+                        <div class="time-selector">
+                            <div class="time-dot"></div>
+                            <span class="time-label">Latest</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="book-selector">
+                        <span class="book-label">Books:</span>
+                        <span class="book-pill active">Alpha Growth</span>
+                        <span class="book-pill active">Beta Momentum</span>
+                        <span class="book-pill">Gamma Value</span>
+                        <span class="book-pill">Delta Quant</span>
+                        <span class="book-pill">+6</span>
+                    </div>
+                </div>
+                <div class="asset-filter">
+                    <span class="filter-pill active">All</span>
+                    <span class="filter-pill active">
+                        <span class="filter-dot equity"></span>
+                        Equity
+                    </span>
+                    <span class="filter-pill active">
+                        <span class="filter-dot rates"></span>
+                        Rates
+                    </span>
+                    <span class="filter-pill active">
+                        <span class="filter-dot credit"></span>
+                        Credit
+                    </span>
+                    <span class="filter-pill active">
+                        <span class="filter-dot fx"></span>
+                        FX
+                    </span>
+                    <span class="filter-pill active">
+                        <span class="filter-dot other"></span>
+                        Other
+                    </span>
+                </div>
+            </header>
+
+            <!-- Tables Container -->
+            <div class="tables-container">
+                <!-- Equity Table -->
+                <div class="riskpod-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title equity">Equity</span>
+                            <span class="position-count">24 positions</span>
+                        </div>
+                        <div class="table-metrics">
+                            <div>
+                                <span class="metric-label">Gross: </span>
+                                <span class="metric-value">$245.8M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Net: </span>
+                                <span class="metric-value positive">$142.3M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Delta: </span>
+                                <span class="metric-value">1.42M</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Instrument</th>
+                                <th>Book</th>
+                                <th>PM</th>
+                                <th class="center">Direction</th>
+                                <th class="right">Quantity</th>
+                                <th class="right">Market Value</th>
+                                <th class="right">Delta</th>
+                                <th class="right">Gamma</th>
+                                <th>Sector</th>
+                                <th class="center">Reprice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="expanded">
+                                <td>
+                                    <button class="expand-btn expanded">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">NVDA</div>
+                                    <div class="security-name">NVIDIA Corporation</div>
+                                </td>
+                                <td>Alpha Growth</td>
+                                <td style="color: #64748b;">Matthew Davis</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">15,000</td>
+                                <td class="right mono" style="color: #34d399;">$12.45M</td>
+                                <td class="right mono">14,850</td>
+                                <td class="right mono">245</td>
+                                <td style="color: #64748b;">Technology</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                            <tr class="expanded-trades">
+                                <td colspan="11">
+                                    <div class="trades-inner">
+                                        <div class="trades-header">
+                                            <span>Trade ID</span>
+                                            <span>Date</span>
+                                            <span>Side</span>
+                                            <span>Qty</span>
+                                            <span>Price</span>
+                                            <span>Notional</span>
+                                            <span>Counterparty</span>
+                                            <span>Broker</span>
+                                        </div>
+                                        <div class="trade-row">
+                                            <span>TRD-8A3F</span>
+                                            <span>Jan 10, 2026</span>
+                                            <span class="side-buy">BUY</span>
+                                            <span>10,000</span>
+                                            <span>$825.50</span>
+                                            <span>$8.26M</span>
+                                            <span>-</span>
+                                            <span>Goldman Sachs</span>
+                                        </div>
+                                        <div class="trade-row">
+                                            <span>TRD-7B2E</span>
+                                            <span>Jan 8, 2026</span>
+                                            <span class="side-buy">BUY</span>
+                                            <span>5,000</span>
+                                            <span>$838.20</span>
+                                            <span>$4.19M</span>
+                                            <span>-</span>
+                                            <span>Morgan Stanley</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">AAPL</div>
+                                    <div class="security-name">Apple Inc.</div>
+                                </td>
+                                <td>Beta Momentum</td>
+                                <td style="color: #64748b;">Emily Chen</td>
+                                <td class="center">
+                                    <span class="direction-badge short">SHORT</span>
+                                </td>
+                                <td class="right mono">8,500</td>
+                                <td class="right mono" style="color: #f87171;">-$1.53M</td>
+                                <td class="right mono">-8,415</td>
+                                <td class="right mono">-142</td>
+                                <td style="color: #64748b;">Technology</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">MSFT</div>
+                                    <div class="security-name">Microsoft Corporation</div>
+                                </td>
+                                <td>Alpha Growth</td>
+                                <td style="color: #64748b;">Matthew Davis</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">12,000</td>
+                                <td class="right mono" style="color: #34d399;">$4.92M</td>
+                                <td class="right mono">11,880</td>
+                                <td class="right mono">198</td>
+                                <td style="color: #64748b;">Technology</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Credit Table (CDS with Counterparty) -->
+                <div class="riskpod-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title credit">Credit</span>
+                            <span class="position-count">8 positions</span>
+                        </div>
+                        <div class="table-metrics">
+                            <div>
+                                <span class="metric-label">Gross: </span>
+                                <span class="metric-value">$85.2M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Net: </span>
+                                <span class="metric-value negative">-$12.5M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">CS01: </span>
+                                <span class="metric-value">42.5K</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Instrument</th>
+                                <th>Book</th>
+                                <th>PM</th>
+                                <th class="center">Direction</th>
+                                <th class="right">Notional</th>
+                                <th class="right">Market Value</th>
+                                <th class="right">CS01</th>
+                                <th>Sector</th>
+                                <th class="center">Reprice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="expanded">
+                                <td>
+                                    <button class="expand-btn expanded">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">GM 5Y CDS</div>
+                                    <div class="security-name">General Motors 5Y CDS</div>
+                                </td>
+                                <td>Credit Alpha</td>
+                                <td style="color: #64748b;">James Wilson</td>
+                                <td class="center">
+                                    <span class="direction-badge short">SHORT</span>
+                                </td>
+                                <td class="right mono">$15M</td>
+                                <td class="right mono" style="color: #f87171;">-$2.85M</td>
+                                <td class="right mono">12,500</td>
+                                <td style="color: #64748b;">Auto</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                            <tr class="expanded-trades">
+                                <td colspan="10">
+                                    <div class="trades-inner">
+                                        <div class="trades-header">
+                                            <span>Trade ID</span>
+                                            <span>Date</span>
+                                            <span>Side</span>
+                                            <span>Notional</span>
+                                            <span>Spread</span>
+                                            <span>MTM</span>
+                                            <span>Counterparty</span>
+                                            <span>Broker</span>
+                                        </div>
+                                        <div class="trade-row">
+                                            <span>CDS-4F2A</span>
+                                            <span>Jan 5, 2026</span>
+                                            <span class="side-sell">SELL</span>
+                                            <span>$10M</span>
+                                            <span>185 bps</span>
+                                            <span>-$1.92M</span>
+                                            <span>JPMorgan Chase</span>
+                                            <span>-</span>
+                                        </div>
+                                        <div class="trade-row">
+                                            <span>CDS-3E1B</span>
+                                            <span>Dec 20, 2025</span>
+                                            <span class="side-sell">SELL</span>
+                                            <span>$5M</span>
+                                            <span>172 bps</span>
+                                            <span>-$0.93M</span>
+                                            <span>Bank of America</span>
+                                            <span>-</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">F 5Y CDS</div>
+                                    <div class="security-name">Ford Motor 5Y CDS</div>
+                                </td>
+                                <td>Credit Alpha</td>
+                                <td style="color: #64748b;">James Wilson</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">$8M</td>
+                                <td class="right mono" style="color: #34d399;">$1.24M</td>
+                                <td class="right mono">8,200</td>
+                                <td style="color: #64748b;">Auto</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Rates Table -->
+                <div class="riskpod-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title rates">Rates</span>
+                            <span class="position-count">12 positions</span>
+                        </div>
+                        <div class="table-metrics">
+                            <div>
+                                <span class="metric-label">Gross: </span>
+                                <span class="metric-value">$320.5M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Net: </span>
+                                <span class="metric-value positive">$85.2M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">DV01: </span>
+                                <span class="metric-value">125.8K</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Instrument</th>
+                                <th>Book</th>
+                                <th>PM</th>
+                                <th class="center">Direction</th>
+                                <th class="right">Notional</th>
+                                <th class="right">Market Value</th>
+                                <th class="right">DV01</th>
+                                <th class="right">Convexity</th>
+                                <th class="center">Reprice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">UST 10Y</div>
+                                    <div class="security-name">US Treasury 10Y 4.25%</div>
+                                </td>
+                                <td>Rates Alpha</td>
+                                <td style="color: #64748b;">Sarah Kim</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">$50M</td>
+                                <td class="right mono" style="color: #34d399;">$52.3M</td>
+                                <td class="right mono">45,200</td>
+                                <td class="right mono">1.24</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">5Y IRS</div>
+                                    <div class="security-name">5Y Interest Rate Swap</div>
+                                </td>
+                                <td>Rates Alpha</td>
+                                <td style="color: #64748b;">Sarah Kim</td>
+                                <td class="center">
+                                    <span class="direction-badge short">SHORT</span>
+                                </td>
+                                <td class="right mono">$25M</td>
+                                <td class="right mono" style="color: #f87171;">-$1.85M</td>
+                                <td class="right mono">-22,500</td>
+                                <td class="right mono">0.85</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FX Table -->
+                <div class="riskpod-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title fx">FX</span>
+                            <span class="position-count">6 positions</span>
+                        </div>
+                        <div class="table-metrics">
+                            <div>
+                                <span class="metric-label">Gross: </span>
+                                <span class="metric-value">$45.2M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Net: </span>
+                                <span class="metric-value positive">$12.8M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">FX Delta: </span>
+                                <span class="metric-value">12.8M</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Instrument</th>
+                                <th>Book</th>
+                                <th>PM</th>
+                                <th class="center">Direction</th>
+                                <th class="right">Notional</th>
+                                <th class="right">Market Value</th>
+                                <th class="right">FX Delta</th>
+                                <th class="center">Reprice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">EUR/USD</div>
+                                    <div class="security-name">Euro vs US Dollar</div>
+                                </td>
+                                <td>FX Macro</td>
+                                <td style="color: #64748b;">David Lee</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">$15M</td>
+                                <td class="right mono" style="color: #34d399;">$15.2M</td>
+                                <td class="right mono">15,200</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Other Table -->
+                <div class="riskpod-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title other">Other</span>
+                            <span class="position-count">3 positions</span>
+                        </div>
+                        <div class="table-metrics">
+                            <div>
+                                <span class="metric-label">Gross: </span>
+                                <span class="metric-value">$18.5M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Net: </span>
+                                <span class="metric-value positive">$8.2M</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Sensitivity: </span>
+                                <span class="metric-value">8.2K</span>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Instrument</th>
+                                <th>Book</th>
+                                <th>PM</th>
+                                <th class="center">Direction</th>
+                                <th class="right">Quantity</th>
+                                <th class="right">Market Value</th>
+                                <th class="right">Sensitivity</th>
+                                <th class="center">Reprice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button class="expand-btn">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="instrument-cell">
+                                    <div class="ticker">GC</div>
+                                    <div class="security-name">Gold Futures</div>
+                                </td>
+                                <td>Commodities</td>
+                                <td style="color: #64748b;">Alex Thompson</td>
+                                <td class="center">
+                                    <span class="direction-badge long">LONG</span>
+                                </td>
+                                <td class="right mono">50</td>
+                                <td class="right mono" style="color: #34d399;">$10.2M</td>
+                                <td class="right mono">5,100</td>
+                                <td class="center">
+                                    <button class="reprice-btn">Reprice</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Toggle expand/collapse for position rows
+        document.querySelectorAll('.expand-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('expanded');
+                // In real app, this would show/hide the trades section
+            });
+        });
+    </script>
+</body>
+</html>

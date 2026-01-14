@@ -13,6 +13,11 @@ import type {
   TradeDetail,
   ValuationDetail,
   BookCorrelation,
+  SnapshotInfo,
+  TimePreset,
+  HistoricalPositionsResponse,
+  RiskPodPositions,
+  UnderlyingTrade,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -551,4 +556,133 @@ export function formatRiskMetric(value: number, metric: string): string {
     return value.toFixed(0)
   }
   return value.toFixed(4)
+}
+
+// ============================================
+// Trades Page API
+// ============================================
+
+export const tradesPageApi = {
+  // Get available snapshots for time selector
+  getSnapshots: (tenantId: string = DEFAULT_TENANT_ID, daysBack: number = 30) =>
+    fetchApi<SnapshotInfo[]>(`/riskboard/snapshots?tenant_id=${tenantId}&days_back=${daysBack}`),
+
+  // Get time presets for quick selection
+  getTimePresets: (tenantId: string = DEFAULT_TENANT_ID) =>
+    fetchApi<TimePreset[]>(`/riskboard/time-presets?tenant_id=${tenantId}`),
+
+  // Get historical positions at a point in time
+  getHistoricalPositions: (
+    bookIds: string[],
+    asOf: string,
+    assetClass?: string,
+    page: number = 1,
+    pageSize: number = 50
+  ) => {
+    let url = `/riskboard/positions/historical?book_ids=${bookIds.join(',')}&as_of=${asOf}&page=${page}&page_size=${pageSize}`
+    if (assetClass) url += `&asset_class=${assetClass}`
+    return fetchApi<HistoricalPositionsResponse>(url)
+  },
+
+  // Get current (latest) positions
+  getCurrentPositions: (
+    bookIds: string[],
+    assetClass?: string,
+    page: number = 1,
+    pageSize: number = 50
+  ) => {
+    let url = `/riskboard/positions/current?book_ids=${bookIds.join(',')}&page=${page}&page_size=${pageSize}`
+    if (assetClass) url += `&asset_class=${assetClass}`
+    return fetchApi<HistoricalPositionsResponse>(url)
+  },
+
+  // Get positions grouped by RiskPod (5 tables)
+  getPositionsByRiskPod: (bookIds: string[], asOf?: string) => {
+    let url = `/riskboard/positions/by-riskpod?book_ids=${bookIds.join(',')}`
+    if (asOf) url += `&as_of=${asOf}`
+    return fetchApi<Record<string, RiskPodPositions>>(url)
+  },
+
+  // Get underlying trades for a position (drill-down)
+  getTradesForPosition: (bookId: string, securityId: string, includeCancelled: boolean = false) =>
+    fetchApi<UnderlyingTrade[]>(
+      `/trades/position/${bookId}/${securityId}?include_cancelled=${includeCancelled}`
+    ),
+
+  // Override price for a security (manual repricing)
+  overridePrice: (securityId: string, price: number, userId: string, reason?: string) =>
+    fetchApi<PriceOverrideResponse>(`/pricing/security/${securityId}/override?user_id=${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ price, reason }),
+    }),
+}
+
+// Utility: Format date for display
+export function formatDate(dateStr?: string): string {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+// Utility: Format time for display
+export function formatDateTime(dateStr?: string): string {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// Utility: Format quantity with commas
+export function formatQuantity(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+// RiskPod configuration for display
+export const RISKPOD_CONFIG = {
+  equity: {
+    key: 'equity' as const,
+    label: 'Equity',
+    primaryMetric: 'delta',
+    primaryMetricLabel: 'Delta',
+    columns: ['delta', 'gamma', 'sector'],
+  },
+  rates: {
+    key: 'rates' as const,
+    label: 'Rates',
+    primaryMetric: 'dv01',
+    primaryMetricLabel: 'DV01',
+    columns: ['dv01', 'convexity'],
+  },
+  credit: {
+    key: 'credit' as const,
+    label: 'Credit',
+    primaryMetric: 'cs01',
+    primaryMetricLabel: 'CS01',
+    columns: ['cs01', 'sector'],
+  },
+  fx: {
+    key: 'fx' as const,
+    label: 'FX',
+    primaryMetric: 'delta',
+    primaryMetricLabel: 'FX Delta',
+    columns: ['delta'],
+  },
+  other: {
+    key: 'other' as const,
+    label: 'Other',
+    primaryMetric: 'delta',
+    primaryMetricLabel: 'Sensitivity',
+    columns: ['delta'],
+  },
 }

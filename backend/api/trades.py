@@ -17,9 +17,40 @@ from ..models.trade import (
     TradeList,
 )
 from ..services.trade_service import TradeService
+from ..services.historical_service import HistoricalService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# =============================================================================
+# Response Models for Position Trades
+# =============================================================================
+
+from pydantic import BaseModel
+from typing import List
+
+
+class UnderlyingTrade(BaseModel):
+    """Trade that makes up a position."""
+    trade_id: str
+    trade_id_external: Optional[str] = None
+    side: str
+    quantity: float
+    price: float
+    notional: float
+    currency: str
+    trade_date: Optional[str] = None
+    trade_time: Optional[str] = None
+    settlement_date: Optional[str] = None
+    counterparty: Optional[str] = None  # CRITICAL for OTC
+    broker: Optional[str] = None
+    commission: float
+    fees: float
+    source: Optional[str] = None
+    is_cancelled: bool
+    cancelled_at: Optional[str] = None
+    created_at: Optional[str] = None
 
 
 @router.get("/", response_model=TradeList)
@@ -394,3 +425,50 @@ def create_trades_bulk(trades: list[TradeCreate]):
         "total": len(trades),
         "errors": errors if errors else None,
     }
+
+
+# =============================================================================
+# POSITION TRADES ENDPOINT (for Trades page drill-down)
+# =============================================================================
+
+@router.get("/position/{book_id}/{security_id}", response_model=List[UnderlyingTrade])
+def get_trades_for_position(
+    book_id: UUID,
+    security_id: UUID,
+    include_cancelled: bool = Query(False, description="Include cancelled trades"),
+):
+    """
+    Get all trades that make up a position.
+
+    Returns the underlying trades for a given book + security combination.
+    This is used when expanding a position row on the Trades page to see
+    individual trade details including counterparty.
+
+    **For equities:** Shows all buys/sells that sum to net position
+    **For OTC (CDS, swaps):** Shows each open contract with different counterparties
+
+    Parameters:
+    - book_id: The book UUID
+    - security_id: The security UUID
+    - include_cancelled: Whether to include cancelled trades (default: false)
+
+    Returns:
+    - List of trades with counterparty, broker, and execution details
+    """
+    try:
+        with get_db_connection() as conn:
+            service = HistoricalService(conn)
+            trades = service.get_trades_for_position(
+                book_id=book_id,
+                security_id=security_id,
+                include_cancelled=include_cancelled,
+            )
+
+            return [UnderlyingTrade(**t) for t in trades]
+
+    except Exception as e:
+        logger.error(f"Error getting trades for position book={book_id}, security={security_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get trades for position: {str(e)}",
+        )

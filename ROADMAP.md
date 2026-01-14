@@ -903,6 +903,123 @@ APScheduler>=3.10.0     # Job scheduling
 
 ---
 
+## Week 9: Counterparty Risk ⬜ NOT STARTED
+
+**Target:** Counterparty exposure tracking and risk management
+**Critical for:** OTC derivatives (CDS, swaps, forwards), prime broker relationships
+
+### Why It Matters
+
+- OTC instruments have bilateral counterparty risk
+- Each CDS/swap contract ties exposure to a specific counterparty
+- Counterparty default = direct loss on positive MTM positions
+- 2008 crisis: Lehman bankruptcy caused massive counterparty losses
+
+### Milestones
+
+- [ ] Counterparty master table (legal entity, ratings, limits)
+- [ ] Counterparty exposure aggregation by entity
+- [ ] Net exposure calculation (netting agreements)
+- [ ] Gross vs net counterparty exposure views
+- [ ] Counterparty concentration warnings (>10% single name)
+- [ ] Rating-weighted exposure metrics
+- [ ] Counterparty dashboard panel
+- [ ] Limit breach alerts
+
+### Data Model
+
+```sql
+-- Counterparty master
+CREATE TABLE counterparties (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    name TEXT NOT NULL,
+    lei TEXT,                    -- Legal Entity Identifier
+    rating TEXT,                 -- S&P/Moody's rating
+    rating_date DATE,
+    parent_id UUID,              -- For corporate hierarchies
+    country TEXT,
+    counterparty_type TEXT,      -- 'bank', 'broker', 'corporate', 'sovereign'
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Netting agreements
+CREATE TABLE netting_agreements (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    counterparty_id UUID REFERENCES counterparties(id),
+    agreement_type TEXT,         -- 'ISDA', 'CSA', 'GMRA'
+    effective_date DATE,
+    termination_date DATE,
+    allows_netting BOOLEAN DEFAULT true,
+    collateral_threshold DECIMAL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Counterparty limits
+CREATE TABLE counterparty_limits (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    counterparty_id UUID REFERENCES counterparties(id),
+    limit_type TEXT,             -- 'gross_exposure', 'net_exposure', 'settlement'
+    limit_value DECIMAL NOT NULL,
+    currency TEXT DEFAULT 'USD',
+    effective_date DATE,
+    expiry_date DATE,
+    approved_by UUID,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /counterparty/exposure` | Aggregated exposure by counterparty |
+| `GET /counterparty/{id}/positions` | All positions with counterparty |
+| `GET /counterparty/concentration` | Top exposures with warnings |
+| `GET /counterparty/limits` | Limit utilization by counterparty |
+| `GET /counterparty/rating-distribution` | Exposure by credit rating |
+| `POST /counterparty/{id}/limit` | Set/update counterparty limit |
+
+### Dashboard Components
+
+1. **Counterparty Exposure Table**
+   - Counterparty name, rating, gross/net exposure
+   - Limit utilization bar
+   - Warning icons for breaches
+
+2. **Concentration Chart**
+   - Top 10 counterparties by exposure
+   - Pie chart or horizontal bars
+
+3. **Rating Distribution**
+   - Exposure bucketed by rating (AAA, AA, A, BBB, etc.)
+   - Color-coded risk tiers
+
+4. **Alerts Panel**
+   - Limit breaches
+   - Rating downgrades
+   - Large exposure changes
+
+### Acceptance Criteria
+
+- [ ] Counterparty field captured on all OTC trades
+- [ ] Exposure aggregation handles netting agreements
+- [ ] Concentration warnings trigger at 10% threshold
+- [ ] Dashboard shows real-time counterparty exposure
+- [ ] Limit breach creates notification
+- [ ] Rating distribution chart renders correctly
+
+### Dependencies
+
+- Trades page counterparty field (✅ implemented)
+- Notification system (Week 8)
+- Limits infrastructure (Week 4)
+
+---
+
 ## Post-MVP: Phase 2 - Correlation Framework
 
 **Timeline:** 8 weeks after MVP

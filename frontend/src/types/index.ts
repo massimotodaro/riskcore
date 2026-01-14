@@ -271,3 +271,114 @@ export interface BookCorrelation {
   netting_opportunity: number
   data_points: number
 }
+
+// ============================================
+// Trades Page Types
+// ============================================
+
+// Available snapshot for time selector
+export interface SnapshotInfo {
+  snapshot_date: string
+  snapshot_type: string
+  position_count: number
+  timestamp?: string
+}
+
+// Time preset option for selector
+export interface TimePreset {
+  type: string
+  label: string
+  timestamp?: string
+  date?: string
+}
+
+// Historical position data
+export interface HistoricalPosition {
+  position_id?: string
+  history_id?: string
+  book_id: string
+  book_name: string
+  pm_id?: string
+  pm_name?: string
+  security_id: string
+  ticker?: string
+  security_name: string
+  asset_class: string
+  sector?: string
+  direction: string
+  quantity: number
+  market_value: number
+  cost_basis: number
+  unrealized_pnl: number
+  price: number
+  price_source?: string
+  delta: number
+  gamma: number
+  vega: number
+  theta: number
+  rho: number
+  dv01: number
+  cs01: number
+  convexity: number
+  snapshot_timestamp?: string
+  snapshot_type?: string
+  updated_at?: string
+  price_as_of?: string
+}
+
+// Paginated historical positions response
+export interface HistoricalPositionsResponse {
+  positions: HistoricalPosition[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+  as_of: string
+}
+
+// RiskPod positions group
+export interface RiskPodPositions {
+  pod: string
+  position_count: number
+  gross_exposure: number
+  net_exposure: number
+  total_delta: number
+  total_dv01: number
+  total_cs01: number
+  positions: HistoricalPosition[]
+  as_of: string
+}
+
+// Underlying trade for position drill-down
+export interface UnderlyingTrade {
+  trade_id: string
+  trade_id_external?: string
+  side: string
+  quantity: number
+  price: number
+  notional: number
+  currency: string
+  trade_date?: string
+  trade_time?: string
+  settlement_date?: string
+  counterparty?: string  // CRITICAL for OTC
+  broker?: string
+  commission: number
+  fees: number
+  source?: string
+  is_cancelled: boolean
+  cancelled_at?: string
+  created_at?: string
+}
+
+// RiskPod type for display
+export type RiskPodType = 'equity' | 'rates' | 'credit' | 'fx' | 'other'
+
+// RiskPod display configuration
+export interface RiskPodConfig {
+  key: RiskPodType
+  label: string
+  primaryMetric: string
+  primaryMetricLabel: string
+  columns: string[]
+}

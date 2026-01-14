@@ -3,6 +3,7 @@ import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import CIODashboard from './pages/CIODashboard'
 import Riskboard from './pages/Riskboard'
+import Trades from './pages/Trades'
 import UnderlyingTrades from './pages/UnderlyingTrades'
 
 function App() {
@@ -13,9 +14,11 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         {/* New Unified Riskboard - Main Dashboard */}
         <Route path="riskboard" element={<Riskboard />} />
+        {/* Trades Page - Net Positions with drill-down to underlying trades */}
+        <Route path="trades" element={<Trades />} />
         {/* Legacy CIO Dashboard */}
         <Route path="cio" element={<CIODashboard />} />
-        {/* Underlying Trades Drill-down */}
+        {/* Legacy Underlying Trades Drill-down (from RiskCard) */}
         <Route path="trades/:bookIds/:assetClass" element={<UnderlyingTrades />} />
         {/* Future routes */}
         {/* <Route path="positions" element={<Positions />} /> */}

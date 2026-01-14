@@ -4,12 +4,14 @@
 
 from typing import Optional, List
 from uuid import UUID
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from backend.database import get_db_connection
 from backend.services.riskpod import RiskPodService
+from backend.services.historical_service import HistoricalService
 
 router = APIRouter()
 
@@ -389,3 +391,273 @@ def get_positions_by_asset_class(
             page_size=result['page_size'],
             total_pages=result['total_pages'],
         )
+
+
+# =============================================================================
+# HISTORICAL / TIME TRAVEL ENDPOINTS
+# =============================================================================
+
+class SnapshotInfo(BaseModel):
+    """Available snapshot for time selector."""
+    snapshot_date: str
+    snapshot_type: str
+    position_count: int
+    timestamp: Optional[str] = None
+
+
+class TimePreset(BaseModel):
+    """Time preset option for selector."""
+    type: str
+    label: str
+    timestamp: Optional[str] = None
+    date: Optional[str] = None
+
+
+class HistoricalPosition(BaseModel):
+    """Position at a point in time."""
+    position_id: Optional[str] = None
+    history_id: Optional[str] = None
+    book_id: str
+    book_name: str
+    pm_id: Optional[str] = None
+    pm_name: Optional[str] = None
+    security_id: str
+    ticker: Optional[str] = None
+    security_name: str
+    asset_class: str
+    sector: Optional[str] = None
+    direction: str
+    quantity: float
+    market_value: float
+    cost_basis: float
+    unrealized_pnl: float
+    price: float
+    price_source: Optional[str] = None
+    delta: float
+    gamma: float
+    vega: float
+    theta: float
+    rho: float
+    dv01: float
+    cs01: float
+    convexity: float
+    snapshot_timestamp: Optional[str] = None
+    snapshot_type: Optional[str] = None
+    updated_at: Optional[str] = None
+    price_as_of: Optional[str] = None
+
+
+class HistoricalPositionsResponse(BaseModel):
+    """Paginated historical positions response."""
+    positions: List[HistoricalPosition]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    as_of: str
+
+
+class RiskPodPositions(BaseModel):
+    """Positions grouped by RiskPod."""
+    pod: str
+    position_count: int
+    gross_exposure: float
+    net_exposure: float
+    total_delta: float
+    total_dv01: float
+    total_cs01: float
+    positions: List[HistoricalPosition]
+    as_of: str
+
+
+@router.get("/snapshots", response_model=List[SnapshotInfo])
+def get_available_snapshots(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+    days_back: int = Query(default=30, ge=1, le=365, description="Days to look back"),
+):
+    """
+    Get available EOD snapshots for time selector.
+
+    Returns list of dates with available position snapshots.
+    Used by: TimeSelector component for date picker
+
+    NOTE: Only EOD snapshots are returned (not intraday).
+    """
+    with get_db_connection() as conn:
+        service = HistoricalService(conn)
+        results = service.get_available_snapshots(tenant_id, days_back)
+        return [SnapshotInfo(**r) for r in results]
+
+
+@router.get("/time-presets", response_model=List[TimePreset])
+def get_time_presets(
+    tenant_id: UUID = Query(..., description="Tenant ID"),
+):
+    """
+    Get time selector preset options.
+
+    Returns presets like "Latest", "Yesterday EOD", "Last Week EOD"
+    with actual timestamps from available snapshots.
+
+    Used by: TimeSelector component for quick-select dropdown
+    """
+    with get_db_connection() as conn:
+        service = HistoricalService(conn)
+        results = service.get_time_presets(tenant_id)
+        return [TimePreset(**r) for r in results]
+
+
+@router.get("/positions/historical", response_model=HistoricalPositionsResponse)
+def get_historical_positions(
+    book_ids: str = Query(..., description="Comma-separated book IDs"),
+    as_of: datetime = Query(..., description="Point-in-time timestamp (ISO format)"),
+    asset_class: Optional[str] = Query(
+        default=None,
+        description="Filter by asset class (equity, fixed_income, cds, fx, etc.)"
+    ),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=50, ge=1, le=100, description="Items per page"),
+):
+    """
+    Get positions at a specific point in time.
+
+    Queries position_history table for the most recent snapshot
+    before or at the requested timestamp.
+
+    Used by: Trades page with time selector set to historical date
+
+    Parameters:
+    - book_ids: Comma-separated list of book UUIDs
+    - as_of: ISO timestamp for point-in-time query
+    - asset_class: Optional filter (equity, fixed_income, cds, fx, etc.)
+    - page, page_size: Pagination
+    """
+    with get_db_connection() as conn:
+        service = HistoricalService(conn)
+
+        # Parse book_ids
+        try:
+            book_id_list = [UUID(bid.strip()) for bid in book_ids.split(",")]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid book_ids format. Use comma-separated UUIDs."
+            )
+
+        if not book_id_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one book_id is required."
+            )
+
+        result = service.get_positions_at_time(
+            book_ids=book_id_list,
+            as_of=as_of,
+            asset_class=asset_class,
+            page=page,
+            page_size=page_size,
+        )
+
+        return HistoricalPositionsResponse(
+            positions=[HistoricalPosition(**p) for p in result['positions']],
+            total=result['total'],
+            page=result['page'],
+            page_size=result['page_size'],
+            total_pages=result['total_pages'],
+            as_of=result['as_of'],
+        )
+
+
+@router.get("/positions/current", response_model=HistoricalPositionsResponse)
+def get_current_positions(
+    book_ids: str = Query(..., description="Comma-separated book IDs"),
+    asset_class: Optional[str] = Query(
+        default=None,
+        description="Filter by asset class (equity, fixed_income, cds, fx, etc.)"
+    ),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=50, ge=1, le=100, description="Items per page"),
+):
+    """
+    Get current (latest) positions from positions table.
+
+    This is for "Latest" time selection - uses live position data,
+    not position_history snapshots.
+
+    Used by: Trades page with time selector set to "Latest"
+    """
+    with get_db_connection() as conn:
+        service = HistoricalService(conn)
+
+        # Parse book_ids
+        try:
+            book_id_list = [UUID(bid.strip()) for bid in book_ids.split(",")]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid book_ids format. Use comma-separated UUIDs."
+            )
+
+        if not book_id_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one book_id is required."
+            )
+
+        result = service.get_positions_current(
+            book_ids=book_id_list,
+            asset_class=asset_class,
+            page=page,
+            page_size=page_size,
+        )
+
+        return HistoricalPositionsResponse(
+            positions=[HistoricalPosition(**p) for p in result['positions']],
+            total=result['total'],
+            page=result['page'],
+            page_size=result['page_size'],
+            total_pages=result['total_pages'],
+            as_of=result['as_of'],
+        )
+
+
+@router.get("/positions/by-riskpod")
+def get_positions_by_riskpod(
+    book_ids: str = Query(..., description="Comma-separated book IDs"),
+    as_of: Optional[datetime] = Query(
+        default=None,
+        description="Point-in-time timestamp (None = latest)"
+    ),
+):
+    """
+    Get positions grouped by RiskPod (5 categories).
+
+    Returns positions organized by: equity, rates, credit, fx, other.
+    Each category includes summary metrics and position list.
+
+    Used by: Trades page to populate 5 RiskPod tables
+    """
+    with get_db_connection() as conn:
+        service = HistoricalService(conn)
+
+        # Parse book_ids
+        try:
+            book_id_list = [UUID(bid.strip()) for bid in book_ids.split(",")]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid book_ids format. Use comma-separated UUIDs."
+            )
+
+        if not book_id_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one book_id is required."
+            )
+
+        result = service.get_positions_grouped_by_riskpod(
+            book_ids=book_id_list,
+            as_of=as_of,
+        )
+
+        return result

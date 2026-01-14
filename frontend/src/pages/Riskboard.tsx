@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import TopBar from '../components/riskboard/TopBar'
 import RiskPodRow from '../components/riskboard/RiskPodRow'
-import PortfolioSelector from '../components/riskboard/PortfolioSelector'
 import CorrelationPanel from '../components/riskboard/CorrelationPanel'
 import {
   riskboardApi,
@@ -87,10 +86,28 @@ export default function Riskboard() {
     )
   }
 
-  // Handle trades click - navigate to positions drill-down
+  // Handle trades click - navigate to Trades page with context
   const handleTradesClick = (bookIds: string[], assetClass: string) => {
     if (bookIds.length > 0) {
-      navigate(`/trades/${bookIds.join(',')}/${assetClass}`)
+      const params = new URLSearchParams()
+      params.set('books', bookIds.join(','))
+      // Map asset class to riskpod for filtering
+      const riskpodMap: Record<string, string> = {
+        equity: 'equity',
+        option: 'equity',
+        future: 'equity',
+        fund: 'equity',
+        fixed_income: 'rates',
+        swap: 'rates',
+        cds: 'credit',
+        fx: 'fx',
+        commodity: 'other',
+        crypto: 'other',
+        other: 'other',
+      }
+      const riskpod = riskpodMap[assetClass] || assetClass
+      params.set('asset', riskpod)
+      navigate(`/trades?${params}`)
     }
   }
 
@@ -180,13 +197,16 @@ function RiskPodSection({
   pod,
   index,
   allBooks,
-  tradingBooks,
-  overlayBooks,
+  tradingBooks: _tradingBooks,
+  overlayBooks: _overlayBooks,
   canDelete,
   onDelete,
   onBookSelectionChange,
   onTradesClick,
 }: RiskPodSectionProps) {
+  // These props are available for future features
+  void _tradingBooks
+  void _overlayBooks
   // Fetch risk by asset class for selected books
   const { data: riskData, isLoading } = useQuery({
     queryKey: ['riskByAssetClass', pod.selectedBookIds],

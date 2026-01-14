@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (Riskboard Polish) |
-| **Status** | ✅ HTML Mockup Complete with Calculate, Accessibility, Price Override |
-| **Next** | Tomorrow: Review User Manual, Test all card calculations |
+| **Week** | 5 - Dashboard (Trades Page Implementation) |
+| **Status** | ✅ Trades Page Complete - Net Positions with drill-down to underlying trades |
+| **Next** | Test with backend running, add TimeSelector to Riskboard header |
 | **Tests** | 154+ passing (backend), frontend builds successfully |
 | **Branch** | develop |
 
@@ -19,7 +19,84 @@
 
 ## Session Log
 
-### 2026-01-13 Session 12 (Latest)
+### 2026-01-14 Session 13 (Latest)
+
+**Focus:** Trades Page - Net Positions with Drill-down to Underlying Trades
+
+**Features Implemented:**
+
+1. **Backend - Historical Service:**
+   - Created `backend/services/historical_service.py` with position_history queries
+   - Added endpoints: `/positions/historical`, `/positions/current`, `/positions/by-riskpod`
+   - Added `/snapshots` endpoint for available EOD snapshots
+   - Added `/time-presets` endpoint for quick time selection
+   - Added `/trades/position/{book_id}/{security_id}` for underlying trades
+
+2. **Frontend - Trades Page:**
+   - Created `TimeSelector` component (presets dropdown + custom date picker)
+   - Created `AssetClassFilter` component (5 RiskPod checkboxes)
+   - Created `PositionTable` component with expandable rows
+   - Created `RepricingModal` for manual price override
+   - Created main `Trades.tsx` page with 5 RiskPod tables
+
+3. **URL-Based State Management:**
+   - Books: `?books=uuid1,uuid2`
+   - Time: `?time=2026-01-13T17:00:00Z` (omit for Latest)
+   - Asset filter: `?asset=equity,rates` (omit for all 5)
+
+4. **Context Passing from RiskCard:**
+   - Updated `Riskboard.tsx` to navigate to Trades with query params
+   - Pre-filters to clicked RiskPod's asset class
+   - Passes selected books from RiskPod
+
+5. **Position Drill-Down:**
+   - Click position row → Expands to show underlying trades
+   - Displays counterparty, broker, trade date, side, quantity, price
+   - Critical for OTC instruments (each contract has different counterparty)
+
+**Backend Files Created/Modified:**
+- `backend/services/historical_service.py` (NEW)
+- `backend/api/riskboard.py` (MODIFIED - added 5 new endpoints)
+- `backend/api/trades.py` (MODIFIED - added position trades endpoint)
+
+**Frontend Files Created/Modified:**
+- `frontend/src/components/common/TimeSelector.tsx` (NEW)
+- `frontend/src/components/common/AssetClassFilter.tsx` (NEW)
+- `frontend/src/components/trades/PositionTable.tsx` (NEW)
+- `frontend/src/components/trades/RepricingModal.tsx` (NEW)
+- `frontend/src/pages/Trades.tsx` (NEW)
+- `frontend/src/types/index.ts` (MODIFIED - added Trades page types)
+- `frontend/src/services/api.ts` (MODIFIED - added tradesPageApi)
+- `frontend/src/App.tsx` (MODIFIED - added /trades route)
+- `frontend/src/components/layout/Sidebar.tsx` (MODIFIED - reordered nav, added Trades)
+- `frontend/src/pages/Riskboard.tsx` (MODIFIED - context passing to Trades)
+
+**TypeScript Types Added:**
+- `SnapshotInfo` - Available snapshot for time selector
+- `TimePreset` - Quick select preset (Latest, Yesterday, Last Week)
+- `HistoricalPosition` - Position at point in time
+- `HistoricalPositionsResponse` - Paginated historical positions
+- `RiskPodPositions` - Positions grouped by RiskPod
+- `UnderlyingTrade` - Trade with counterparty info
+- `RiskPodType` - Union type for 5 RiskPods
+- `RiskPodConfig` - Display configuration per pod
+
+**API Endpoints Added:**
+- `GET /riskboard/snapshots` - Available EOD snapshots
+- `GET /riskboard/time-presets` - Quick select presets
+- `GET /riskboard/positions/historical` - Point-in-time positions
+- `GET /riskboard/positions/current` - Latest positions
+- `GET /riskboard/positions/by-riskpod` - Grouped by 5 RiskPods
+- `GET /trades/position/{book_id}/{security_id}` - Underlying trades
+
+**Verification:**
+- Python backend compiles successfully
+- TypeScript frontend compiles successfully (no errors)
+- All imports resolved correctly
+
+---
+
+### 2026-01-13 Session 12
 
 **Focus:** Riskboard Expanded Card Modal Fixes
 
