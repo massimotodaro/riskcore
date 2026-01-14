@@ -1,0 +1,65 @@
+name: Daily Activity
+
+# Runs at 11:55 PM UTC daily (safety net for contribution graph)
+# Only creates a commit if no other commits were made that day
+
+on:
+  schedule:
+    - cron: '55 23 * * *'  # 11:55 PM UTC daily
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for commit checking
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for today's commits
+        id: check
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          echo "Checking for commits on $TODAY..."
+
+          # Count commits from today (excluding bot commits)
+          COMMITS=$(git log --since="$TODAY 00:00:00 UTC" --until="$TODAY 23:59:59 UTC" \
+            --oneline --author-date-order \
+            --invert-grep --grep="Daily heartbeat" | wc -l)
+
+          echo "Found $COMMITS human commits today"
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+
+      - name: Create heartbeat commit if no activity
+        if: steps.check.outputs.commits == '0'
+        run: |
+          # Create or update heartbeat file
+          mkdir -p .github
+          cat > .github/HEARTBEAT << EOF
+          # RISKCORE Development Heartbeat
+
+          Last active: $(date -u +%Y-%m-%d)
+          Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          This file is automatically updated to maintain contribution activity.
+          Real development happens in the codebase - this is just a safety net.
+          EOF
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit and push
+          git add .github/HEARTBEAT
+          git commit -m "chore: Daily heartbeat [skip ci]"
+          git push
+
+      - name: Skip message
+        if: steps.check.outputs.commits != '0'
+        run: |
+          echo "Found ${{ steps.check.outputs.commits }} commits today - no heartbeat needed!"
