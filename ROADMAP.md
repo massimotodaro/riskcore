@@ -1,7 +1,7 @@
 # RISKCORE Development Roadmap
 
 > Living document tracking MVP development progress.
-> **Last Updated:** 2026-01-12
+> **Last Updated:** 2026-01-14
 > **Sync to Claude Desktop:** Copy this file + CLAUDE.md daily
 
 ---
@@ -14,10 +14,11 @@
 | 2 | Data Ingestion | ✅ COMPLETE | Position/trade API, FIX adapter, CSV/Excel upload |
 | 3 | Risk Engine | ✅ COMPLETE | VaR/CVaR (numpy/scipy), exposures, Greeks (Black-Scholes) |
 | 4 | Aggregation | ✅ COMPLETE | Cross-PM netting, overlap detection, firm rollup |
-| 5 | Dashboard | 🔄 IN PROGRESS | CIO Dashboard + Overlay Book, needs testing/polish |
-| 6 | AI + Polish | ⬜ NOT STARTED | Claude integration, NL queries, documentation |
+| 5 | Dashboard | 🔄 IN PROGRESS | CIO Dashboard + Overlay Book, Trades page |
+| 6 | AI Assistant | ⬜ NOT STARTED | Voice + NL queries, on-premises LLM, hybrid cloud option |
+| 7 | Reports | ⬜ NOT STARTED | PDF/Excel generation, scheduling, email delivery |
 
-**Current Focus:** Week 5 - CIO Dashboard (testing, styling, PM view)
+**Current Focus:** Week 5 - Dashboard (Trades page, testing, polish)
 
 ---
 
@@ -468,60 +469,437 @@ VERIFY-4.7: Returns & Correlation ✅
 
 ---
 
-## Week 6: AI + Polish + Auto-Import ⬜ NOT STARTED
+## Week 6: AI Assistant (Voice + NL Queries) ⬜ NOT STARTED
 
-**Target:** Natural language queries, automated file imports, and production readiness
+**Target:** AI-native platform with voice and natural language queries
+**Philosophy:** This is what sets RISKCORE apart from legacy platforms
+
+### Core Principle: ON-PREMISES FIRST
+
+**CRITICAL:** Sensitive financial data NEVER leaves client network.
+- All position/trade queries processed by on-premises LLM
+- Optional cloud (Claude API) only for general queries with explicit client consent
+- Voice processing runs locally (Whisper)
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     RISKCORE AI LAYER                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐  │
+│  │   Whisper   │────▶│  Query Router    │────▶│  Response   │  │
+│  │  (Voice)    │     │                  │     │  Formatter  │  │
+│  └─────────────┘     │  - Sanitization  │     └─────────────┘  │
+│                      │  - Classification│                       │
+│  ┌─────────────┐     │  - Routing logic │     ┌─────────────┐  │
+│  │   Text UI   │────▶│                  │────▶│  Audit Log  │  │
+│  │  (Chat)     │     └────────┬─────────┘     └─────────────┘  │
+│  └─────────────┘              │                                 │
+│                               ▼                                 │
+│         ┌─────────────────────┴─────────────────────┐          │
+│         │                                           │          │
+│         ▼                                           ▼          │
+│  ┌─────────────────┐                    ┌─────────────────┐   │
+│  │  LOCAL LLM      │                    │  CLOUD LLM      │   │
+│  │  (vLLM/Ollama)  │                    │  (Claude API)   │   │
+│  │                 │                    │                 │   │
+│  │  Qwen 72B or    │                    │  Claude Opus    │   │
+│  │  QwQ 32B        │                    │  Zero Data      │   │
+│  │                 │                    │  Retention      │   │
+│  │  For: ALL       │                    │                 │   │
+│  │  sensitive      │                    │  For: General   │   │
+│  │  queries        │                    │  queries only   │   │
+│  └─────────────────┘                    └─────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Milestones
 
-**Watched Folder / Auto-Import:**
-- [ ] File watcher service (monitor directories for new files)
-- [ ] Auto-detect file type (CSV, Excel)
-- [ ] Import with existing parsers (FileParser)
-- [ ] Move processed files to archive folder
-- [ ] Error handling and notifications
-- [ ] SFTP server integration (optional)
-- [ ] Email attachment parsing (optional)
+**Voice Interface:**
+- [ ] Whisper Large V3 Turbo deployment (local, 809M params, 6x faster)
+- [ ] Voice activation ("Hey RISKCORE" or push-to-talk)
+- [ ] Real-time transcription with visual feedback
+- [ ] Financial vocabulary fine-tuning (CUSIP, VaR, delta, DV01, etc.)
+- [ ] Vosk fallback for ultra-low latency command detection
 
-**AI Integration:**
-- [ ] Claude API integration
-- [ ] Natural language query endpoint
-- [ ] Chat interface in dashboard
-- [ ] Query examples and suggestions
-- [ ] Rate limiting and caching
+**Natural Language Processing:**
+- [ ] Query classification (risk, position, exposure, aggregation, general)
+- [ ] Intent extraction with entity recognition
+- [ ] Context-aware responses (remembers current portfolio selection)
+- [ ] Multi-turn conversation support
 
-**Production Readiness:**
-- [ ] Error handling and logging
-- [ ] API documentation (OpenAPI/Swagger)
-- [ ] User documentation
-- [ ] Demo script preparation
-- [ ] LinkedIn announcement post
+**On-Premises LLM (Primary):**
+- [ ] Ollama setup for development (easy, OpenAI-compatible API)
+- [ ] vLLM deployment for production (PagedAttention, 2-4x throughput)
+- [ ] Qwen2.5 72B or QwQ-32B model (best for financial reasoning)
+- [ ] Mistral 7B fallback for simple queries (faster, less VRAM)
+- [ ] RAG integration with local vector store (Chroma)
+
+**Hybrid Cloud (Optional - Client Consent Required):**
+- [ ] Claude API integration (Zero Data Retention endpoints)
+- [ ] Query router: sensitive data → local, general → cloud
+- [ ] Client configuration: enable/disable cloud
+- [ ] Data anonymization for cloud queries
+
+**Security & Compliance:**
+- [ ] Query sanitization (block SQL injection, prompt injection)
+- [ ] Audit logging for all AI queries (who, what, when, which model)
+- [ ] OWASP LLM Top 10 mitigations implemented
+- [ ] Role-based query restrictions (PM can only query own books)
+
+**Chat Interface:**
+- [ ] Chat sidebar in dashboard
+- [ ] Voice input button with visual feedback
+- [ ] Query suggestions based on current view
+- [ ] Response with actionable links (e.g., "show me" → navigates to view)
+- [ ] Chat history per session
+
+### Example Queries
+
+```
+Voice: "Show me the RiskPods for portfolio 17 and portfolio 21"
+→ Dashboard displays selected portfolios side by side
+
+Voice: "What's our net tech exposure across all PMs?"
+→ Returns: "Firm-wide net tech exposure is $45.2M long,
+           driven primarily by PM Chen ($28M) and PM Davis ($12M)"
+
+Voice: "Flag any PMs with correlation above 0.7"
+→ Returns list of high-correlation pairs with recommendation
+
+Voice: "Generate a risk summary for the macro fund"
+→ Triggers report generation (Week 7 feature)
+```
+
+### Hardware Requirements
+
+| Tier | GPU | VRAM | Models Supported |
+|------|-----|------|------------------|
+| **Entry** | RTX 4090 | 24GB | QwQ-32B (Q4), Mistral 7B |
+| **Recommended** | A100 | 80GB | Qwen 72B, full precision |
+| **Budget** | RTX 4060 | 8GB | Mistral 7B only |
+| **CPU-only** | None | 64GB RAM | llama.cpp with Q4 models (slow) |
+
+### Technology Stack
+
+| Component | Development | Production |
+|-----------|-------------|------------|
+| **LLM Framework** | Ollama | vLLM |
+| **LLM Model** | Mistral 7B | Qwen2.5 72B or QwQ-32B |
+| **Voice-to-Text** | Whisper (faster-whisper) | Whisper Large V3 Turbo |
+| **Vector Store** | Chroma (local) | Chroma (persistent) |
+| **Cloud LLM** | Claude API (optional) | Claude with ZDR |
+
+### Safety Implementation
+
+```python
+# Query sanitization (OWASP LLM01:2025)
+BLOCKED_PATTERNS = [
+    r'ignore\s+(previous|above)',      # Prompt injection
+    r'forget\s+your\s+instructions',   # Jailbreak attempt
+    r';\s*DROP',                        # SQL injection
+    r'UNION\s+SELECT',                  # SQL injection
+]
+
+# Audit log schema
+class AIQueryAuditLog:
+    timestamp: datetime
+    tenant_id: str
+    user_id: str
+    user_email: str  # Denormalized
+    raw_query: str
+    sanitized_query: str
+    routed_to: str  # 'local_llm' | 'claude_api'
+    model_used: str
+    contains_positions: bool  # Always local if True
+    response_tokens: int
+    latency_ms: int
+    flagged_for_review: bool
+```
 
 ### Acceptance Criteria
 
-- [ ] "What's our net tech exposure?" returns correct answer
-- [ ] "Show me overlapping positions" lists cross-PM overlaps
-- [ ] Query response time <3 seconds (with caching)
+- [ ] "Show me RiskPods for portfolio 17 and 21" works via voice and text
+- [ ] Voice recognition accuracy >95% for financial terms
+- [ ] Query response time <3 seconds (local LLM)
+- [ ] All queries with position data use local LLM only
+- [ ] Audit log captures every AI interaction
+- [ ] Works fully offline (no internet required)
 - [ ] Chat history persisted per user session
-- [ ] API docs auto-generated at `/docs`
-- [ ] README has quick start guide
-- [ ] Demo runs smoothly for 10 minutes
 
 ### Dependencies
 
-- Week 5 dashboard (for chat interface)
-- Week 4 aggregation (for answering queries)
-- Week 3 risk (for risk-related queries)
+- Week 5 dashboard (for chat interface integration)
+- Week 4 aggregation (for position/overlap queries)
+- Week 3 risk (for VaR/exposure queries)
+- GPU hardware for production deployment
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
-| `backend/services/ai_assistant.py` | Claude API integration |
-| `backend/api/chat.py` | Chat API endpoints |
-| `frontend/src/components/ChatInterface.tsx` | Chat UI component |
-| `docs/API.md` | API documentation |
-| `docs/USER_GUIDE.md` | User documentation |
+| File | Purpose | Status |
+|------|---------|--------|
+| `backend/services/ai_assistant.py` | Query router, LLM integration | ⬜ |
+| `backend/services/voice_service.py` | Whisper integration | ⬜ |
+| `backend/services/query_sanitizer.py` | Security, prompt injection prevention | ⬜ |
+| `backend/services/llm_local.py` | Ollama/vLLM client | ⬜ |
+| `backend/services/llm_cloud.py` | Claude API client (optional) | ⬜ |
+| `backend/api/chat.py` | Chat API endpoints | ⬜ |
+| `backend/api/voice.py` | Voice API endpoints | ⬜ |
+| `frontend/src/components/ChatSidebar.tsx` | Chat UI component | ⬜ |
+| `frontend/src/components/VoiceInput.tsx` | Voice button with feedback | ⬜ |
+| `supabase/migrations/*_ai_audit_logs.sql` | Audit logging schema | ⬜ |
+
+### Python Dependencies
+
+```
+# Add to requirements.txt
+ollama>=0.1.0           # Local LLM (development)
+vllm>=0.4.0             # Local LLM (production)
+faster-whisper>=1.0.0   # Voice-to-text
+chromadb>=0.4.0         # Vector store for RAG
+anthropic>=0.25.0       # Claude API (optional cloud)
+```
+
+---
+
+## Week 7: Reports & Scheduling ⬜ NOT STARTED
+
+**Target:** Professional report generation with automated scheduling and delivery
+**Philosophy:** Risk managers need printable, schedulable reports for compliance and stakeholders
+
+### Core Features
+
+1. **On-Demand Reports** - Generate PDF/Excel from any dashboard view
+2. **Scheduled Reports** - Daily/weekly/monthly automated generation
+3. **Email Delivery** - Send reports to configured recipients
+4. **Multi-Format Export** - PDF (visual), Excel (data), CSV (raw)
+
+### Report Types
+
+| Report | Description | Formats |
+|--------|-------------|---------|
+| **Daily Risk Summary** | VaR, exposures, limit breaches | PDF, Excel |
+| **RiskPod Report** | Single or multiple RiskPods snapshot | PDF |
+| **RiskCard Detail** | Individual asset class deep dive | PDF |
+| **Exposure Breakdown** | Sector/geography/asset class pie charts | PDF, Excel |
+| **Correlation Matrix** | PM-to-PM correlation heatmap | PDF |
+| **Overlap Report** | Cross-PM netting opportunities | PDF, Excel |
+| **Limit Breach Report** | All breaches with timestamps | PDF, Excel |
+| **Audit Trail** | AI queries, user actions, changes | Excel, CSV |
+
+### Scheduling Options
+
+| Schedule | Example | Use Case |
+|----------|---------|----------|
+| **Daily** | 6:00 AM EST | Morning risk briefing |
+| **Weekly** | Friday 5:00 PM | Weekend review pack |
+| **Monthly** | 1st of month, 8:00 AM | Compliance reporting |
+| **On-Demand** | User triggered | Ad-hoc analysis |
+| **Event-Triggered** | On limit breach | Real-time alerts |
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RISKCORE REPORTS                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐        │
+│  │ Report       │   │ Template     │   │ Scheduler    │        │
+│  │ Request API  │──▶│ Engine       │──▶│ (APScheduler)│        │
+│  └──────────────┘   │ (Jinja2)     │   └──────┬───────┘        │
+│         │           └──────────────┘          │                 │
+│         │                  │                  │                 │
+│         ▼                  ▼                  ▼                 │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐        │
+│  │ Data         │   │ PDF/Excel    │   │ Email        │        │
+│  │ Aggregator   │   │ Generator    │   │ Service      │        │
+│  │ (Risk APIs)  │   │ (WeasyPrint) │   │ (SMTP)       │        │
+│  └──────────────┘   └──────────────┘   └──────────────┘        │
+│                            │                  │                 │
+│                            ▼                  ▼                 │
+│                     ┌──────────────────────────────┐           │
+│                     │        Storage               │           │
+│                     │  - Local filesystem          │           │
+│                     │  - Audit trail in DB         │           │
+│                     └──────────────────────────────┘           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Milestones
+
+**Report Generation:**
+- [ ] WeasyPrint + Jinja2 template engine setup
+- [ ] Base template with RISKCORE branding
+- [ ] Daily Risk Summary report template
+- [ ] RiskPod/RiskCard report templates
+- [ ] Multi-tenant branding support (logo, colors)
+- [ ] "Powered by RISKCORE" watermark (Free tier)
+
+**Chart Integration:**
+- [ ] Matplotlib charts embedded as base64/SVG
+- [ ] Exposure pie charts
+- [ ] VaR trend line charts
+- [ ] Correlation heatmap
+
+**Excel Reports:**
+- [ ] XlsxWriter + Pandas integration
+- [ ] Formatted headers, conditional formatting
+- [ ] Multiple sheets per report
+- [ ] Charts in Excel (native)
+
+**Scheduling:**
+- [ ] APScheduler with PostgreSQL job store
+- [ ] Schedule management API (CRUD)
+- [ ] User-configurable schedules
+- [ ] Timezone support
+- [ ] Job persistence across restarts
+
+**Email Delivery:**
+- [ ] SMTP integration (on-premises mail server)
+- [ ] HTML email body with summary
+- [ ] PDF/Excel attachments
+- [ ] Delivery confirmation logging
+- [ ] Bounce handling
+
+**React UI:**
+- [ ] Report configuration modal
+- [ ] Schedule builder (cron-like UI)
+- [ ] Recipient list management
+- [ ] Report history view
+- [ ] Download generated reports
+
+### User Workflow
+
+```
+1. User opens Report modal from dashboard
+2. Selects report type (Daily Summary, RiskPod, etc.)
+3. Configures scope:
+   - All portfolios / Selected portfolios
+   - Date range
+   - Include charts? Include raw data?
+4. Chooses delivery:
+   - Download now (PDF/Excel)
+   - Schedule (Daily at 6 AM)
+   - Email to: user@firm.com, cro@firm.com
+5. System generates report and delivers
+6. Audit log records: who, what, when, recipients
+```
+
+### Schedule Configuration Schema
+
+```python
+class ReportSchedule(BaseModel):
+    id: str
+    tenant_id: str
+    created_by: str  # user_id
+
+    # Report configuration
+    report_type: str  # 'daily_summary', 'riskpod', 'exposure', etc.
+    scope: dict  # {'book_ids': [...], 'fund_id': '...'}
+    format: str  # 'pdf', 'excel', 'both'
+    include_charts: bool = True
+
+    # Schedule
+    schedule_type: str  # 'daily', 'weekly', 'monthly', 'once'
+    cron_expression: str  # '0 6 * * *' = daily at 6 AM
+    timezone: str = 'America/New_York'
+
+    # Delivery
+    delivery_method: str  # 'email', 'download', 'both'
+    recipients: list[str]  # email addresses
+
+    # Status
+    is_active: bool = True
+    last_run: datetime | None
+    next_run: datetime
+    last_status: str  # 'success', 'failed', 'pending'
+```
+
+### Technology Stack
+
+| Component | Library | Notes |
+|-----------|---------|-------|
+| **PDF Generation** | WeasyPrint + Jinja2 | HTML/CSS → PDF, flexbox support |
+| **Excel Generation** | XlsxWriter + Pandas | Rich formatting, charts |
+| **Scheduling** | APScheduler | PostgreSQL job store, no Redis needed |
+| **Email** | smtplib (built-in) | On-premises SMTP compatible |
+| **Charts** | Matplotlib | Embed as base64 in PDF |
+
+### Acceptance Criteria
+
+- [ ] Generate PDF report from dashboard in <5 seconds
+- [ ] Schedule reports for daily/weekly/monthly delivery
+- [ ] Email delivery works with on-premises SMTP
+- [ ] Multi-tenant branding (logo, colors per tenant)
+- [ ] Free tier shows "Powered by RISKCORE" watermark
+- [ ] Report history accessible for 90 days
+- [ ] Audit log tracks all report generation
+
+### Dependencies
+
+- Week 5 dashboard (report content comes from dashboard views)
+- Week 4 aggregation (for firm-wide reports)
+- Week 3 risk (for VaR/exposure data)
+
+### Files to Create
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `backend/services/report_generator.py` | WeasyPrint PDF generation | ⬜ |
+| `backend/services/excel_service.py` | XlsxWriter Excel generation | ⬜ |
+| `backend/services/scheduler.py` | APScheduler setup | ⬜ |
+| `backend/services/email_service.py` | SMTP email delivery | ⬜ |
+| `backend/api/reports.py` | Report API endpoints | ⬜ |
+| `backend/templates/reports/base.html` | Base Jinja2 template | ⬜ |
+| `backend/templates/reports/daily_summary.html` | Daily report template | ⬜ |
+| `backend/templates/reports/riskpod.html` | RiskPod report template | ⬜ |
+| `frontend/src/components/ReportModal.tsx` | Report configuration UI | ⬜ |
+| `frontend/src/components/ScheduleBuilder.tsx` | Schedule configuration | ⬜ |
+| `supabase/migrations/*_report_schedules.sql` | Schedules table | ⬜ |
+
+### Python Dependencies
+
+```
+# Add to requirements.txt
+weasyprint>=60.0        # HTML → PDF
+Jinja2>=3.1.0           # Template engine
+xlsxwriter>=3.1.0       # Excel generation
+openpyxl>=3.1.0         # Excel reading
+APScheduler>=3.10.0     # Job scheduling
+# smtplib is built-in, no install needed
+```
+
+---
+
+## Week 8: Production Readiness ⬜ NOT STARTED
+
+**Target:** Documentation, testing, demo preparation
+**This is the polish week before launch**
+
+### Milestones
+
+- [ ] API documentation (OpenAPI/Swagger at `/docs`)
+- [ ] User documentation (USER_GUIDE.md)
+- [ ] Installation guide (INSTALL.md)
+- [ ] Error handling audit
+- [ ] Performance testing
+- [ ] Security audit
+- [ ] Demo script preparation
+- [ ] LinkedIn announcement post
+- [ ] GitHub README polish
+
+### Acceptance Criteria
+
+- [ ] API docs auto-generated at `/docs`
+- [ ] README has quick start guide
+- [ ] Demo runs smoothly for 10 minutes
+- [ ] All endpoints handle errors gracefully
+- [ ] No security vulnerabilities (OWASP check)
 
 ---
 
