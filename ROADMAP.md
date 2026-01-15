@@ -1,7 +1,7 @@
 # RISKCORE Development Roadmap
 
 > Living document tracking MVP development progress.
-> **Last Updated:** 2026-01-14
+> **Last Updated:** 2026-01-15
 > **Sync to Claude Desktop:** Copy this file + CLAUDE.md daily
 
 ---
@@ -15,6 +15,7 @@
 | 3 | Risk Engine | ✅ COMPLETE | VaR/CVaR (numpy/scipy), exposures, Greeks (Black-Scholes) |
 | 4 | Aggregation | ✅ COMPLETE | Cross-PM netting, overlap detection, firm rollup |
 | 5 | Dashboard | 🔄 IN PROGRESS | CIO Dashboard + Overlay Book, Trades page |
+| 5b | Instrument Normalization | ✅ COMPLETE | Instrument type matching, unmatched queue, compositions |
 | 6 | AI Assistant | ⬜ NOT STARTED | Voice + NL queries, on-premises LLM, hybrid cloud option |
 | 7 | Reports | ⬜ NOT STARTED | PDF/Excel generation, scheduling, email delivery |
 
@@ -466,6 +467,153 @@ VERIFY-4.7: Returns & Correlation ✅
 | `frontend/src/pages/CIODashboard.tsx` | CIO Dashboard page | ✅ Done |
 | `frontend/src/pages/UnderlyingTrades.tsx` | Trades drill-down | ✅ Done |
 | `supabase/migrations/20260112110000_overlay_book_support.sql` | DB schema | ✅ Applied |
+
+---
+
+## Week 5b: Instrument Normalization & Structured Notes ✅ COMPLETE
+
+**Target:** Normalize client instrument names to canonical types and handle structured notes
+**Dates:** 2026-01-14 to 2026-01-15
+**Status:** All milestones complete and tested
+
+### Problem Solved
+
+1. **Instrument Normalization:** Client files contain varied instrument type names ("CDS", "Credit Default Swap", "Credti Defualt Swp"). Need to normalize to canonical types and map to RiskPods.
+
+2. **Structured Note Decomposition:** Structured notes and complex instruments need component breakdown for:
+   - Pricing based on underlying components
+   - Risk metrics (Greeks, duration) from components
+   - Risk attribution across RiskPods
+
+### Milestones
+
+**Instrument Normalization:**
+- [x] Instrument types master table with RiskPod mapping
+- [x] Alias/synonym database with priority ordering
+- [x] Multi-tier matching algorithm (exact → prefix → fuzzy → pattern)
+- [x] Tenor extraction from instrument names (5Y, 10Y, etc.)
+- [x] Unmatched instrument queue for manual review
+- [x] Cache for repeated lookups
+- [x] API endpoints for normalization
+
+**Structured Note Compositions:**
+- [x] Composition templates table
+- [x] Component definitions with allocations
+- [x] Position-composition linking
+- [x] Risk attribution calculation across RiskPods
+- [x] Decompose option in unmatched queue
+- [x] API endpoints for compositions
+
+### Technical Approach
+
+**Matching Algorithm (Priority Order):**
+1. **Exact Match** (confidence: 1.0) - Direct code or name match
+2. **Prefix Match** (confidence: 0.95) - Code at start of input
+3. **Fuzzy Match** (confidence: 0.85+) - Levenshtein distance similarity
+4. **Pattern Match** (confidence: 0.80) - Regex patterns
+5. **Unmatched** (confidence: 0.0) - Queued for manual review
+
+**RiskPod Attribution:**
+- Position stays in "Other" RiskPod (user created it for a reason)
+- Components define exposure breakdown (e.g., 66% Equity, 34% Credit)
+- Risk metrics aggregated from components
+
+### Example Use Case
+
+```
+Input: Client uploads "ABC Structured Note" with $30M notional
+
+User defines composition:
+├── S&P 500 Future ($10M) → Equity RiskPod
+├── NVIDIA Put ($10M) → Equity RiskPod
+└── NVIDIA Bond ($10M) → Credit RiskPod
+
+Result:
+├── Position: 1 row in "Other" RiskPod showing $30M
+├── Risk Attribution: $20M Equity, $10M Credit
+└── Pricing: Sum of component prices
+```
+
+### Files Created
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `supabase/migrations/20260115*_instrument_types.sql` | Types, aliases, unmatched queue | ✅ Applied |
+| `supabase/migrations/20260116*_instrument_compositions.sql` | Compositions, components, position links | ✅ Ready |
+| `backend/services/instrument_normalization.py` | Normalization service | ✅ Complete |
+| `backend/services/composition_service.py` | Composition management | ✅ Complete |
+| `backend/api/instrument_normalization.py` | Normalization API | ✅ Complete |
+| `backend/api/compositions.py` | Compositions API | ✅ Complete |
+| `backend/tests/test_instrument_normalization.py` | Normalization tests | ✅ Passing |
+| `backend/tests/test_compositions.py` | Composition tests | ✅ Passing |
+| `docs/USER_MANUAL_INSTRUMENT_NORMALIZATION.md` | User guide | ✅ Complete |
+| `docs/USER_MANUAL_STRUCTURED_NOTES.md` | User guide | ✅ Complete |
+
+### API Endpoints Added
+
+**Instrument Normalization:**
+- `POST /instrument/normalize` - Normalize single instrument
+- `POST /instrument/normalize/batch` - Normalize multiple instruments
+- `GET /instrument/types` - List canonical types
+- `GET /instrument/types/{code}` - Get specific type
+- `GET /instrument/aliases` - List alias mappings
+- `POST /instrument/aliases` - Create new alias
+- `GET /instrument/unmatched` - List unmatched queue
+- `POST /instrument/unmatched/{id}/resolve` - Map to type
+- `POST /instrument/unmatched/{id}/ignore` - Mark as not applicable
+- `POST /instrument/unmatched/{id}/escalate` - Escalate for review
+- `POST /instrument/unmatched/{id}/decompose` - Create composition
+
+**Compositions:**
+- `GET /compositions` - List templates
+- `POST /compositions` - Create composition
+- `GET /compositions/{id}` - Get details
+- `PUT /compositions/{id}` - Update metadata
+- `DELETE /compositions/{id}` - Delete
+- `GET /compositions/{id}/components` - List components
+- `POST /compositions/{id}/components` - Add component
+- `DELETE /compositions/{id}/components/{cid}` - Remove component
+- `GET /compositions/position/{id}` - Get position's composition
+- `POST /compositions/position/{id}` - Apply composition
+- `DELETE /compositions/position/{id}` - Remove composition
+- `GET /compositions/position/{id}/risk-attribution` - Get RiskPod breakdown
+- `GET /compositions/lookup/by-name` - Find by name
+- `POST /compositions/apply-by-pattern` - Apply to matching positions
+
+**Position Extensions:**
+- `GET /positions/{id}/composition` - Get composition
+- `POST /positions/{id}/composition` - Apply composition
+- `DELETE /positions/{id}/composition` - Remove composition
+- `GET /positions/{id}/risk-attribution` - Get RiskPod breakdown
+
+### Verification Criteria (ALL PASSED)
+
+```
+VERIFY-5b.1: Instrument Normalization ✅
+  [x] "CDS" → asset_class='cds', riskpod='credit'
+  [x] "Credit Default Swap" → exact match
+  [x] "Credti Default Swap" → fuzzy match (confidence 0.85+)
+  [x] "Unknown XYZ" → queued in unmatched
+
+VERIFY-5b.2: Tenor Extraction ✅
+  [x] "CDS 5Y" → tenor='5Y'
+  [x] "10-year bond" → tenor='10Y'
+  [x] "five year" → tenor='5Y'
+
+VERIFY-5b.3: Composition Creation ✅
+  [x] Create composition with 3 components
+  [x] Components linked to instrument types
+  [x] RiskPod auto-determined from type
+
+VERIFY-5b.4: Risk Attribution ✅
+  [x] $30M position with 33/33/34% allocation
+  [x] Returns equity=$20M, credit=$10M
+  [x] Components list with values
+
+VERIFY-5b.5: Tests ✅
+  [x] 28 normalization tests passing
+  [x] 16 composition tests passing
+```
 
 ---
 

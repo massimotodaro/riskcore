@@ -30,6 +30,16 @@ from .openfigi import (
     get_client as get_openfigi_client,
 )
 
+# Lazy import to avoid circular dependency
+InstrumentNormalizationService = None
+
+def _get_normalization_service(conn, tenant_id=None):
+    """Lazy load the normalization service."""
+    global InstrumentNormalizationService
+    if InstrumentNormalizationService is None:
+        from .instrument_normalization import InstrumentNormalizationService
+    return InstrumentNormalizationService(conn, tenant_id)
+
 logger = logging.getLogger(__name__)
 
 # ============================================
@@ -106,6 +116,7 @@ class ResolvedSecurity:
     ticker: Optional[str]
     asset_class: str
     currency: str
+    riskpod: Optional[str] = None
     is_new: bool = False
     enriched: bool = False
 
@@ -146,6 +157,8 @@ class SecurityMasterService:
         exchange: Optional[str] = None,
         currency: Optional[str] = None,
         create_if_missing: bool = True,
+        instrument_type_name: Optional[str] = None,
+        tenant_id: Optional[str] = None,
     ) -> Optional[ResolvedSecurity]:
         """
         Resolve an identifier to a canonical security.
@@ -164,6 +177,8 @@ class SecurityMasterService:
             exchange: Exchange code (required for ticker)
             currency: Currency filter
             create_if_missing: Whether to create security if not found
+            instrument_type_name: Client-provided instrument type name for normalization
+            tenant_id: Tenant UUID for tenant-specific mappings
 
         Returns:
             ResolvedSecurity or None if not found and create_if_missing=False
@@ -177,6 +192,8 @@ class SecurityMasterService:
         security = self._find_by_identifier(id_type_normalized, id_value, exchange)
         if security:
             logger.info(f"Found in local DB: {security['name']} (ID: {security['id']})")
+            # Infer RiskPod from existing asset class
+            riskpod = self._infer_riskpod(security["asset_class"])
             return ResolvedSecurity(
                 security_id=security["id"],
                 figi=security.get("figi"),
@@ -184,6 +201,7 @@ class SecurityMasterService:
                 ticker=self._get_ticker(security["id"]),
                 asset_class=security["asset_class"],
                 currency=security["currency"],
+                riskpod=riskpod,
                 is_new=False,
                 enriched=False,
             )
@@ -202,7 +220,11 @@ class SecurityMasterService:
             if not create_if_missing:
                 return None
             # Create placeholder security without FIGI
-            return self._create_placeholder_security(id_type_normalized, id_value, exchange, currency)
+            return self._create_placeholder_security(
+                id_type_normalized, id_value, exchange, currency,
+                instrument_type_name=instrument_type_name,
+                tenant_id=tenant_id,
+            )
 
         # Use first result
         figi_data = figi_result.results[0]
@@ -214,6 +236,7 @@ class SecurityMasterService:
             # Add the new identifier mapping
             self._add_identifier(security["id"], id_type_normalized, id_value, exchange)
             logger.info(f"Added identifier to existing security: {security['name']}")
+            riskpod = self._infer_riskpod(security["asset_class"])
             return ResolvedSecurity(
                 security_id=security["id"],
                 figi=security["figi"],
@@ -221,6 +244,7 @@ class SecurityMasterService:
                 ticker=figi_data.ticker or self._get_ticker(security["id"]),
                 asset_class=security["asset_class"],
                 currency=security["currency"],
+                riskpod=riskpod,
                 is_new=False,
                 enriched=True,
             )
@@ -229,20 +253,27 @@ class SecurityMasterService:
         if not create_if_missing:
             return None
 
-        new_security = self._create_security_from_figi(figi_data, id_type_normalized, id_value, exchange)
+        new_security = self._create_security_from_figi(
+            figi_data, id_type_normalized, id_value, exchange,
+            instrument_type_name=instrument_type_name,
+            tenant_id=tenant_id,
+        )
         return new_security
 
     def resolve_identifiers(
         self,
         identifiers: List[Dict[str, Any]],
         create_if_missing: bool = True,
+        tenant_id: Optional[str] = None,
     ) -> List[Optional[ResolvedSecurity]]:
         """
         Resolve multiple identifiers in batch.
 
         Args:
-            identifiers: List of dicts with keys: type, value, exchange (optional)
+            identifiers: List of dicts with keys: type, value, exchange,
+                        instrument_type_name (all optional except type/value)
             create_if_missing: Whether to create securities if not found
+            tenant_id: Default tenant UUID (can be overridden per identifier)
 
         Returns:
             List of ResolvedSecurity (same order as input, None for failures)
@@ -256,6 +287,8 @@ class SecurityMasterService:
                     exchange=id_info.get("exchange", id_info.get("exchCode")),
                     currency=id_info.get("currency"),
                     create_if_missing=create_if_missing,
+                    instrument_type_name=id_info.get("instrument_type_name", id_info.get("instrumentType")),
+                    tenant_id=id_info.get("tenant_id", tenant_id),
                 )
                 results.append(result)
             except Exception as e:
@@ -399,6 +432,80 @@ class SecurityMasterService:
         result = cur.fetchone()
         return result[0] if result else None
 
+    def _determine_asset_class(
+        self,
+        security_type: Optional[str],
+        market_sector: Optional[str],
+        instrument_type_name: Optional[str] = None,
+        tenant_id: Optional[str] = None,
+    ) -> Tuple[str, Optional[str]]:
+        """
+        Determine asset class and RiskPod for a security.
+
+        Priority:
+        1. Instrument type name (via normalization service)
+        2. OpenFIGI security type mapping
+        3. OpenFIGI market sector mapping
+        4. Default to 'other'
+
+        Args:
+            security_type: OpenFIGI security type (e.g., "Common Stock")
+            market_sector: OpenFIGI market sector (e.g., "Equity")
+            instrument_type_name: Client-provided instrument type name
+            tenant_id: Tenant UUID for tenant-specific mappings
+
+        Returns:
+            Tuple of (asset_class, riskpod)
+        """
+        # Priority 1: Use instrument normalization if name provided
+        if instrument_type_name:
+            try:
+                normalizer = _get_normalization_service(self.conn, tenant_id)
+                result = normalizer.normalize(instrument_type_name)
+                if result.success and result.asset_class:
+                    logger.info(
+                        f"Normalized '{instrument_type_name}' -> "
+                        f"asset_class={result.asset_class}, riskpod={result.riskpod}"
+                    )
+                    return (result.asset_class, result.riskpod)
+            except Exception as e:
+                logger.warning(f"Instrument normalization failed: {e}")
+
+        # Priority 2: OpenFIGI security type mapping
+        if security_type:
+            asset_class = SECURITY_TYPE_MAP.get(security_type)
+            if asset_class:
+                # Infer RiskPod from asset class
+                riskpod = self._infer_riskpod(asset_class)
+                return (asset_class, riskpod)
+
+        # Priority 3: OpenFIGI market sector mapping
+        if market_sector:
+            asset_class = MARKET_SECTOR_MAP.get(market_sector)
+            if asset_class:
+                riskpod = self._infer_riskpod(asset_class)
+                return (asset_class, riskpod)
+
+        # Default
+        return ("other", "other")
+
+    def _infer_riskpod(self, asset_class: str) -> str:
+        """Infer RiskPod from asset class."""
+        ASSET_CLASS_TO_RISKPOD = {
+            "equity": "equity",
+            "fixed_income": "rates",
+            "fx": "fx",
+            "option": "equity",  # Default, but options can span all RiskPods
+            "future": "equity",  # Default, futures can span all RiskPods
+            "swap": "rates",
+            "cds": "credit",
+            "commodity": "other",
+            "crypto": "other",
+            "fund": "equity",
+            "other": "other",
+        }
+        return ASSET_CLASS_TO_RISKPOD.get(asset_class, "other")
+
     def _add_identifier(
         self,
         security_id: str,
@@ -427,18 +534,21 @@ class SecurityMasterService:
         original_id_type: str,
         original_id_value: str,
         exchange: Optional[str],
+        instrument_type_name: Optional[str] = None,
+        tenant_id: Optional[str] = None,
     ) -> ResolvedSecurity:
         """Create a new security from OpenFIGI data."""
         cur = self.conn.cursor()
 
         security_id = str(uuid.uuid4())
 
-        # Determine asset class
-        asset_class = "equity"  # Default
-        if figi_data.security_type:
-            asset_class = SECURITY_TYPE_MAP.get(figi_data.security_type, "other")
-        elif figi_data.market_sector:
-            asset_class = MARKET_SECTOR_MAP.get(figi_data.market_sector, "other")
+        # Determine asset class and RiskPod using normalization
+        asset_class, riskpod = self._determine_asset_class(
+            security_type=figi_data.security_type,
+            market_sector=figi_data.market_sector,
+            instrument_type_name=instrument_type_name,
+            tenant_id=tenant_id,
+        )
 
         currency = figi_data.currency or "USD"
 
@@ -508,6 +618,7 @@ class SecurityMasterService:
             ticker=figi_data.ticker,
             asset_class=asset_class,
             currency=currency,
+            riskpod=riskpod,
             is_new=True,
             enriched=True,
         )
@@ -518,12 +629,22 @@ class SecurityMasterService:
         id_value: str,
         exchange: Optional[str],
         currency: Optional[str],
+        instrument_type_name: Optional[str] = None,
+        tenant_id: Optional[str] = None,
     ) -> ResolvedSecurity:
         """Create a placeholder security when OpenFIGI lookup fails."""
         cur = self.conn.cursor()
 
         security_id = str(uuid.uuid4())
         name = f"Unknown ({id_type.upper()}: {id_value})"
+
+        # Try normalization if instrument type name provided
+        asset_class, riskpod = self._determine_asset_class(
+            security_type=None,
+            market_sector=None,
+            instrument_type_name=instrument_type_name,
+            tenant_id=tenant_id,
+        )
 
         cur.execute("""
             INSERT INTO securities (
@@ -535,7 +656,7 @@ class SecurityMasterService:
         """, (
             security_id,
             name,
-            "other",
+            asset_class,
             currency or "USD",
             exchange,
             "manual",
@@ -556,8 +677,9 @@ class SecurityMasterService:
             figi=None,
             name=name,
             ticker=id_value if id_type == "ticker" else None,
-            asset_class="other",
+            asset_class=asset_class,
             currency=currency or "USD",
+            riskpod=riskpod,
             is_new=True,
             enriched=False,
         )
@@ -572,6 +694,8 @@ def resolve_security(
     id_type: str,
     id_value: str,
     exchange: Optional[str] = None,
+    instrument_type_name: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> Optional[ResolvedSecurity]:
     """
     Convenience function to resolve a single security.
@@ -581,12 +705,18 @@ def resolve_security(
         id_type: Identifier type (ticker, cusip, isin, sedol, figi)
         id_value: The identifier value
         exchange: Exchange code (required for ticker)
+        instrument_type_name: Client-provided instrument type for normalization
+        tenant_id: Tenant UUID for tenant-specific mappings
 
     Returns:
         ResolvedSecurity or None
     """
     service = SecurityMasterService(db_connection)
-    return service.resolve_identifier(id_type, id_value, exchange)
+    return service.resolve_identifier(
+        id_type, id_value, exchange,
+        instrument_type_name=instrument_type_name,
+        tenant_id=tenant_id,
+    )
 
 
 # ============================================

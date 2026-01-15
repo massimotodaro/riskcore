@@ -18,6 +18,7 @@ from ..models.position import (
     PositionList,
 )
 from ..services.position_service import PositionService
+from ..services.composition_service import CompositionService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -443,3 +444,176 @@ def create_positions_bulk(positions: list[PositionCreate]):
         "total": len(positions),
         "errors": errors if errors else None,
     }
+
+
+# =============================================================================
+# Composition & Risk Attribution Endpoints
+# =============================================================================
+
+@router.get("/{position_id}/composition")
+def get_position_composition(
+    position_id: UUID,
+    tenant_id: Optional[UUID] = Query(None, description="Tenant ID"),
+):
+    """
+    Get the composition applied to a position.
+
+    Returns the structured note breakdown if a composition template
+    has been applied to this position. Returns null if no composition.
+    """
+    try:
+        with get_db_connection() as conn:
+            service = CompositionService(conn, str(tenant_id) if tenant_id else None)
+            composition = service.get_position_composition(str(position_id))
+
+            if not composition:
+                return None
+
+            return composition.to_dict()
+    except Exception as e:
+        logger.error(f"Error getting composition for position {position_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get composition: {str(e)}",
+        )
+
+
+@router.post("/{position_id}/composition")
+def apply_composition_to_position(
+    position_id: UUID,
+    composition_id: UUID = Query(..., description="Composition UUID to apply"),
+    tenant_id: Optional[UUID] = Query(None),
+    user_id: Optional[UUID] = Query(None, description="User applying composition"),
+):
+    """
+    Apply a composition template to this position.
+
+    Links the position to a composition for risk attribution.
+    The position's value will be broken down across RiskPods
+    based on the composition's component allocations.
+    """
+    try:
+        with get_db_connection() as conn:
+            # Verify position exists
+            pos_service = PositionService(conn)
+            position = pos_service.get_position(position_id, tenant_id)
+
+            if not position:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Position {position_id} not found",
+                )
+
+            # Apply composition
+            comp_service = CompositionService(conn, str(tenant_id) if tenant_id else None)
+            success = comp_service.apply_to_position(
+                position_id=str(position_id),
+                composition_id=str(composition_id),
+                applied_by=str(user_id) if user_id else None,
+            )
+
+            if not success:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to apply composition",
+                )
+
+            return {
+                "status": "applied",
+                "position_id": str(position_id),
+                "composition_id": str(composition_id),
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error applying composition to position {position_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to apply composition: {str(e)}",
+        )
+
+
+@router.delete("/{position_id}/composition")
+def remove_position_composition(
+    position_id: UUID,
+    tenant_id: Optional[UUID] = Query(None),
+):
+    """
+    Remove composition from this position.
+
+    The position will no longer have risk attribution across RiskPods.
+    """
+    try:
+        with get_db_connection() as conn:
+            service = CompositionService(conn, str(tenant_id) if tenant_id else None)
+            success = service.remove_from_position(str(position_id))
+
+            if not success:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No composition found for this position",
+                )
+
+            return {"status": "removed", "position_id": str(position_id)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error removing composition from position {position_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove composition: {str(e)}",
+        )
+
+
+@router.get("/{position_id}/risk-attribution")
+def get_position_risk_attribution(
+    position_id: UUID,
+    tenant_id: Optional[UUID] = Query(None),
+):
+    """
+    Get risk attribution for this position.
+
+    Returns the position's value broken down by RiskPod based on
+    its composition. If no composition is applied, the entire
+    value is attributed to "other" RiskPod.
+
+    **Response:**
+    ```json
+    {
+        "position_id": "uuid",
+        "total_value": 30000000,
+        "attribution": {
+            "equity": 20000000,
+            "credit": 10000000,
+            "rates": 0,
+            "fx": 0,
+            "other": 0
+        },
+        "components": [
+            {"name": "S&P Future", "value": 10000000, "riskpod": "equity"},
+            {"name": "NVIDIA Put", "value": 10000000, "riskpod": "equity"},
+            {"name": "NVIDIA Bond", "value": 10000000, "riskpod": "credit"}
+        ]
+    }
+    ```
+    """
+    try:
+        with get_db_connection() as conn:
+            service = CompositionService(conn, str(tenant_id) if tenant_id else None)
+            attribution = service.get_risk_attribution(str(position_id))
+
+            if not attribution:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Position {position_id} not found",
+                )
+
+            return attribution.to_dict()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting risk attribution for position {position_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get risk attribution: {str(e)}",
+        )

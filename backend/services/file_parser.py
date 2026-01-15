@@ -31,6 +31,13 @@ COLUMN_PATTERNS = {
     "book": [r"^book$", r"^portfolio$", r"^account$", r"^fund$", r"^strategy$"],
     "as_of_date": [r"^as.?of.?date$", r"^date$", r"^position.?date$", r"^trade.?date$", r"^value.?date$"],
 
+    # Instrument type (for normalization)
+    "instrument_type": [
+        r"^instrument.?type$", r"^product.?type$", r"^security.?type$",
+        r"^type$", r"^product$", r"^asset.?type$", r"^asset.?class$",
+        r"^inst.?type$", r"^sec.?type$", r"^instr.?type$",
+    ],
+
     # Trade-specific fields
     "trade_date": [r"^trade.?date$", r"^exec.?date$", r"^execution.?date$"],
     "settlement_date": [r"^settle.?date$", r"^settlement.?date$", r"^settl.?date$"],

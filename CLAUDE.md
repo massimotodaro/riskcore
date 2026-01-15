@@ -199,9 +199,13 @@ No Supabase client, no cloud storage, no REST API wrappers for database access.
 | **Position Tests** | `backend/tests/test_positions.py` | ✅ Complete | 25 tests (13 pass without DB) |
 | **Trade API** | `backend/api/trades.py` | ✅ Complete | Full CRUD, cancel, bulk, book query |
 | **Trade Service** | `backend/services/trade_service.py` | ✅ Complete | psycopg2, business logic |
-| FIX Parser | `backend/services/fix_parser.py` | ⬜ Week 2 | simplefix integration |
-| Risk Engine | `backend/services/risk_engine.py` | ⬜ Week 3 | Riskfolio-Lib |
-| Aggregation | `backend/services/aggregation.py` | ⬜ Week 4 | Cross-PM netting |
+| FIX Parser | `backend/services/fix_parser.py` | ✅ Complete | simplefix integration |
+| Risk Engine | `backend/services/risk_engine.py` | ✅ Complete | VaR/CVaR with numpy/scipy |
+| Aggregation | `backend/services/aggregation.py` | ✅ Complete | Cross-PM netting |
+| **Instrument Normalization** | `backend/services/instrument_normalization.py` | ✅ Complete | Fuzzy matching, tenor extraction |
+| **Composition Service** | `backend/services/composition_service.py` | ✅ Complete | Structured note decomposition |
+| **Normalization API** | `backend/api/instrument_normalization.py` | ✅ Complete | Normalize, aliases, unmatched queue |
+| **Compositions API** | `backend/api/compositions.py` | ✅ Complete | CRUD, position linking, attribution |
 
 ### Database Migrations
 
@@ -210,6 +214,8 @@ No Supabase client, no cloud storage, no REST API wrappers for database access.
 | `20260109*_initial` | 32 core tables with RLS | ✅ Applied |
 | `20260111160000_schema_improvements` | +2 tables, indexes, triggers | ✅ Applied |
 | `20260111180000_add_composite_figi` | FIGI enum values | ✅ Applied |
+| `20260115*_instrument_types` | Instrument normalization tables | ✅ Applied |
+| `20260116*_instrument_compositions` | Composition tables for structured notes | ✅ Ready |
 
 ### Scripts
 
@@ -333,12 +339,26 @@ No Supabase client, no cloud storage, no REST API wrappers for database access.
 | `audit_logs` | Security audit trail (includes `user_email`) |
 | `pending_invitations` | User invitations |
 
+### Instrument Normalization & Compositions (NEW - 2026-01-15)
+| Table | Purpose |
+|-------|---------|
+| `instrument_types` | Canonical instrument types with RiskPod mapping |
+| `instrument_aliases` | Synonyms/aliases for fuzzy matching |
+| `unmatched_instruments` | Queue for manual review of unknown instruments |
+| `normalization_cache` | Cache for repeated lookups |
+| `instrument_compositions` | Templates for structured note component breakdown |
+| `composition_components` | Individual components with allocation and Greeks |
+| `position_compositions` | Links positions to their composition template |
+
 ---
 
 ## Recent Decisions
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-15 | Structured notes stay in "Other" RiskPod | User created it intentionally; components provide risk attribution |
+| 2026-01-15 | Composition templates reusable | Same structured note imported again auto-decomposes |
+| 2026-01-15 | Multi-tier instrument matching | Exact → Prefix → Fuzzy → Pattern → Unmatched queue |
 | 2026-01-12 | **ON-PREMISES ONLY** - No cloud storage | Hedge funds won't accept cloud-stored positions/trades. Data leakage risk. |
 | 2026-01-12 | psycopg2 instead of Supabase client | Direct PostgreSQL for on-premises. Connection pooling for production. |
 | 2026-01-12 | Synchronous FastAPI endpoints | psycopg2 is synchronous. Simpler code, no async complexity. |

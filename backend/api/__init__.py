@@ -17,6 +17,8 @@ from .correlation import router as correlation_router
 from .riskboard import router as riskboard_router
 from .pricing import router as pricing_router
 from .market import router as market_router
+from .instrument_normalization import router as instrument_normalization_router
+from .compositions import router as compositions_router
 
 # Include routers
 api_router.include_router(positions_router, prefix="/positions", tags=["Positions"])
@@ -29,3 +31,5 @@ api_router.include_router(correlation_router, prefix="/correlation", tags=["Corr
 api_router.include_router(riskboard_router, prefix="/riskboard", tags=["Riskboard Dashboard"])
 api_router.include_router(pricing_router, prefix="/pricing", tags=["Pricing"])
 api_router.include_router(market_router, prefix="/market", tags=["Market Data"])
+api_router.include_router(instrument_normalization_router)  # Uses own prefix /instrument
+api_router.include_router(compositions_router)  # Uses own prefix /compositions

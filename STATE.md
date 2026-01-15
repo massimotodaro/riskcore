@@ -9,17 +9,114 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (Trades Page Implementation) |
-| **Status** | ✅ Trades Page Complete - Net Positions with drill-down to underlying trades |
-| **Next** | Test with backend running, add TimeSelector to Riskboard header |
-| **Tests** | 154+ passing (backend), frontend builds successfully |
+| **Week** | 5 - Dashboard (Composition Feature) |
+| **Status** | ✅ Structured Note Component Breakdown Complete |
+| **Next** | Apply migration, test composition endpoints, integration testing |
+| **Tests** | 154+ passing (backend), 16 composition tests passing |
 | **Branch** | develop |
 
 ---
 
 ## Session Log
 
-### 2026-01-14 Session 13 (Latest)
+### 2026-01-15 Session 14 (Latest)
+
+**Focus:** Structured Note Component Breakdown for Pricing and Risk Attribution
+
+**Problem Solved:**
+Structured notes and complex instruments in the "Other" RiskPod need to be:
+1. Priced based on their underlying components
+2. Risk-measured with Greeks, duration, etc. from components
+3. Risk-attributed across RiskPods (how much Equity/Rates/Credit exposure)
+
+The position stays as ONE line item in "Other" RiskPod, but we now track what's inside.
+
+**Example:**
+- Input: "ABC Structured Note" with $30M notional
+- Components: S&P Future ($10M equity), NVIDIA Put ($10M equity), NVIDIA Bond ($10M credit)
+- Result: Position in "Other" shows $30M, but risk attribution shows $20M equity, $10M credit
+
+**Database Tables Created:**
+1. `instrument_compositions` - Templates for structured instruments
+2. `composition_components` - Individual components with allocation and risk params
+3. `position_compositions` - Links positions to their composition template
+
+**Views Created:**
+1. `v_composition_details` - Aggregated view with RiskPod allocation breakdown
+2. `v_position_risk_attribution` - Position-level attribution across RiskPods
+
+**Backend Files Created:**
+- `supabase/migrations/20260116100000_instrument_compositions.sql` (NEW)
+- `backend/services/composition_service.py` (NEW) - ~720 lines
+- `backend/api/compositions.py` (NEW) - ~390 lines
+- `backend/tests/test_compositions.py` (NEW) - ~350 lines
+
+**Backend Files Modified:**
+- `backend/api/__init__.py` - Register compositions router
+- `backend/api/instrument_normalization.py` - Add decompose endpoint
+- `backend/api/positions.py` - Add composition + attribution endpoints
+
+**API Endpoints Added:**
+
+Composition CRUD:
+- `GET /compositions` - List composition templates
+- `POST /compositions` - Create new composition
+- `GET /compositions/{id}` - Get composition details
+- `PUT /compositions/{id}` - Update composition
+- `DELETE /compositions/{id}` - Delete composition
+- `GET /compositions/{id}/components` - List components
+- `POST /compositions/{id}/components` - Add component
+- `DELETE /compositions/{id}/components/{component_id}` - Remove component
+
+Position Composition:
+- `GET /compositions/position/{position_id}` - Get position's composition
+- `POST /compositions/position/{position_id}` - Apply composition
+- `DELETE /compositions/position/{position_id}` - Remove composition
+- `GET /compositions/position/{position_id}/risk-attribution` - Get risk breakdown
+
+Position API (duplicated for convenience):
+- `GET /positions/{id}/composition`
+- `POST /positions/{id}/composition`
+- `DELETE /positions/{id}/composition`
+- `GET /positions/{id}/risk-attribution`
+
+Unmatched Queue:
+- `POST /instrument/unmatched/{id}/decompose` - Create composition from unmatched
+
+Lookup:
+- `GET /compositions/lookup/by-name` - Find template by name
+- `POST /compositions/apply-by-pattern` - Apply to positions by security name
+
+**Service Methods:**
+- `create_composition()` - Create template with components
+- `get_composition()` - Get with all components
+- `list_compositions()` - Paginated list
+- `update_composition()` - Update metadata
+- `delete_composition()` - Delete with cascade
+- `add_component()` - Add to existing
+- `remove_component()` - Remove from existing
+- `apply_to_position()` - Link position to composition
+- `remove_from_position()` - Unlink
+- `get_position_composition()` - Get linked composition
+- `get_risk_attribution()` - Calculate RiskPod breakdown
+- `find_composition_by_name()` - For auto-matching
+- `apply_to_positions_by_security_name()` - Retroactive application
+
+**Tests:**
+- 16 passed, 5 skipped (DB tests require RUN_DB_TESTS=1)
+- DataClass tests (ComponentData, CompositionData, RiskAttribution)
+- Service initialization and name normalization
+- Risk attribution calculations
+- API model validation
+
+**Verification:**
+- All Python files compile successfully
+- Unit tests pass (16/21, 5 DB tests skipped)
+- Pydantic deprecation warnings (minor, works fine)
+
+---
+
+### 2026-01-14 Session 13
 
 **Focus:** Trades Page - Net Positions with Drill-down to Underlying Trades
 
