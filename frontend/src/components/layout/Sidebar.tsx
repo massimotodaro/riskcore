@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import clsx from 'clsx'
+import { useTheme } from '../../context/ThemeContext'
 
 const navigation = [
   {
@@ -69,21 +70,23 @@ const navigation = [
 ]
 
 export default function Sidebar() {
+  const { isDarkMode } = useTheme()
+
   return (
-    <aside className="w-64 flex flex-col glass border-r border-white/5 rounded-none">
+    <aside className={clsx(
+      'w-64 flex flex-col rounded-none border-r transition-colors duration-200',
+      isDarkMode ? 'glass border-white/5' : 'bg-[#ECECEC] border-[#CCCCCC]'
+    )}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-white/5">
+      <div className={clsx(
+        'h-16 flex items-center px-6 border-b transition-colors duration-200',
+        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+      )}>
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold gradient-text">RISKCORE</span>
+          <span className="text-xl font-bold" style={{ color: '#22C55E' }}>RISKCORE</span>
         </motion.div>
       </div>
 
@@ -99,10 +102,19 @@ export default function Sidebar() {
             <NavLink
               to={item.href}
               className={({ isActive }) =>
-                clsx('nav-item', isActive && 'active')
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? isDarkMode
+                      ? 'bg-white/10 text-white'
+                      : 'bg-[#D9D9D9] text-slate-900'
+                    : isDarkMode
+                      ? 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      : 'text-slate-600 hover:bg-[#D9D9D9] hover:text-slate-900'
+                )
               }
             >
-              {item.icon}
+              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>{item.icon}</span>
               <span>{item.name}</span>
             </NavLink>
           </motion.div>
@@ -110,20 +122,38 @@ export default function Sidebar() {
       </nav>
 
       {/* Command palette hint */}
-      <div className="px-4 py-3 border-t border-white/5">
-        <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className={clsx(
+        'px-4 py-3 border-t transition-colors duration-200',
+        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+      )}>
+        <div className={clsx(
+          'flex items-center justify-between text-xs',
+          isDarkMode ? 'text-slate-500' : 'text-slate-500'
+        )}>
           <span>Quick search</span>
-          <kbd className="px-2 py-1 bg-white/5 rounded text-slate-400 font-mono">
+          <kbd className={clsx(
+            'px-2 py-1 rounded font-mono transition-colors duration-200',
+            isDarkMode ? 'bg-white/5 text-slate-400' : 'bg-[#D9D9D9] text-slate-600'
+          )}>
             Ctrl K
           </kbd>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-white/5">
-        <div className="text-xs text-slate-500">
-          <div className="font-medium text-slate-400">RISKCORE v0.1.0</div>
-          <div className="mt-0.5">Risk Aggregation Platform</div>
+      <div className={clsx(
+        'px-4 py-4 border-t transition-colors duration-200',
+        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+      )}>
+        <div className="text-xs">
+          <div className={clsx(
+            'font-medium',
+            isDarkMode ? 'text-slate-400' : 'text-slate-600'
+          )}>RISKCORE v0.1.0</div>
+          <div className={clsx(
+            'mt-0.5',
+            isDarkMode ? 'text-slate-500' : 'text-slate-500'
+          )}>Risk Aggregation Platform</div>
         </div>
       </div>
     </aside>

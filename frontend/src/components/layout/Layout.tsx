@@ -3,14 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import Watermark from '../common/Watermark'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function Layout() {
+  const { isDarkMode } = useTheme()
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className={`flex h-screen overflow-hidden ${isDarkMode ? '' : 'light-mode'}`}>
       {/* Background gradient */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.15),transparent)]" />
+        {isDarkMode ? (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.15),transparent)]" />
+          </>
+        ) : (
+          /* Light mode: neutral gray background */
+          <div className="absolute inset-0" style={{ background: '#D9D9D9' }} />
+        )}
       </div>
 
       {/* Sidebar */}

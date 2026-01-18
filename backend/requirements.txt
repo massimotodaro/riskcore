@@ -27,8 +27,8 @@ python-dateutil>=2.8.0
 simplefix>=1.0.16
 
 # === Risk Libraries (Week 3) ===
-riskfolio-lib>=6.0.0
-financepy>=0.350
+# riskfolio-lib>=6.0.0  # DISABLED - Windows build issues with cvxpy/osqp
+# financepy>=0.350      # DISABLED - Optional, not required for core functionality
 numpy>=1.24.0
 scipy>=1.11.0
 

@@ -1609,6 +1609,298 @@
             background: rgba(59, 130, 246, 0.3) !important;
             transform: scale(1.02);
         }
+
+        /* ============================================
+           TIME TRAVEL CONTROLS
+           ============================================ */
+        .time-travel-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: 20px;
+        }
+
+        /* Time Selector Dropdown */
+        .time-selector {
+            position: relative;
+            display: inline-block;
+        }
+        .time-selector-btn {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 180px;
+            transition: all 0.2s;
+        }
+        .time-selector-btn:hover {
+            background: rgba(51, 65, 85, 1);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .time-selector-btn .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+        @keyframes pulse-live {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+        }
+        .time-selector-btn .clock-icon {
+            font-size: 14px;
+        }
+        .time-selector-btn .arrow {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-left: auto;
+        }
+        .time-selector-btn.historical {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+        }
+        .time-selector-btn.historical:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        /* Time Selector Menu */
+        .time-selector-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            min-width: 280px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 6px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+        .time-selector-menu.active { display: block; }
+        .time-menu-section {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .time-menu-section:last-child { border-bottom: none; }
+        .time-menu-section-title {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 14px;
+            font-weight: 600;
+        }
+        .time-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+        .time-menu-item:hover { background: rgba(51, 65, 85, 0.5); }
+        .time-menu-item.selected {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+        .time-menu-item.selected.historical {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+        .time-menu-item .radio {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #64748b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .time-menu-item.selected .radio {
+            border-color: #22c55e;
+        }
+        .time-menu-item.selected .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+        .time-menu-item.selected.historical .radio {
+            border-color: #fbbf24;
+        }
+        .time-menu-item.selected.historical .radio::after {
+            background: #fbbf24;
+        }
+        .time-menu-item .item-content {
+            flex: 1;
+        }
+        .time-menu-item .item-label {
+            font-weight: 500;
+        }
+        .time-menu-item .item-sublabel {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .time-menu-item .item-icon {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Custom Date Picker Row */
+        .time-menu-custom {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .time-menu-custom input[type="datetime-local"] {
+            flex: 1;
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            padding: 8px 10px;
+            color: #e2e8f0;
+            font-size: 12px;
+            font-family: 'SF Mono', monospace;
+        }
+        .time-menu-custom input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .time-menu-custom .apply-btn {
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 5px;
+            color: #60a5fa;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-menu-custom .apply-btn:hover {
+            background: rgba(59, 130, 246, 0.35);
+        }
+
+        /* Global Calculate Button */
+        .global-calculate-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 6px;
+            color: #22c55e;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .global-calculate-btn:hover {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: #22c55e;
+            transform: translateY(-1px);
+        }
+        .global-calculate-btn:active {
+            transform: translateY(0);
+        }
+        .global-calculate-btn .icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        .global-calculate-btn.calculating .icon {
+            animation: spin 1s linear infinite;
+        }
+        .global-calculate-btn.historical {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #60a5fa;
+        }
+        .global-calculate-btn.historical:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+        }
+        .global-calculate-btn.stale {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: rgba(249, 115, 22, 0.5);
+            color: #f97316;
+            animation: pulse-stale 2s ease-in-out infinite;
+        }
+        .global-calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Historical Mode Banner */
+        .historical-banner {
+            display: none;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+        }
+        .historical-banner.active { display: flex; }
+        .historical-banner .banner-icon {
+            font-size: 20px;
+        }
+        .historical-banner .banner-text {
+            flex: 1;
+        }
+        .historical-banner .banner-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+        .historical-banner .banner-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .historical-banner .banner-close {
+            padding: 6px 12px;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 5px;
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .historical-banner .banner-close:hover {
+            background: rgba(245, 158, 11, 0.35);
+        }
+
+        /* Last Calculated Timestamp */
+        .last-calculated {
+            font-size: 11px;
+            color: #64748b;
+            font-family: 'SF Mono', monospace;
+        }
+        .last-calculated.stale {
+            color: #f97316;
+        }
     </style>
 </head>
 <body>
@@ -1642,7 +1934,98 @@
         <header class="header">
             <div class="header-left">
                 <span class="page-title">Riskboard</span>
-                <span class="last-updated">Updated: 14:32:15 UTC</span>
+
+                <!-- TIME TRAVEL CONTROLS -->
+                <div class="time-travel-controls">
+                    <!-- Time Selector Dropdown -->
+                    <div class="time-selector" id="time-selector">
+                        <button class="time-selector-btn" id="time-selector-btn" onclick="toggleTimeSelector()">
+                            <span class="live-dot" id="live-dot"></span>
+                            <span id="time-selector-label">Latest (Now)</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="time-selector-menu" id="time-selector-menu">
+                            <!-- Presets Section -->
+                            <div class="time-menu-section">
+                                <div class="time-menu-section-title">Presets</div>
+                                <div class="time-menu-item selected" onclick="selectTime('latest')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Latest (Now)</div>
+                                        <div class="item-sublabel">Real-time data</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('yesterday')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Yesterday Close</div>
+                                        <div class="item-sublabel">Jan 14, 2026 16:00 UTC</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('lastweek')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Last Week</div>
+                                        <div class="item-sublabel">Jan 8, 2026 16:00 UTC</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('monthend')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Month End</div>
+                                        <div class="item-sublabel">Dec 31, 2025 16:00 UTC</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('quarterend')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Quarter End</div>
+                                        <div class="item-sublabel">Dec 31, 2025 16:00 UTC</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Recent Snapshots Section -->
+                            <div class="time-menu-section">
+                                <div class="time-menu-section-title">Recent Snapshots</div>
+                                <div class="time-menu-item" onclick="selectTime('snap1')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Jan 15, 2026 09:30</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('snap2')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Jan 14, 2026 16:00</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item" onclick="selectTime('snap3')">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Jan 14, 2026 12:00</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Custom Section -->
+                            <div class="time-menu-section">
+                                <div class="time-menu-section-title">Custom Date & Time</div>
+                                <div class="time-menu-custom">
+                                    <input type="datetime-local" id="custom-datetime" value="2026-01-15T14:30">
+                                    <button class="apply-btn" onclick="applyCustomTime()">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculate Button -->
+                    <button class="global-calculate-btn" id="global-calculate-btn" onclick="calculateRisk()">
+                        <span class="icon">↻</span>
+                        <span>Calculate</span>
+                    </button>
+
+                    <!-- Last Calculated Timestamp -->
+                    <span class="last-calculated" id="last-calculated">Last: 14:32:15</span>
+                </div>
             </div>
             <div class="header-right">
                 <div class="accessibility-toggle">
@@ -1654,6 +2037,16 @@
                 </div>
             </div>
         </header>
+
+        <!-- Historical Mode Banner (shown when viewing past data) -->
+        <div class="historical-banner" id="historical-banner">
+            <span class="banner-icon">🕐</span>
+            <div class="banner-text">
+                <div class="banner-title">Viewing Historical Data</div>
+                <div class="banner-subtitle" id="historical-banner-time">As of Jan 14, 2026 16:00 UTC</div>
+            </div>
+            <button class="banner-close" onclick="returnToLive()">Return to Live</button>
+        </div>
 
         <main class="main-content">
             <!-- Market Anchors Section -->
@@ -3183,6 +3576,189 @@
         // Close overrides modal on background click
         document.getElementById('overridesModal').addEventListener('click', function(e) {
             if (e.target === this) closeOverridesModal();
+        });
+
+        // =============================================
+        // TIME TRAVEL FUNCTIONALITY
+        // =============================================
+
+        let currentTimeMode = 'latest';  // 'latest' or a specific time identifier
+        let isGlobalCalculating = false;
+
+        const timePresets = {
+            'latest': { label: 'Latest (Now)', sublabel: 'Real-time data', isLive: true },
+            'yesterday': { label: 'Yesterday Close', sublabel: 'Jan 14, 2026 16:00 UTC', isLive: false },
+            'lastweek': { label: 'Last Week', sublabel: 'Jan 8, 2026 16:00 UTC', isLive: false },
+            'monthend': { label: 'Month End', sublabel: 'Dec 31, 2025 16:00 UTC', isLive: false },
+            'quarterend': { label: 'Quarter End', sublabel: 'Dec 31, 2025 16:00 UTC', isLive: false },
+            'snap1': { label: 'Jan 15, 2026 09:30', sublabel: '', isLive: false },
+            'snap2': { label: 'Jan 14, 2026 16:00', sublabel: '', isLive: false },
+            'snap3': { label: 'Jan 14, 2026 12:00', sublabel: '', isLive: false },
+        };
+
+        function toggleTimeSelector() {
+            const menu = document.getElementById('time-selector-menu');
+            menu.classList.toggle('active');
+        }
+
+        // Close time selector when clicking outside
+        document.addEventListener('click', function(e) {
+            const selector = document.getElementById('time-selector');
+            if (selector && !selector.contains(e.target)) {
+                document.getElementById('time-selector-menu').classList.remove('active');
+            }
+        });
+
+        function selectTime(timeKey) {
+            currentTimeMode = timeKey;
+            const preset = timePresets[timeKey];
+            if (!preset) return;
+
+            // Update button appearance
+            const btn = document.getElementById('time-selector-btn');
+            const label = document.getElementById('time-selector-label');
+            const liveDot = document.getElementById('live-dot');
+            const calcBtn = document.getElementById('global-calculate-btn');
+            const banner = document.getElementById('historical-banner');
+            const bannerTime = document.getElementById('historical-banner-time');
+
+            if (preset.isLive) {
+                // Live mode
+                btn.classList.remove('historical');
+                calcBtn.classList.remove('historical');
+                liveDot.style.display = 'inline-block';
+                label.textContent = preset.label;
+                banner.classList.remove('active');
+            } else {
+                // Historical mode - TIME TRAVEL ACTIVATED!
+                btn.classList.add('historical');
+                calcBtn.classList.add('historical');
+                liveDot.style.display = 'none';
+                label.innerHTML = `🕐 ${preset.label}`;
+                banner.classList.add('active');
+                bannerTime.textContent = `As of ${preset.sublabel || preset.label}`;
+            }
+
+            // Update menu selection styling
+            document.querySelectorAll('.time-menu-item').forEach(item => {
+                item.classList.remove('selected', 'historical');
+            });
+
+            // Find and highlight the selected item
+            const menuItems = document.querySelectorAll('.time-menu-item');
+            menuItems.forEach(item => {
+                const onclick = item.getAttribute('onclick');
+                if (onclick && onclick.includes(`'${timeKey}'`)) {
+                    item.classList.add('selected');
+                    if (!preset.isLive) {
+                        item.classList.add('historical');
+                    }
+                }
+            });
+
+            // Close menu
+            document.getElementById('time-selector-menu').classList.remove('active');
+
+            console.log(`⏰ Time Travel to: ${timeKey} - "${preset.label}"`);
+        }
+
+        function applyCustomTime() {
+            const input = document.getElementById('custom-datetime');
+            const customDate = new Date(input.value);
+
+            // Format the date for display
+            const options = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const formattedDate = customDate.toLocaleDateString('en-US', options);
+
+            // Add to presets temporarily
+            timePresets['custom'] = {
+                label: formattedDate,
+                sublabel: 'Custom snapshot',
+                isLive: false
+            };
+
+            // Apply the custom time
+            currentTimeMode = 'custom';
+
+            // Update UI for historical mode
+            const btn = document.getElementById('time-selector-btn');
+            const label = document.getElementById('time-selector-label');
+            const liveDot = document.getElementById('live-dot');
+            const calcBtn = document.getElementById('global-calculate-btn');
+            const banner = document.getElementById('historical-banner');
+            const bannerTime = document.getElementById('historical-banner-time');
+
+            btn.classList.add('historical');
+            calcBtn.classList.add('historical');
+            liveDot.style.display = 'none';
+            label.innerHTML = `🕐 ${formattedDate}`;
+            banner.classList.add('active');
+            bannerTime.textContent = `As of ${formattedDate}`;
+
+            // Close menu
+            document.getElementById('time-selector-menu').classList.remove('active');
+
+            console.log(`⏰ Custom Time Travel to: ${formattedDate}`);
+        }
+
+        function returnToLive() {
+            selectTime('latest');
+            console.log('🔴 Returning to LIVE data');
+        }
+
+        function calculateRisk() {
+            if (isGlobalCalculating) return;
+
+            isGlobalCalculating = true;
+            const calcBtn = document.getElementById('global-calculate-btn');
+            const lastCalc = document.getElementById('last-calculated');
+
+            // Add calculating state
+            calcBtn.classList.add('calculating');
+            calcBtn.disabled = true;
+
+            const modeLabel = currentTimeMode === 'latest' ? 'LIVE' : timePresets[currentTimeMode]?.label || currentTimeMode;
+            console.log(`🧮 Calculating risk for: ${modeLabel}...`);
+
+            // Simulate calculation (in real app, this calls the API with the selected timestamp)
+            setTimeout(() => {
+                isGlobalCalculating = false;
+                calcBtn.classList.remove('calculating');
+                calcBtn.disabled = false;
+
+                // Update timestamp
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0];
+                lastCalc.textContent = `Last: ${timeStr}`;
+                lastCalc.classList.remove('stale');
+                calcBtn.classList.remove('stale');
+
+                console.log(`✅ Risk calculation complete for: ${modeLabel}`);
+
+                // Visual feedback - briefly flash the button
+                const originalBg = calcBtn.style.background;
+                calcBtn.style.background = currentTimeMode === 'latest'
+                    ? 'rgba(34, 197, 94, 0.4)'
+                    : 'rgba(59, 130, 246, 0.4)';
+                setTimeout(() => {
+                    calcBtn.style.background = originalBg;
+                }, 400);
+
+                // Also refresh all pods
+                document.querySelectorAll('.riskpod').forEach(pod => {
+                    markPodFresh(pod.id);
+                });
+            }, 2500);  // 2.5 second simulated calculation
+        }
+
+        // Initialize time selector on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure live dot is visible on load
+            const liveDot = document.getElementById('live-dot');
+            if (liveDot) {
+                liveDot.style.display = 'inline-block';
+            }
+            console.log('🚀 Riskboard Time Travel ready - select a point in time to view historical risk');
         });
     </script>
 </body>

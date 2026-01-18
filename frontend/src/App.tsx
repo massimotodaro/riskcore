@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import CIODashboard from './pages/CIODashboard'
-import Riskboard from './pages/Riskboard'
+import RiskboardNew from './pages/RiskboardNew'
 import Trades from './pages/Trades'
 import UnderlyingTrades from './pages/UnderlyingTrades'
 
@@ -12,8 +12,8 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/riskboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
-        {/* New Unified Riskboard - Main Dashboard */}
-        <Route path="riskboard" element={<Riskboard />} />
+        {/* New Unified Riskboard - Main Dashboard (Matching HTML Design) */}
+        <Route path="riskboard" element={<RiskboardNew />} />
         {/* Trades Page - Net Positions with drill-down to underlying trades */}
         <Route path="trades" element={<Trades />} />
         {/* Legacy CIO Dashboard */}

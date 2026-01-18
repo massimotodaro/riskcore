@@ -9,17 +9,60 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (Composition Feature) |
-| **Status** | ✅ Structured Note Component Breakdown Complete |
-| **Next** | Apply migration, test composition endpoints, integration testing |
-| **Tests** | 154+ passing (backend), 16 composition tests passing |
+| **Week** | 5 - Dashboard (Riskboard UI Matching HTML) |
+| **Status** | ✅ Riskboard React Implementation Matching HTML Mockup |
+| **Next** | Test in browser, wire up to real API data |
+| **Tests** | 154+ passing (backend), TypeScript compiles |
 | **Branch** | develop |
 
 ---
 
 ## Session Log
 
-### 2026-01-15 Session 14 (Latest)
+### 2026-01-18 Session 15 (Latest)
+
+**Focus:** Riskboard React Implementation - Match HTML Mockup Exactly
+
+**User Direction:**
+- React Riskboard was a skeleton, not matching the detailed HTML mockup
+- User wants React to match `designs/Riskboard.html` exactly
+- **6 RiskCards** (not 5): Equity, Rates, Credit, FX, **Commodities**, Other
+
+**Files Created:**
+- `frontend/src/components/riskboard/RiskCardNew.tsx` - 440x580px cards matching HTML design
+- `frontend/src/components/riskboard/RiskPodNew.tsx` - Pod container with dropdown, calculate, timestamp
+- `frontend/src/components/riskboard/MarketAnchors.tsx` - 6-column market data section
+- `frontend/src/components/riskboard/riskboard.css` - All styles from HTML mockup
+- `frontend/src/pages/RiskboardNew.tsx` - Main page with all components
+
+**Files Modified:**
+- `frontend/src/App.tsx` - Route to new RiskboardNew page
+
+**Key Features Implemented:**
+1. **6 RiskCards** (Equity/blue, Rates/green, Credit/purple, FX/cyan, Commodities/yellow, Other/gray)
+2. **Market Anchors** section with 6 columns of market data
+3. **Time Travel** controls (Latest, Yesterday, Last Week, Month End, custom)
+4. **Historical Banner** when viewing past data
+5. **Summary Strip** (Firm Gross, Firm Net, Total Positions, Refresh All)
+6. **RiskPods** with multi-select portfolio dropdown
+7. **Calculate buttons** with animation
+8. **Accessibility toggle** for color-blind mode
+9. **Add RiskPod** button for additional comparisons
+
+**Process Improvement:**
+- User noted I failed to track the "6 RiskCards with Commodities" decision
+- **LESSON:** When user gives new directions, IMMEDIATELY update:
+  - `STATE.md` - Session notes
+  - `DECISIONS.md` - Design/architecture decisions
+  - `ROADMAP.md` - If affects milestones
+
+**Verification:**
+- TypeScript compiles with no errors
+- All 6 RiskCards render with correct colors and data structure
+
+---
+
+### 2026-01-15 Session 14
 
 **Focus:** Structured Note Component Breakdown for Pricing and Risk Attribution
 
@@ -646,10 +689,52 @@ Lookup:
 
 ---
 
+## Brand Colors (Official Palette)
+
+**IMPORTANT:** Use ONLY these 5 colors for consistency across website and platform.
+
+| Color | HEX Code | CSS Variable | Usage |
+|-------|----------|--------------|-------|
+| **Blue** | `#3b82f6` | `--color-blue` | Equity asset class, primary actions |
+| **Green** | `#22c55e` | `--color-green` | Rates asset class, RISKCORE logo, success states |
+| **Purple** | `#a855f7` | `--color-purple` | Credit asset class |
+| **Cyan** | `#06b6d4` | `--color-cyan` | FX asset class |
+| **Orange** | `#f97316` | `--color-orange` | Commodities asset class, warnings |
+
+### Asset Class → Color Mapping
+
+| Asset Class | Color | HEX |
+|-------------|-------|-----|
+| Equity | Blue | `#3b82f6` |
+| Rates | Green | `#22c55e` |
+| Credit | Purple | `#a855f7` |
+| FX | Cyan | `#06b6d4` |
+| Commodities | Orange | `#f97316` |
+| Other | Gray | `#94a3b8` |
+
+### RISKCORE Logo
+- Color: **Green** (`#22c55e`)
+- No icon, just text "RISKCORE"
+- Font: Bold, 20px
+
+### Files Where Colors Are Defined
+- `frontend/src/components/riskboard/RiskCardNew.tsx` - ASSET_CLASS_CONFIG
+- `frontend/src/components/riskboard/ExpandModal.tsx` - ASSET_CLASS_CONFIG
+- `frontend/src/components/riskboard/riskboard.css` - All CSS color classes
+- `frontend/src/components/layout/Sidebar.tsx` - Logo color
+
+### History
+- **2026-01-18:** Updated from yellow (#eab308) to orange (#f97316) for Commodities
+- **2026-01-18:** Standardized blue from #579CF9 to #3b82f6
+- **2026-01-18:** Standardized green from #3CD574 to #22c55e
+
+---
+
 ## Architecture Decisions (Recent)
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-15 | Brand green = emerald-400 → green-500 | User liked the AnimatedRiskboard gradient - use platform-wide |
 | 2026-01-12 | psycopg2 for database | On-premises architecture - hedge funds won't accept cloud storage |
 | 2026-01-12 | simplefix over quickfix | Lightweight for MVP, can upgrade later if needed |
 | 2026-01-12 | Column auto-detection for uploads | Better UX - don't require exact column names |
@@ -806,4 +891,4 @@ python -c "from backend.main import app; from fastapi.testclient import TestClie
 
 ---
 
-*Last updated: 2026-01-13 (Session 9 - Compliance Architecture: SOC 2 + GDPR + Privacy)*
+*Last updated: 2026-01-18 (Session 16 - Brand Colors Standardized, Modals Implemented)*

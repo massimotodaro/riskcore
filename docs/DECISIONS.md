@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-01-18
+
+### DECISION: 6 RiskCards (including Commodities)
+
+**Context:** Designing the Riskboard dashboard with asset class breakdowns.
+
+**Decision:** Use 6 RiskCards, not 5:
+1. **Equity** (blue - #579CF9)
+2. **Rates** (green - #3CD574)
+3. **Credit** (purple - #a855f7)
+4. **FX** (cyan - #06b6d4)
+5. **Commodities** (yellow - #eab308) - **NEW**
+6. **Other** (gray - #94a3b8) - for crypto, vol products, structured notes
+
+**Rationale:**
+- Commodities deserve their own RiskPod (Energy, Metals, Agri)
+- "Other" bucket now cleaner (crypto, vol, structured notes only)
+- Matches how multi-manager funds think about risk buckets
+- HTML mockup already had 6 columns in Market Anchors (Equity, Rates, Credit, FX, Commodities, Other)
+
+**Status:** ✅ Implemented
+
+---
+
 ## 2025-01-09 (Afternoon)
 
 ### DECISION: Build Correlation Framework as Phase 2-3 differentiator
