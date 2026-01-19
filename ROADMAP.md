@@ -1,7 +1,7 @@
 # RISKCORE Development Roadmap
 
 > Living document tracking MVP development progress.
-> **Last Updated:** 2026-01-15
+> **Last Updated:** 2026-01-19
 > **Sync to Claude Desktop:** Copy this file + CLAUDE.md daily
 
 ---
@@ -621,6 +621,22 @@ VERIFY-5b.5: Tests ✅
 
 **Target:** AI-native platform with voice and natural language queries
 **Philosophy:** This is what sets RISKCORE apart from legacy platforms
+
+### Architecture Research: COMPLETE
+
+**See:** `docs/AI_ARCHITECTURE_RESEARCH.md` for full details
+
+**Key Decisions (2026-01-19):**
+- Two-model architecture: Embedding (300M) + LLM (3-7B)
+- MVP: Ollama + Phi-3-mini + all-MiniLM-L6-v2 + pgvector
+- Production: vLLM + Qwen2.5-7B + Gemma Embedding
+- 100% on-premises - competitive differentiator
+
+**Action Items When Starting Week 6:**
+1. Prototype AI layer with Ollama + Phi-3
+2. Design chat interface in Riskboard UI
+3. Research fine-tuning on risk/finance data
+4. Test Gemma embedding model
 
 ### Core Principle: ON-PREMISES FIRST
 

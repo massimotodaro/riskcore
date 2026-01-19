@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (Riskboard UI Matching HTML) |
-| **Status** | ✅ Riskboard React Implementation Matching HTML Mockup |
-| **Next** | Test in browser, wire up to real API data |
+| **Week** | 5 - Dashboard (Riskboard UI Polish Complete) |
+| **Status** | ✅ Riskboard UI with dark/light theme, Market Anchors aligned |
+| **Next** | Trades page implementation |
 | **Tests** | 154+ passing (backend), TypeScript compiles |
 | **Branch** | develop |
 
@@ -19,7 +19,63 @@
 
 ## Session Log
 
-### 2026-01-18 Session 15 (Latest)
+### 2026-01-19 Session 17 (Latest)
+
+**Focus:** Riskboard UI Polish + AI Architecture Research
+
+**UI Improvements:**
+1. **Dark/Light Theme** - Complete implementation with Slack-inspired gray palette
+2. **Theme Context** - Global state management with localStorage persistence
+3. **Sidebar & Header** - Theme-aware styling with toggle button
+4. **Market Anchors Alignment** - Fixed alignment with RiskCards below
+5. **Scrollbar Styling** - Consistent medium blue scrollbars in light mode
+
+**Color Palette (Light Mode):**
+- Main background: `#D9D9D9`
+- Cards/panels: `#ECECEC`
+- Borders: `#CCCCCC`
+- Scrollbar thumb: `#93c5fd` (medium blue)
+
+**AI Architecture Research:**
+- Discussed on-premises AI as competitive differentiator
+- Researched two-model architecture (Embedding + LLM)
+- Identified model options (Phi-3, Qwen2.5, Gemma embedding)
+- Documented hardware requirements and implementation phases
+- **Full research saved to: `docs/AI_ARCHITECTURE_RESEARCH.md`**
+
+**Key Decision:** AI will run 100% on-premises. No competitor offers this.
+
+**Files Created:**
+- `docs/AI_ARCHITECTURE_RESEARCH.md` - Complete AI architecture research
+
+**Files Modified:**
+- `frontend/src/components/riskboard/riskboard.css` - Light mode, scrollbars, anchors alignment
+- `frontend/src/components/layout/Header.tsx` - Theme toggle
+- `frontend/src/components/layout/Sidebar.tsx` - Theme-aware styling
+- `frontend/src/components/layout/Layout.tsx` - Theme-aware background
+- `frontend/src/context/ThemeContext.tsx` - Global theme state
+
+**Commits:**
+- `ab60aee` - feat: Complete Riskboard UI with dark/light theme support
+
+**Next:**
+- Work on Trades page (tomorrow)
+- Week 6 AI implementation (future - research complete)
+
+---
+
+### 2026-01-18 Session 16
+
+**Focus:** Brand Colors Standardization + Modal Implementation
+
+**Completed:**
+- Standardized 5 brand colors across all components
+- Implemented ExpandModal, CalculationModal, TradesModal, OverridesModal
+- Created ThemeContext for global theme state
+
+---
+
+### 2026-01-18 Session 15
 
 **Focus:** Riskboard React Implementation - Match HTML Mockup Exactly
 
@@ -891,4 +947,4 @@ python -c "from backend.main import app; from fastapi.testclient import TestClie
 
 ---
 
-*Last updated: 2026-01-18 (Session 16 - Brand Colors Standardized, Modals Implemented)*
+*Last updated: 2026-01-19 (Session 17 - UI Polish, AI Architecture Research)*
