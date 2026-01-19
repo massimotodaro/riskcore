@@ -371,8 +371,8 @@ export interface UnderlyingTrade {
   created_at?: string
 }
 
-// RiskPod type for display
-export type RiskPodType = 'equity' | 'rates' | 'credit' | 'fx' | 'other'
+// RiskPod type for display (6 asset classes matching Riskboard)
+export type RiskPodType = 'equity' | 'rates' | 'credit' | 'fx' | 'commodities' | 'other'
 
 // RiskPod display configuration
 export interface RiskPodConfig {

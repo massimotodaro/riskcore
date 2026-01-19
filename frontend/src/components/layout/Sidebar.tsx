@@ -1,9 +1,11 @@
-import { NavLink } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import { useTheme } from '../../context/ThemeContext'
 
-const navigation = [
+// Navigation sections
+const dashboardNav = [
   {
     name: 'Riskboard',
     href: '/riskboard',
@@ -14,7 +16,7 @@ const navigation = [
     ),
   },
   {
-    name: 'Trades',
+    name: 'Positions & Trades',
     href: '/trades',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -22,24 +24,9 @@ const navigation = [
       </svg>
     ),
   },
-  {
-    name: 'CIO View',
-    href: '/cio',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-  },
+]
+
+const analysisNav = [
   {
     name: 'Overlaps',
     href: '/overlaps',
@@ -59,102 +46,299 @@ const navigation = [
     ),
   },
   {
-    name: 'Upload',
-    href: '/upload',
+    name: 'Reports',
+    href: '/reports',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
 ]
 
-export default function Sidebar() {
+const importSubmenu = [
+  { name: 'Upload Trades', href: '/upload?mode=trades' },
+  { name: 'Portfolio Snapshot', href: '/upload?mode=portfolio' },
+  { name: 'Position Updates', href: '/upload?mode=delta' },
+  { name: 'Google Sheet', href: '/upload?mode=google' },
+  { name: 'FIX Message', href: '/upload?mode=fix' },
+]
+
+const systemNav = [
+  {
+    name: 'Settings',
+    href: '/settings',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Help',
+    href: '/help',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+]
+
+// Nav Item Component
+function NavItem({ item, index }: { item: typeof dashboardNav[0]; index: number }) {
   const { isDarkMode } = useTheme()
 
   return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03 }}
+    >
+      <NavLink
+        to={item.href}
+        className={({ isActive }) =>
+          clsx(
+            'group relative flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-200',
+            isActive
+              ? isDarkMode
+                ? 'bg-emerald-500/15 text-emerald-400'
+                : 'bg-emerald-100 text-emerald-700'
+              : isDarkMode
+                ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+          )
+        }
+      >
+        {({ isActive }) => (
+          <>
+            {/* Active indicator bar */}
+            {isActive && (
+              <motion.div
+                layoutId="activeIndicator"
+                className={clsx(
+                  'absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full',
+                  isDarkMode ? 'bg-emerald-400' : 'bg-emerald-600'
+                )}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
+            <span className={clsx(
+              'transition-colors',
+              isActive
+                ? isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                : isDarkMode ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-500 group-hover:text-slate-700'
+            )}>
+              {item.icon}
+            </span>
+            <span>{item.name}</span>
+          </>
+        )}
+      </NavLink>
+    </motion.div>
+  )
+}
+
+// Section Title Component
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  const { isDarkMode } = useTheme()
+
+  return (
+    <div className={clsx(
+      'text-[10px] font-semibold uppercase tracking-wider px-3 py-2',
+      isDarkMode ? 'text-slate-600' : 'text-slate-500'
+    )}>
+      {children}
+    </div>
+  )
+}
+
+export default function Sidebar() {
+  const { isDarkMode } = useTheme()
+  const location = useLocation()
+  const [importExpanded, setImportExpanded] = useState(false)
+  const pendingCount = 3 // TODO: Get from context/state
+
+  // Check if current page is upload/import related
+  const isImportActive = location.pathname.startsWith('/upload')
+
+  return (
     <aside className={clsx(
-      'w-64 flex flex-col rounded-none border-r transition-colors duration-200',
-      isDarkMode ? 'glass border-white/5' : 'bg-[#ECECEC] border-[#CCCCCC]'
+      'w-[200px] flex flex-col h-screen border-r transition-colors duration-200',
+      isDarkMode
+        ? 'bg-slate-950/95 border-white/10'
+        : 'bg-slate-100 border-slate-300'
     )}>
       {/* Logo */}
       <div className={clsx(
-        'h-16 flex items-center px-6 border-b transition-colors duration-200',
-        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+        'h-14 flex items-center px-4 border-b transition-colors duration-200',
+        isDarkMode ? 'border-white/10' : 'border-slate-300'
       )}>
-        <motion.div
+        <motion.h1
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
+          className="text-xl font-extrabold tracking-wider"
+          style={{
+            background: 'linear-gradient(135deg, #3CD574, #22c55e)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
         >
-          <span className="text-xl font-bold" style={{ color: '#22C55E' }}>RISKCORE</span>
-        </motion.div>
+          RISKCORE
+        </motion.h1>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navigation.map((item, index) => (
-          <motion.div
-            key={item.name}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <NavLink
-              to={item.href}
-              className={({ isActive }) =>
-                clsx(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? isDarkMode
-                      ? 'bg-white/10 text-white'
-                      : 'bg-[#D9D9D9] text-slate-900'
-                    : isDarkMode
-                      ? 'text-slate-300 hover:bg-white/5 hover:text-white'
-                      : 'text-slate-600 hover:bg-[#D9D9D9] hover:text-slate-900'
-                )
-              }
-            >
-              <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>{item.icon}</span>
-              <span>{item.name}</span>
-            </NavLink>
-          </motion.div>
-        ))}
+      {/* Main Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2">
+        {/* Dashboard Section */}
+        <div className="mb-4">
+          <SectionTitle>Dashboard</SectionTitle>
+          <div className="space-y-0.5">
+            {dashboardNav.map((item, index) => (
+              <NavItem key={item.name} item={item} index={index} />
+            ))}
+          </div>
+        </div>
+
+        {/* Analysis Section */}
+        <div className="mb-4">
+          <SectionTitle>Analysis</SectionTitle>
+          <div className="space-y-0.5">
+            {analysisNav.map((item, index) => (
+              <NavItem key={item.name} item={item} index={index + dashboardNav.length} />
+            ))}
+          </div>
+        </div>
       </nav>
 
-      {/* Command palette hint */}
+      {/* Bottom Section - Import & System */}
       <div className={clsx(
-        'px-4 py-3 border-t transition-colors duration-200',
-        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+        'border-t py-3 px-2',
+        isDarkMode ? 'border-white/10' : 'border-slate-300'
       )}>
-        <div className={clsx(
-          'flex items-center justify-between text-xs',
-          isDarkMode ? 'text-slate-500' : 'text-slate-500'
-        )}>
-          <span>Quick search</span>
-          <kbd className={clsx(
-            'px-2 py-1 rounded font-mono transition-colors duration-200',
-            isDarkMode ? 'bg-white/5 text-slate-400' : 'bg-[#D9D9D9] text-slate-600'
-          )}>
-            Ctrl K
-          </kbd>
+        {/* Data Section */}
+        <div className="mb-3">
+          <SectionTitle>Data</SectionTitle>
+
+          {/* Import Data with submenu */}
+          <div>
+            <button
+              onClick={() => setImportExpanded(!importExpanded)}
+              className={clsx(
+                'w-full group relative flex items-center justify-between px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-200',
+                isImportActive
+                  ? isDarkMode
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-emerald-100 text-emerald-700'
+                  : isDarkMode
+                    ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                {/* Active indicator */}
+                {isImportActive && (
+                  <div className={clsx(
+                    'absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full',
+                    isDarkMode ? 'bg-emerald-400' : 'bg-emerald-600'
+                  )} />
+                )}
+                <svg className={clsx(
+                  'w-5 h-5 transition-colors',
+                  isImportActive
+                    ? isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                    : isDarkMode ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-500 group-hover:text-slate-700'
+                )} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span>Import Data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {pendingCount > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500 text-slate-900">
+                    {pendingCount}
+                  </span>
+                )}
+                <svg
+                  className={clsx(
+                    'w-4 h-4 transition-transform duration-200',
+                    importExpanded && 'rotate-180',
+                    isDarkMode ? 'text-slate-500' : 'text-slate-400'
+                  )}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            {/* Submenu */}
+            <AnimatePresence>
+              {importExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pl-8 py-1 space-y-0.5">
+                    {importSubmenu.map((item) => (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        className={clsx(
+                          'block px-3 py-1.5 rounded text-[12px] transition-colors',
+                          isDarkMode
+                            ? 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'
+                        )}
+                      >
+                        {item.name}
+                      </NavLink>
+                    ))}
+                    {pendingCount > 0 && (
+                      <NavLink
+                        to="/upload?pending=true"
+                        className={clsx(
+                          'block px-3 py-1.5 rounded text-[12px] transition-colors',
+                          isDarkMode
+                            ? 'text-amber-400 hover:bg-amber-500/10'
+                            : 'text-amber-600 hover:bg-amber-100'
+                        )}
+                      >
+                        Pending ({pendingCount})
+                      </NavLink>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* System Section */}
+        <div>
+          <SectionTitle>System</SectionTitle>
+          <div className="space-y-0.5">
+            {systemNav.map((item, index) => (
+              <NavItem key={item.name} item={item} index={index} />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Footer */}
       <div className={clsx(
-        'px-4 py-4 border-t transition-colors duration-200',
-        isDarkMode ? 'border-white/5' : 'border-[#CCCCCC]'
+        'px-4 py-3 border-t text-[10px]',
+        isDarkMode ? 'border-white/10 text-slate-600' : 'border-slate-300 text-slate-500'
       )}>
-        <div className="text-xs">
-          <div className={clsx(
-            'font-medium',
-            isDarkMode ? 'text-slate-400' : 'text-slate-600'
-          )}>RISKCORE v0.1.0</div>
-          <div className={clsx(
-            'mt-0.5',
-            isDarkMode ? 'text-slate-500' : 'text-slate-500'
-          )}>Risk Aggregation Platform</div>
-        </div>
+        Powered by RISKCORE
       </div>
     </aside>
   )

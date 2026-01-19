@@ -4,6 +4,8 @@ import Dashboard from './pages/Dashboard'
 import CIODashboard from './pages/CIODashboard'
 import RiskboardNew from './pages/RiskboardNew'
 import Trades from './pages/Trades'
+import TradesNew from './pages/TradesNew'
+import Upload from './pages/Upload'
 import UnderlyingTrades from './pages/UnderlyingTrades'
 
 function App() {
@@ -14,17 +16,22 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         {/* New Unified Riskboard - Main Dashboard (Matching HTML Design) */}
         <Route path="riskboard" element={<RiskboardNew />} />
-        {/* Trades Page - Net Positions with drill-down to underlying trades */}
-        <Route path="trades" element={<Trades />} />
+        {/* Positions & Trades Page - RiskPod tables with drill-down (Matching HTML Design) */}
+        <Route path="trades" element={<TradesNew />} />
+        {/* Import Data Page - File upload and reconciliation workflow */}
+        <Route path="upload" element={<Upload />} />
         {/* Legacy CIO Dashboard */}
         <Route path="cio" element={<CIODashboard />} />
+        {/* Legacy Trades Page */}
+        <Route path="trades-legacy" element={<Trades />} />
         {/* Legacy Underlying Trades Drill-down (from RiskCard) */}
         <Route path="trades/:bookIds/:assetClass" element={<UnderlyingTrades />} />
         {/* Future routes */}
-        {/* <Route path="positions" element={<Positions />} /> */}
         {/* <Route path="overlaps" element={<Overlaps />} /> */}
         {/* <Route path="correlation" element={<Correlation />} /> */}
-        {/* <Route path="upload" element={<Upload />} /> */}
+        {/* <Route path="reports" element={<Reports />} /> */}
+        {/* <Route path="settings" element={<Settings />} /> */}
+        {/* <Route path="help" element={<Help />} /> */}
       </Route>
     </Routes>
   )

@@ -9,6 +9,7 @@ interface PositionTableProps {
   positions: HistoricalPosition[]
   riskpod: RiskPodType
   onReprice: (position: HistoricalPosition) => void
+  isDarkMode?: boolean
 }
 
 interface ExpandedRowProps {
@@ -111,9 +112,22 @@ export default function PositionTable({
   positions,
   riskpod,
   onReprice,
+  isDarkMode = true,
 }: PositionTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const config = RISKPOD_CONFIG[riskpod]
+
+  // Theme-aware colors
+  const colors = {
+    text: isDarkMode ? '#e2e8f0' : '#1e293b',
+    textMuted: '#64748b',
+    textLight: isDarkMode ? '#94a3b8' : '#475569',
+    border: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    borderFaint: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    hover: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    expanded: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    expandedTrades: isDarkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(0, 0, 0, 0.02)',
+  }
 
   const toggleExpand = (positionId: string) => {
     setExpandedId((prev) => (prev === positionId ? null : positionId))
@@ -138,43 +152,44 @@ export default function PositionTable({
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-white/10">
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-8">
+          <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider w-8" style={{ color: colors.textMuted }}>
               {/* Expand icon */}
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               Instrument
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               Book
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               PM
             </th>
-            <th className="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               Direction
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               Quantity
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: colors.textMuted }}>
               Market Value
             </th>
             {/* Dynamic risk metric columns */}
             {config.columns.map((col) => (
               <th
                 key={col}
-                className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider"
+                className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider"
+                style={{ color: colors.textMuted }}
               >
                 {col === 'sector' ? 'Sector' : col.toUpperCase()}
               </th>
             ))}
-            <th className="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-24">
+            <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider w-24" style={{ color: colors.textMuted }}>
               Reprice
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody style={{ borderTop: `1px solid ${colors.borderFaint}` }}>
           {positions.map((position) => {
             const positionId = position.position_id || position.history_id || `${position.book_id}-${position.security_id}`
             const isExpanded = expandedId === positionId
@@ -185,20 +200,22 @@ export default function PositionTable({
                 <motion.tr
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className={clsx(
-                    'transition-colors',
-                    isExpanded ? 'bg-white/5' : 'hover:bg-white/5'
-                  )}
+                  className="transition-colors"
+                  style={{
+                    background: isExpanded ? colors.expanded : undefined,
+                    borderBottom: `1px solid ${colors.borderFaint}`,
+                  }}
                 >
                   {/* Expand button */}
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggleExpand(positionId)}
-                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      className="p-1 rounded transition-colors"
+                      style={{ color: colors.textMuted }}
                     >
                       <svg
                         className={clsx(
-                          'w-4 h-4 text-slate-400 transition-transform',
+                          'w-4 h-4 transition-transform',
                           isExpanded && 'rotate-90'
                         )}
                         fill="none"
@@ -221,47 +238,46 @@ export default function PositionTable({
                       onClick={() => toggleExpand(positionId)}
                       className="text-left hover:text-blue-400 transition-colors"
                     >
-                      <div className="font-medium text-white">
+                      <div className="font-medium" style={{ color: colors.text }}>
                         {position.ticker || position.security_name?.slice(0, 10)}
                       </div>
-                      <div className="text-xs text-slate-500 truncate max-w-[150px]">
+                      <div className="text-xs truncate max-w-[150px]" style={{ color: colors.textMuted }}>
                         {position.security_name}
                       </div>
                     </button>
                   </td>
 
                   {/* Book */}
-                  <td className="px-4 py-3 text-sm text-slate-300">
+                  <td className="px-4 py-3 text-sm" style={{ color: colors.textLight }}>
                     {position.book_name}
                   </td>
 
                   {/* PM */}
-                  <td className="px-4 py-3 text-sm text-slate-400">
+                  <td className="px-4 py-3 text-sm" style={{ color: colors.textMuted }}>
                     {position.pm_name || '-'}
                   </td>
 
                   {/* Direction */}
                   <td className="px-4 py-3 text-center">
                     <span
-                      className={clsx(
-                        'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                        position.direction === 'long'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-red-500/20 text-red-300'
-                      )}
+                      className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={position.direction === 'long'
+                        ? { background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80' }
+                        : { background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }
+                      }
                     >
                       {position.direction.toUpperCase()}
                     </span>
                   </td>
 
                   {/* Quantity */}
-                  <td className="px-4 py-3 text-right text-sm text-white font-mono">
+                  <td className="px-4 py-3 text-right text-sm font-mono" style={{ color: colors.text }}>
                     {formatQuantity(position.quantity)}
                   </td>
 
                   {/* Market Value */}
                   <td className="px-4 py-3 text-right text-sm font-medium">
-                    <span className={position.market_value >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    <span style={{ color: position.market_value >= 0 ? '#34d399' : '#f87171' }}>
                       {formatCurrency(position.market_value)}
                     </span>
                   </td>
@@ -270,9 +286,9 @@ export default function PositionTable({
                   {config.columns.map((col) => (
                     <td key={col} className="px-4 py-3 text-right text-sm">
                       {col === 'sector' ? (
-                        <span className="text-slate-400">{position.sector || '-'}</span>
+                        <span style={{ color: colors.textMuted }}>{position.sector || '-'}</span>
                       ) : (
-                        <span className="text-slate-300 font-mono">
+                        <span className="font-mono" style={{ color: colors.textLight }}>
                           {getRiskMetricValue(position, col)}
                         </span>
                       )}
@@ -283,11 +299,12 @@ export default function PositionTable({
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => onReprice(position)}
-                      className={clsx(
-                        'px-2 py-1 rounded text-xs font-medium transition-colors',
-                        'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-                        'hover:bg-amber-500/20 hover:border-amber-500/30'
-                      )}
+                      className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                      style={{
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        color: '#fbbf24',
+                        border: '1px solid rgba(245, 158, 11, 0.2)',
+                      }}
                     >
                       Reprice
                     </button>

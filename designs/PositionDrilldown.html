@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Position Drill-down - Manual Pricing Override</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .demo-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f8fafc;
+        }
+
+        .demo-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        /* Sample table row showing override indicator */
+        .sample-table {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 32px;
+        }
+
+        .sample-table h3 {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            background: #334155;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .table-row:hover {
+            background: #475569;
+        }
+
+        .row-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ticker {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        /* Manual Override Warning Badge in Table */
+        .override-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: #f59e0b20;
+            border: 1px solid #f59e0b40;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .override-badge::before {
+            content: "!";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            background: #f59e0b;
+            color: #000;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .row-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            color: #94a3b8;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .click-hint {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        /* Section divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 40px 0 24px 0;
+        }
+
+        .section-divider h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+            white-space: nowrap;
+        }
+
+        .section-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, #334155 0%, transparent 100%);
+        }
+
+        /* Modal/Slide-out Panel */
+        .panel-container {
+            display: flex;
+            gap: 24px;
+        }
+
+        .panel {
+            flex: 1;
+            background: #1e293b;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .panel-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inst-type-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #8b5cf620;
+            color: #a78bfa;
+            border: 1px solid #8b5cf640;
+        }
+
+        .panel-subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        /* Override Warning Banner */
+        .override-warning-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #f59e0b15 0%, #f59e0b08 100%);
+            border: 1px solid #f59e0b30;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .warning-icon {
+            width: 36px;
+            height: 36px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 2px;
+        }
+
+        .warning-text {
+            font-size: 12px;
+            color: #fcd34d;
+            opacity: 0.8;
+        }
+
+        .reset-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #f59e0b50;
+            border-radius: 6px;
+            color: #fbbf24;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #f59e0b20;
+            border-color: #f59e0b;
+        }
+
+        /* Metrics Grid */
+        .metrics-section {
+            margin-bottom: 24px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: #334155;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .metric-value.positive {
+            color: #34d399;
+        }
+
+        .metric-value.negative {
+            color: #f87171;
+        }
+
+        /* Pricing Section with Tabs */
+        .pricing-section {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .pricing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .pricing-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pricing-source-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .pricing-source-badge.market {
+            background: #3b82f620;
+            color: #60a5fa;
+            border: 1px solid #3b82f640;
+        }
+
+        .pricing-source-badge.model {
+            background: #8b5cf620;
+            color: #a78bfa;
+            border: 1px solid #8b5cf640;
+        }
+
+        .pricing-source-badge.manual {
+            background: #f59e0b20;
+            color: #fbbf24;
+            border: 1px solid #f59e0b40;
+        }
+
+        /* Tab Navigation */
+        .pricing-tabs {
+            display: flex;
+            gap: 4px;
+            background: #1e293b;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pricing-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pricing-tab:hover {
+            color: #94a3b8;
+        }
+
+        .pricing-tab.active {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        /* Current Price Display */
+        .current-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #1e293b;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .price-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        /* Override Input Section */
+        .override-section {
+            padding: 16px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px dashed #475569;
+        }
+
+        .override-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        .override-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .override-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #f1f5f9;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .override-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px #3b82f620;
+        }
+
+        .override-input::placeholder {
+            color: #475569;
+        }
+
+        /* Model Inputs Section */
+        .model-inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .model-input-card {
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .model-input-card.overridden {
+            border-color: #f59e0b50;
+            background: linear-gradient(135deg, #f59e0b08 0%, transparent 100%);
+        }
+
+        .model-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .model-input-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .model-input-edit {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: none;
+            background: #475569;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .model-input-edit:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .model-input-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .model-input-card.overridden .model-input-value {
+            color: #fbbf24;
+        }
+
+        .model-input-default {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* What-if Preview */
+        .whatif-preview {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #3b82f610 0%, #3b82f605 100%);
+            border: 1px solid #3b82f630;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .whatif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .whatif-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .whatif-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .whatif-label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .whatif-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .whatif-change {
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .whatif-change.positive {
+            color: #34d399;
+        }
+
+        .whatif-change.negative {
+            color: #f87171;
+        }
+
+        /* Override History */
+        .override-history {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #334155;
+        }
+
+        .history-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+
+        .history-time {
+            color: #64748b;
+            min-width: 100px;
+        }
+
+        .history-action {
+            color: #94a3b8;
+        }
+
+        .history-user {
+            color: #60a5fa;
+        }
+
+        /* Design Options */
+        .design-options {
+            margin-top: 48px;
+            padding: 24px;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .design-options h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 16px;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .option-card {
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .option-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-card h4 span {
+            padding: 2px 6px;
+            background: #10b98120;
+            color: #34d399;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        .option-card p {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Footer Actions */
+        .panel-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        /* Annotation */
+        .annotation {
+            position: relative;
+            margin: 16px 0;
+            padding: 12px 16px;
+            background: #10b98110;
+            border-left: 3px solid #10b981;
+            border-radius: 0 8px 8px 0;
+            font-size: 12px;
+            color: #34d399;
+        }
+
+        .annotation-number {
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">Position Drill-down with Manual Price Override</h1>
+        <p class="demo-subtitle">Click any position row to open the detail panel. Override price directly or modify model inputs.</p>
+
+        <!-- Sample Table Row -->
+        <div class="sample-table">
+            <h3>Table Row with Override Indicator</h3>
+            <div class="table-row">
+                <div class="row-name">
+                    <span class="ticker">EUR/USD 3M Call 1.10</span>
+                    <span class="override-badge">MANUAL PRICE</span>
+                </div>
+                <span class="row-value">Option</span>
+                <span class="row-value">EUR</span>
+                <span class="row-value" style="color: #34d399;">+10M</span>
+                <span class="row-value">$1.12M</span>
+                <span class="row-value">0.0112</span>
+            </div>
+            <p class="click-hint">Click row to open position details panel</p>
+        </div>
+
+        <div class="section-divider">
+            <h2>Position Detail Panel (Slide-out)</h2>
+        </div>
+
+        <!-- Panel Design -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title-section">
+                    <div class="panel-title">
+                        EUR/USD 3M Call 1.10
+                        <span class="inst-type-badge">Option</span>
+                    </div>
+                    <div class="panel-subtitle">Epsilon Macro | K. Tanaka | Trade: TRD-6L1I</div>
+                </div>
+                <button class="close-btn">x</button>
+            </div>
+
+            <div class="panel-body">
+                <!-- Override Warning Banner -->
+                <div class="override-warning-banner">
+                    <div class="warning-icon">!</div>
+                    <div class="warning-content">
+                        <div class="warning-title">Manual Price Override Active</div>
+                        <div class="warning-text">Price manually set by M. Johnson on Jan 17, 2026 at 14:32</div>
+                    </div>
+                    <button class="reset-btn">Reset to Model Price</button>
+                </div>
+
+                <!-- Position Metrics -->
+                <div class="metrics-section">
+                    <div class="section-label">Position Details</div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Quantity</div>
+                            <div class="metric-value">10,000,000</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Entry Price</div>
+                            <div class="metric-value">0.0085</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Market Value</div>
+                            <div class="metric-value positive">$1.12M</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">P&L</div>
+                            <div class="metric-value positive">+$270K</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Delta</div>
+                            <div class="metric-value">$5,200</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Gamma</div>
+                            <div class="metric-value">85</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Vega</div>
+                            <div class="metric-value">42,500</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Theta</div>
+                            <div class="metric-value negative">-$1,250</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Correlation</div>
+                            <div class="metric-value">0.18</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Override Section -->
+                <div class="pricing-section">
+                    <div class="pricing-header">
+                        <div class="pricing-title">
+                            Pricing
+                            <span class="pricing-source-badge manual">Manual Override</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabs for Override Type -->
+                    <div class="pricing-tabs">
+                        <button class="pricing-tab active">Override Price</button>
+                        <button class="pricing-tab">Override Model Inputs</button>
+                    </div>
+
+                    <!-- Current Price -->
+                    <div class="current-price-row">
+                        <span class="price-label">Current Price</span>
+                        <span class="price-value">0.0112</span>
+                    </div>
+
+                    <!-- Override Input -->
+                    <div class="override-section">
+                        <div class="override-title">Enter Manual Price Override</div>
+                        <div class="override-input-row">
+                            <div class="input-group">
+                                <label class="input-label">New Price</label>
+                                <input type="text" class="override-input" placeholder="e.g., 0.0115" value="0.0118">
+                            </div>
+                            <div class="input-group" style="max-width: 180px;">
+                                <label class="input-label">Reason (optional)</label>
+                                <input type="text" class="override-input" placeholder="Reason...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What-if Preview -->
+                    <div class="whatif-preview">
+                        <div class="whatif-header">
+                            <span class="whatif-title">What-if Preview</span>
+                        </div>
+                        <div class="whatif-row">
+                            <span class="whatif-label">New Market Value</span>
+                            <span class="whatif-value">
+                                $1.18M
+                                <span class="whatif-change positive">+$60K (+5.4%)</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Override History -->
+                    <div class="override-history">
+                        <div class="history-title">Override History</div>
+                        <div class="history-item">
+                            <span class="history-time">Jan 17, 14:32</span>
+                            <span class="history-action">Price override: 0.0112</span>
+                            <span class="history-user">M. Johnson</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-time">Jan 16, 09:15</span>
+                            <span class="history-action">Reset to model price</span>
+                            <span class="history-user">K. Tanaka</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <button class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Save and Recalculate</button>
+            </div>
+        </div>
+
+        <div class="section-divider">
+            <h2>Model Inputs Override (Tab 2)</h2>
+        </div>
+
+        <!-- Model Inputs Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title-section">
+                    <div class="panel-title">
+                        EUR/USD 3M Call 1.10
+                        <span class="inst-type-badge">Option</span>
+                    </div>
+                    <div class="panel-subtitle">Epsilon Macro | K. Tanaka | Trade: TRD-6L1I</div>
+                </div>
+                <button class="close-btn">x</button>
+            </div>
+
+            <div class="panel-body">
+                <!-- Different Warning - Input Override -->
+                <div class="override-warning-banner">
+                    <div class="warning-icon">!</div>
+                    <div class="warning-content">
+                        <div class="warning-title">Model Input Override Active</div>
+                        <div class="warning-text">Volatility override: 12.5% (default: 11.2%) by M. Johnson</div>
+                    </div>
+                    <button class="reset-btn">Reset All Inputs</button>
+                </div>
+
+                <!-- Pricing Override Section -->
+                <div class="pricing-section">
+                    <div class="pricing-header">
+                        <div class="pricing-title">
+                            Pricing
+                            <span class="pricing-source-badge model">Model + Override</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabs for Override Type -->
+                    <div class="pricing-tabs">
+                        <button class="pricing-tab">Override Price</button>
+                        <button class="pricing-tab active">Override Model Inputs</button>
+                    </div>
+
+                    <!-- Model Calculated Price -->
+                    <div class="current-price-row">
+                        <span class="price-label">Model Calculated Price</span>
+                        <span class="price-value" style="color: #a78bfa;">0.0112</span>
+                    </div>
+
+                    <!-- Model Inputs Grid -->
+                    <div class="section-label" style="margin-top: 16px;">Model Inputs</div>
+                    <div class="model-inputs-grid">
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Spot Rate</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">1.0892</div>
+                            <div class="model-input-default">Market observed</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Strike</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">1.1000</div>
+                            <div class="model-input-default">Contract term</div>
+                        </div>
+                        <div class="model-input-card overridden">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Implied Volatility (3M ATM)</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">12.5%</div>
+                            <div class="model-input-default">Default: 11.2% (market)</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">EUR Risk-Free Rate</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">3.25%</div>
+                            <div class="model-input-default">ECB curve</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">USD Risk-Free Rate</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">4.85%</div>
+                            <div class="model-input-default">Fed curve</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Time to Expiry</span>
+                                <button class="model-input-edit" disabled style="opacity: 0.5;">E</button>
+                            </div>
+                            <div class="model-input-value">92 days</div>
+                            <div class="model-input-default">Calculated</div>
+                        </div>
+                    </div>
+
+                    <!-- What-if Preview for Model -->
+                    <div class="whatif-preview">
+                        <div class="whatif-header">
+                            <span class="whatif-title">Model Recalculation Preview</span>
+                        </div>
+                        <div class="whatif-row" style="margin-bottom: 8px;">
+                            <span class="whatif-label">With Vol @ 12.5%</span>
+                            <span class="whatif-value">
+                                0.0118
+                                <span class="whatif-change positive">+0.0006 (+5.4%)</span>
+                            </span>
+                        </div>
+                        <div class="whatif-row">
+                            <span class="whatif-label">New Market Value</span>
+                            <span class="whatif-value">
+                                $1.18M
+                                <span class="whatif-change positive">+$60K</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Override History -->
+                    <div class="override-history">
+                        <div class="history-title">Input Override History</div>
+                        <div class="history-item">
+                            <span class="history-time">Jan 17, 14:32</span>
+                            <span class="history-action">Vol override: 11.2% -> 12.5%</span>
+                            <span class="history-user">M. Johnson</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <button class="btn-secondary">Cancel</button>
+                <button class="btn-primary">Save and Recalculate</button>
+            </div>
+        </div>
+
+        <!-- Design Recommendations -->
+        <div class="design-options">
+            <h3>Design Recommendations</h3>
+            <div class="option-grid">
+                <div class="option-card">
+                    <h4>1. Visual Override Indicator <span>Recommended</span></h4>
+                    <p>Show amber/yellow badge directly in the table row when any manual override is active. Makes it immediately visible which positions have overrides without opening the detail panel.</p>
+                </div>
+                <div class="option-card">
+                    <h4>2. Two Override Modes</h4>
+                    <p><strong>Override Price:</strong> Direct price input - simple, quick, overrides everything.<br><br><strong>Override Model Inputs:</strong> Change specific inputs (vol, rates) - model recalculates price. More granular control, audit trail shows what was changed.</p>
+                </div>
+                <div class="option-card">
+                    <h4>3. What-if Preview <span>Recommended</span></h4>
+                    <p>Show real-time preview of impact before applying. User sees new price, new P&L, new market value instantly as they type. Reduces errors and gives confidence.</p>
+                </div>
+                <div class="option-card">
+                    <h4>4. Reset to Default</h4>
+                    <p>Prominent "Reset" button in warning banner. Clearly states what default is (Market price or Model with default inputs). One-click to remove all overrides.</p>
+                </div>
+                <div class="option-card">
+                    <h4>5. Audit Trail</h4>
+                    <p>Track who made overrides and when. Essential for compliance. Show last N overrides in the panel, full history available via link.</p>
+                </div>
+                <div class="option-card">
+                    <h4>6. Pricing Source Badge</h4>
+                    <p>Clear indicator of current pricing source:<br>
+                    <strong style="color: #60a5fa;">Market</strong> - observed price<br>
+                    <strong style="color: #a78bfa;">Model</strong> - calculated price<br>
+                    <strong style="color: #fbbf24;">Manual</strong> - user override</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="annotation" style="margin-top: 32px;">
+            <span class="annotation-number">!</span>
+            <strong>Key UX Decision:</strong> When a user overrides a model input (like volatility), the price badge should show "Model + Override" (purple with amber accent) to indicate it's still model-priced but with modified inputs. This is different from a direct price override where the badge shows "Manual" (amber).
+        </div>
+    </div>
+</body>
+</html>

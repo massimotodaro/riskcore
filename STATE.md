@@ -9,9 +9,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Week** | 5 - Dashboard (Riskboard UI Polish Complete) |
-| **Status** | ✅ Riskboard UI with dark/light theme, Market Anchors aligned |
-| **Next** | Trades page implementation |
+| **Week** | 5 - Dashboard (Import & Reconciliation Design Complete) |
+| **Status** | ✅ Import workflow mockup with reconciliation preview |
+| **Next** | Implement backend reconciliation service / Week 6 AI |
 | **Tests** | 154+ passing (backend), TypeScript compiles |
 | **Branch** | develop |
 
@@ -19,7 +19,153 @@
 
 ## Session Log
 
-### 2026-01-19 Session 17 (Latest)
+### 2026-01-19 Session 19 (Latest)
+
+**Focus:** Import & Reconciliation System Design
+
+**MILESTONE: Import Workflow Design Complete**
+
+**Problem Statement:**
+1. No way to distinguish between adding trades vs replacing portfolio
+2. No reconciliation between imported data and existing records
+3. No way to detect/remove stale positions
+4. Limited ability to manually adjust quantities or delete positions
+
+**Solution Designed:**
+
+1. **Three Import Modes:**
+   - **ADD TRADES** (Incremental) - Append new trades to existing
+   - **FULL PORTFOLIO SNAPSHOT** (Reconcile) - Replace with comparison
+   - **POSITION UPDATES** (Delta) - Upsert changed positions
+
+2. **Reconciliation Preview:**
+   - ✅ MATCHED - Identical in file and system
+   - ⚠️ QUANTITY MISMATCH - User decides: Update or Keep
+   - ❌ STALE POSITIONS - User decides: Delete or Keep
+   - ➕ NEW POSITIONS - Auto-add after mapping
+
+3. **Manual Position Actions:**
+   - Adjust Quantity (with reason selection)
+   - Delete Position (with reason selection)
+   - All changes logged to audit trail
+
+4. **Sidebar Import Section:**
+   - Located in sidebar bottom section (with Settings & Help)
+   - Expandable submenu with all import options
+   - Pending actions badge (unmatched, reconciliation)
+
+**User Decisions:**
+- Import modes: All three
+- Default mismatch action: Require user decision on each
+- UI placement: Sidebar bottom section (user changed from header)
+
+**Files Created:**
+- `designs/ImportWorkflow.html` - Complete HTML mockup (~1900 lines)
+  - Step 1: Mode Selection
+  - Step 2: Column Mapping
+  - Step 3: Reconciliation Preview
+  - Resolve Unmatched Security Modal
+  - Adjust Quantity Modal
+  - Delete Position Modal
+  - Sidebar with Import Data expandable submenu
+
+**Plan File:**
+- `C:\Users\massi\.claude\plans\glowing-crafting-kahn.md` - Full implementation plan
+  - Database schema (reconciliation_sessions, reconciliation_items)
+  - Backend services (ReconciliationService)
+  - API endpoints (reconciliation, enhanced positions)
+  - Frontend components list
+  - Verification criteria
+
+**Security Mapping:**
+- ✅ ALREADY SOLVED in Week 5b (unmatched queue + aliases)
+- Linked into reconciliation workflow
+
+**Next Steps (When Implementing):**
+1. Create database migration for reconciliation tables
+2. Implement ReconciliationService
+3. Add reconciliation API endpoints
+4. Add position adjust/delete with reason to backend
+5. Implement frontend components
+
+---
+
+### 2026-01-19 Session 18
+
+**Focus:** Positions & Trades Page - Position Drill-down with Manual Price Override
+
+**MILESTONE COMPLETE: Trades Page with Price Override UI**
+
+**Features Implemented:**
+
+1. **Table Sorting by Portfolio**
+   - All 6 tables (Equity, Rates, Credit, FX, Commodities, Other) sorted by:
+     - Portfolio name (alphabetical)
+     - Then by instrument name (alphabetical within portfolio)
+
+2. **Table Styling Improvements**
+   - PNL column added to all tables with tooltips on Entry Price
+   - Type, Ccy, Quantity columns set to equal width (120px)
+   - Quantity color-coded: green positive, red negative
+   - Currency badges replaced with plain text
+   - Portfolio cards with colored backgrounds and white text
+
+3. **Position Drill-down Panel (NEW)**
+   - Click any position row → Slide-out panel opens from right
+   - Panel shows all position details and risk metrics
+   - **Two override modes:**
+     - **Override Price** - Direct price input for all instruments
+     - **Override Model Inputs** - Change vol, rates, etc. (derivatives only)
+   - Model Inputs tab hidden for cash equities (no model behind them)
+   - Greeks section shown only for derivatives
+   - What-if preview calculates impact in real-time
+
+4. **Manual Override Warning System**
+   - Warning banner when override is active
+   - Shows who made override and when
+   - One-click "Reset to Default" button
+   - Pricing source badges: Market (blue), Model (purple), Manual (amber)
+
+5. **Panel Features**
+   - Populated from row data on click
+   - Tab switching between price/model override
+   - Overlay click closes panel
+   - Cancel and "Save and Recalculate" buttons
+
+**Files Created:**
+- `designs/PositionDrilldown.html` - Standalone mockup for design review
+
+**Files Modified:**
+- `designs/TradesPage.html` - Added:
+  - ~550 lines of CSS for drill-down panel styling
+  - ~180 lines of HTML for slide-out panel structure
+  - ~130 lines of JavaScript for panel interactivity
+  - Table sorting by portfolio then by name
+
+**Design Decisions:**
+- Cash equities: Only "Override Price" tab (no model inputs)
+- Options/Swaps/CDS: Both tabs available (price OR model inputs)
+- Badge colors: Market=blue, Model=purple, Manual=amber, Model+Override=purple/amber gradient
+- Single "Save and Recalculate" button (not two separate buttons)
+
+**Key UX Patterns:**
+1. Click row → Panel slides in from right
+2. What-if preview shows impact before saving
+3. Override warning banner prominent at top
+4. Reset button in warning banner for quick reversal
+5. Model inputs grid with edit buttons per input
+
+**Verification:**
+- All positions clickable
+- Panel opens with correct data from row
+- Tab switching works
+- Model tab hidden for cash equity
+- Overlay click closes panel
+- HTML validates
+
+---
+
+### 2026-01-19 Session 17
 
 **Focus:** Riskboard UI Polish + AI Architecture Research
 
@@ -947,4 +1093,4 @@ python -c "from backend.main import app; from fastapi.testclient import TestClie
 
 ---
 
-*Last updated: 2026-01-19 (Session 17 - UI Polish, AI Architecture Research)*
+*Last updated: 2026-01-19 (Session 18 - Trades Page with Position Drill-down & Price Override)*

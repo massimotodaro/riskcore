@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISKCORE - Import Workflow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #e2e8f0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: rgba(15, 23, 42, 0.98);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-logo h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3CD574, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-section { padding: 0 8px; margin-bottom: 20px; }
+        .nav-section-title {
+            font-size: 9px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 10px;
+            margin-bottom: 2px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: rgba(51, 65, 85, 0.5); color: #e2e8f0; }
+        .nav-item.active { background: rgba(60, 213, 116, 0.15); color: #3CD574; }
+        .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+        .nav-item .badge {
+            margin-left: auto;
+            background: #fbbf24;
+            color: #0f172a;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* Sidebar Bottom Section */
+        .sidebar-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px;
+        }
+        .sidebar-bottom .nav-section { margin-bottom: 8px; }
+
+        /* Import Submenu in Sidebar */
+        .nav-submenu {
+            display: none;
+            padding-left: 30px;
+            margin-top: 4px;
+        }
+        .nav-submenu.show { display: block; }
+        .nav-submenu .nav-item {
+            font-size: 12px;
+            padding: 6px 10px;
+            color: #64748b;
+        }
+        .nav-submenu .nav-item:hover { color: #e2e8f0; }
+        .nav-item.has-submenu .expand-arrow {
+            margin-left: auto;
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .nav-item.has-submenu.expanded .expand-arrow { transform: rotate(180deg); }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            color: #475569;
+        }
+
+        /* Main Content */
+        .main-wrapper { margin-left: 200px; flex: 1; min-height: 100vh; }
+
+        /* Header */
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .page-title { font-size: 18px; font-weight: 600; color: #e2e8f0; }
+
+        .header-icons { display: flex; align-items: center; gap: 8px; }
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+            font-size: 16px;
+        }
+        .header-icon:hover { background: rgba(51, 65, 85, 0.8); color: #e2e8f0; }
+        .header-icon.has-badge { position: relative; }
+        .header-icon .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 24px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            min-height: calc(100vh - 50px);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal */
+        .modal {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-overlay.show .modal { transform: scale(1); }
+        .modal.wide { max-width: 1100px; }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: rgba(239, 68, 68, 0.3); }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            gap: 8px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(51, 65, 85, 0.5);
+            border: 2px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .step.active .step-number {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        .step.completed .step-number {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+        .step-label { font-size: 13px; color: #94a3b8; }
+        .step.active .step-label { color: #22c55e; font-weight: 500; }
+        .step.completed .step-label { color: #e2e8f0; }
+        .step-connector {
+            width: 40px;
+            height: 2px;
+            background: #475569;
+        }
+        .step-connector.completed { background: #22c55e; }
+
+        /* Mode Selection Cards */
+        .mode-cards { display: flex; flex-direction: column; gap: 12px; }
+        .mode-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-card:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(51, 65, 85, 0.3); }
+        .mode-card.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .mode-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .mode-card.selected .mode-radio {
+            border-color: #22c55e;
+        }
+        .mode-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .mode-card.selected .mode-radio::after { opacity: 1; }
+        .mode-content { flex: 1; }
+        .mode-title { font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+        .mode-desc { font-size: 13px; color: #94a3b8; }
+        .mode-features {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .mode-feature {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-feature::before {
+            content: '•';
+            color: #475569;
+        }
+
+        /* Portfolio Selector */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .form-select {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px 12px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .form-select:focus { outline: none; border-color: #22c55e; }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.05);
+        }
+        .drop-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+        .drop-text { font-size: 14px; color: #94a3b8; margin-bottom: 8px; }
+        .drop-formats { font-size: 12px; color: #64748b; }
+        .drop-zone input { display: none; }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
+        .btn-primary:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+        .btn-secondary:hover { background: rgba(51, 65, 85, 0.8); }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+
+        /* Column Mapping Table */
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .mapping-table th, .mapping-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mapping-table th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .mapping-table td { font-size: 14px; }
+        .mapping-select {
+            padding: 8px 10px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 13px;
+            min-width: 150px;
+        }
+        .sample-value {
+            font-family: 'SF Mono', monospace;
+            font-size: 13px;
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* Warning Banner */
+        .warning-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .warning-banner .icon { font-size: 18px; }
+        .warning-banner .text { font-size: 13px; color: #fbbf24; }
+
+        /* Reconciliation Sections */
+        .recon-section {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .recon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.5);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .recon-header:hover { background: rgba(15, 23, 42, 0.7); }
+        .recon-header-left { display: flex; align-items: center; gap: 12px; }
+        .recon-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .recon-icon.matched { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .recon-icon.mismatch { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .recon-icon.stale { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .recon-icon.new { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .recon-title { font-size: 14px; font-weight: 600; }
+        .recon-count {
+            font-size: 12px;
+            color: #64748b;
+            margin-left: 8px;
+        }
+        .recon-value {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .expand-icon {
+            font-size: 16px;
+            color: #64748b;
+            transition: transform 0.2s;
+        }
+        .recon-section.expanded .expand-icon { transform: rotate(180deg); }
+
+        .recon-body {
+            display: none;
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .recon-section.expanded .recon-body { display: block; }
+
+        /* Reconciliation Table */
+        .recon-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .recon-table th, .recon-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .recon-table th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .recon-table td { font-size: 13px; }
+        .recon-table tbody tr:hover { background: rgba(51, 65, 85, 0.3); }
+
+        /* Radio Options in Table */
+        .action-options {
+            display: flex;
+            gap: 12px;
+        }
+        .action-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .action-option input { display: none; }
+        .action-radio {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-option input:checked + .action-radio {
+            border-color: #22c55e;
+        }
+        .action-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            opacity: 0;
+        }
+        .action-option input:checked + .action-radio::after { opacity: 1; }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.ready { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.unmatched { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+        /* Quick Action Buttons */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .quick-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .quick-btn:hover { background: rgba(51, 65, 85, 0.8); color: #e2e8f0; }
+        .quick-btn.primary {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        .quick-btn.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        .summary-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+        }
+        .summary-item .icon { width: 20px; text-align: center; }
+        .summary-item.update .icon { color: #fbbf24; }
+        .summary-item.delete .icon { color: #ef4444; }
+        .summary-item.add .icon { color: #22c55e; }
+        .summary-item.pending .icon { color: #f97316; }
+
+        /* Resolve Modal */
+        .resolve-options { display: flex; flex-direction: column; gap: 12px; }
+        .resolve-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .resolve-option:hover { background: rgba(51, 65, 85, 0.3); }
+        .resolve-option.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .resolve-option .radio {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .resolve-option.selected .radio { border-color: #22c55e; }
+        .resolve-option .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            opacity: 0;
+        }
+        .resolve-option.selected .radio::after { opacity: 1; }
+        .resolve-content { flex: 1; }
+        .resolve-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+        .resolve-desc { font-size: 12px; color: #64748b; }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #22c55e;
+        }
+
+        /* Position Actions Menu */
+        .actions-menu {
+            position: relative;
+            display: inline-block;
+        }
+        .actions-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .actions-btn:hover { background: rgba(51, 65, 85, 0.8); color: #e2e8f0; }
+        .actions-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            width: 200px;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 100;
+        }
+        .actions-dropdown.show { display: block; }
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .action-item:hover { background: rgba(51, 65, 85, 0.5); }
+        .action-item:first-child { border-radius: 8px 8px 0 0; }
+        .action-item:last-child { border-radius: 0 0 8px 8px; }
+        .action-item .icon { width: 20px; text-align: center; }
+        .action-item.danger { color: #ef4444; }
+        .action-item.danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* Adjust/Delete Modal Content */
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .detail-label { font-size: 13px; color: #94a3b8; }
+        .detail-value { font-size: 14px; font-weight: 500; }
+
+        .input-group { margin-top: 16px; }
+        .input-label {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+        .input-field:focus { outline: none; border-color: #22c55e; }
+
+        .reason-options { margin-top: 16px; }
+        .reason-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .reason-option:hover { background: rgba(51, 65, 85, 0.3); }
+        .reason-option.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .reason-option input { display: none; }
+        .reason-radio {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+        }
+        .reason-option.selected .reason-radio {
+            border-color: #22c55e;
+            background: #22c55e;
+        }
+        .reason-text { font-size: 13px; }
+
+        .audit-warning {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #93c5fd;
+        }
+        .audit-warning .icon { font-size: 16px; }
+
+        .delete-warning {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #fca5a5;
+        }
+        .delete-warning .icon { font-size: 16px; }
+
+        /* Demo navigation */
+        .demo-nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 2000;
+        }
+        .demo-btn {
+            padding: 10px 16px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .demo-btn:hover { background: #2563eb; }
+        .demo-btn.active { background: #22c55e; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>RISKCORE</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Dashboard</div>
+                <div class="nav-item">
+                    <span class="icon">📊</span>
+                    Riskboard
+                </div>
+                <div class="nav-item active">
+                    <span class="icon">📈</span>
+                    Positions & Trades
+                </div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Analysis</div>
+                <div class="nav-item">
+                    <span class="icon">🔗</span>
+                    Correlation
+                </div>
+                <div class="nav-item">
+                    <span class="icon">📑</span>
+                    Reports
+                </div>
+            </div>
+        </nav>
+
+        <!-- Bottom Section with Import & Settings -->
+        <div class="sidebar-bottom">
+            <div class="nav-section">
+                <div class="nav-section-title">Data</div>
+                <div class="nav-item has-submenu" onclick="toggleImportSubmenu(this)">
+                    <span class="icon">📥</span>
+                    Import Data
+                    <span class="badge">3</span>
+                    <span class="expand-arrow">▼</span>
+                </div>
+                <div class="nav-submenu" id="importSubmenu">
+                    <div class="nav-item" onclick="openModal('step1', 'trades')">
+                        <span class="icon">📤</span>
+                        Upload Trades
+                    </div>
+                    <div class="nav-item" onclick="openModal('step1', 'portfolio')">
+                        <span class="icon">📋</span>
+                        Portfolio Snapshot
+                    </div>
+                    <div class="nav-item" onclick="openModal('step1', 'delta')">
+                        <span class="icon">🔄</span>
+                        Position Updates
+                    </div>
+                    <div class="nav-item" onclick="openModal('step1', 'google')">
+                        <span class="icon">📊</span>
+                        Google Sheet
+                    </div>
+                    <div class="nav-item" onclick="openModal('step1', 'fix')">
+                        <span class="icon">📡</span>
+                        FIX Message
+                    </div>
+                    <div class="nav-item" style="color: #fbbf24;">
+                        <span class="icon">⚠️</span>
+                        Pending (3)
+                    </div>
+                </div>
+            </div>
+            <div class="nav-section" style="margin-bottom: 0;">
+                <div class="nav-section-title">System</div>
+                <div class="nav-item">
+                    <span class="icon">⚙️</span>
+                    Settings
+                </div>
+                <div class="nav-item">
+                    <span class="icon">❓</span>
+                    Help
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            Powered by RISKCORE
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="page-title">Positions & Trades</h1>
+            </div>
+            <div class="header-right">
+                <div class="header-icons">
+                    <div class="header-icon has-badge">
+                        🔔
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="header-icon">⚙️</div>
+                    <div class="user-avatar">JD</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <p style="color: #64748b; text-align: center; padding: 40px;">
+                Click <strong style="color: #22c55e;">Import Data</strong> in the sidebar (bottom left) to see the import workflow.<br><br>
+                Use the <strong style="color: #3b82f6;">Demo Navigation</strong> buttons at the bottom right to jump between screens.
+            </p>
+        </div>
+    </main>
+
+    <!-- Step 1: Mode Selection Modal -->
+    <div class="modal-overlay" id="modal-step1">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Import Data</h2>
+                <button class="modal-close" onclick="closeModal('step1')">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Select Mode</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Map Columns</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Review & Apply</span>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 15px; margin-bottom: 16px;">Select Import Mode:</h3>
+
+                <div class="mode-cards">
+                    <div class="mode-card selected" onclick="selectMode(this)">
+                        <div class="mode-radio"></div>
+                        <div class="mode-content">
+                            <div class="mode-title">ADD TRADES (Incremental)</div>
+                            <div class="mode-desc">Add new trades to existing portfolio</div>
+                            <div class="mode-features">
+                                <div class="mode-feature">Won't affect existing positions</div>
+                                <div class="mode-feature">Good for daily trade imports</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-card" onclick="selectMode(this)">
+                        <div class="mode-radio"></div>
+                        <div class="mode-content">
+                            <div class="mode-title">FULL PORTFOLIO SNAPSHOT (Reconcile)</div>
+                            <div class="mode-desc">Replace portfolio with this file</div>
+                            <div class="mode-features">
+                                <div class="mode-feature">Compares against existing positions</div>
+                                <div class="mode-feature">Shows differences for your review</div>
+                                <div class="mode-feature">Can delete stale positions</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mode-card" onclick="selectMode(this)">
+                        <div class="mode-radio"></div>
+                        <div class="mode-content">
+                            <div class="mode-title">POSITION UPDATES (Delta)</div>
+                            <div class="mode-desc">Update specific positions that changed</div>
+                            <div class="mode-features">
+                                <div class="mode-feature">Matches by security identifier</div>
+                                <div class="mode-feature">Updates quantity/price for matches</div>
+                                <div class="mode-feature">Adds new, ignores missing</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">Target Portfolio:</label>
+                    <select class="form-select">
+                        <option>Alpha Growth</option>
+                        <option>Beta Value</option>
+                        <option>Gamma Momentum</option>
+                        <option>Delta Quant</option>
+                        <option>Epsilon Macro</option>
+                    </select>
+                </div>
+
+                <div class="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
+                    <div class="drop-icon">📁</div>
+                    <div class="drop-text">Drop file here or click to browse</div>
+                    <div class="drop-formats">Supports: CSV, Excel (.xlsx, .xls), or paste Google Sheets URL</div>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('step1')">Cancel</button>
+                <button class="btn btn-primary" onclick="goToStep('step2')">Preview Import →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Column Mapping Modal -->
+    <div class="modal-overlay" id="modal-step2">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Column Mapping</h2>
+                <button class="modal-close" onclick="closeModal('step2')">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step completed">
+                        <div class="step-number">✓</div>
+                        <span class="step-label">Select Mode</span>
+                    </div>
+                    <div class="step-connector completed"></div>
+                    <div class="step active">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Map Columns</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Review & Apply</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <div style="font-size: 14px; color: #e2e8f0;"><strong>File:</strong> positions_20260119.csv (95 rows)</div>
+                        <div style="font-size: 13px; color: #94a3b8;"><strong>Mode:</strong> Full Portfolio Snapshot</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-bottom: 12px; color: #94a3b8;">Detected Columns:</h3>
+
+                <table class="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>File Column</th>
+                            <th>Maps To</th>
+                            <th>Sample Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Symbol</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option selected>Ticker</option>
+                                    <option>CUSIP</option>
+                                    <option>ISIN</option>
+                                    <option>SEDOL</option>
+                                    <option>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">AAPL</span></td>
+                        </tr>
+                        <tr>
+                            <td>Shares</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option selected>Quantity</option>
+                                    <option>Notional</option>
+                                    <option>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">1,000</span></td>
+                        </tr>
+                        <tr>
+                            <td>Last Price</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option selected>Price</option>
+                                    <option>Cost Basis</option>
+                                    <option>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">195.50</span></td>
+                        </tr>
+                        <tr>
+                            <td>Cost</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option>Price</option>
+                                    <option selected>Cost Basis</option>
+                                    <option>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">150.25</span></td>
+                        </tr>
+                        <tr>
+                            <td>Type</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option selected>Instrument Type</option>
+                                    <option>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">Stock</span></td>
+                        </tr>
+                        <tr>
+                            <td>Account</td>
+                            <td>
+                                <select class="mapping-select">
+                                    <option>Book</option>
+                                    <option selected>-- Skip --</option>
+                                </select>
+                            </td>
+                            <td><span class="sample-value">12345</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning-banner">
+                    <span class="icon">⚠️</span>
+                    <span class="text">2 securities may not match and will be queued for review</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="goToStep('step1')">← Back</button>
+                <button class="btn btn-primary" onclick="goToStep('step3')">Continue to Preview →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Reconciliation Preview Modal -->
+    <div class="modal-overlay" id="modal-step3">
+        <div class="modal wide">
+            <div class="modal-header">
+                <h2 class="modal-title">Reconciliation Preview</h2>
+                <button class="modal-close" onclick="closeModal('step3')">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step completed">
+                        <div class="step-number">✓</div>
+                        <span class="step-label">Select Mode</span>
+                    </div>
+                    <div class="step-connector completed"></div>
+                    <div class="step completed">
+                        <div class="step-number">✓</div>
+                        <span class="step-label">Map Columns</span>
+                    </div>
+                    <div class="step-connector completed"></div>
+                    <div class="step active">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Review & Apply</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 15px; color: #e2e8f0;"><strong>Portfolio:</strong> Alpha Growth</div>
+                        <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">As of: 2026-01-19 16:00</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 13px; color: #94a3b8;">Import File: <strong style="color: #e2e8f0;">95 positions</strong></div>
+                        <div style="font-size: 13px; color: #94a3b8;">System: <strong style="color: #e2e8f0;">100 positions</strong></div>
+                    </div>
+                </div>
+
+                <!-- Matched Section -->
+                <div class="recon-section expanded" onclick="toggleSection(this)">
+                    <div class="recon-header">
+                        <div class="recon-header-left">
+                            <div class="recon-icon matched">✓</div>
+                            <span class="recon-title">MATCHED</span>
+                            <span class="recon-count">(87 positions)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span class="recon-value">Total Value: $12,450,000</span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="recon-body">
+                        <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">Identical in file and system - no action needed</div>
+                        <table class="recon-table">
+                            <thead>
+                                <tr>
+                                    <th>Security</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>AAPL - Apple Inc.</td>
+                                    <td>1,000</td>
+                                    <td>$195.50</td>
+                                    <td>$195,500</td>
+                                </tr>
+                                <tr>
+                                    <td>MSFT - Microsoft Corp.</td>
+                                    <td>500</td>
+                                    <td>$420.00</td>
+                                    <td>$210,000</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" style="color: #64748b; font-style: italic;">... (85 more positions)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mismatch Section -->
+                <div class="recon-section expanded">
+                    <div class="recon-header" onclick="toggleSection(this.parentElement)">
+                        <div class="recon-header-left">
+                            <div class="recon-icon mismatch">⚠</div>
+                            <span class="recon-title">QUANTITY MISMATCH</span>
+                            <span class="recon-count">(5 positions)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span class="recon-value">Values differ between file and system</span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="recon-body">
+                        <table class="recon-table">
+                            <thead>
+                                <tr>
+                                    <th>Security</th>
+                                    <th>System</th>
+                                    <th>Import</th>
+                                    <th>Difference</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>NVDA - NVIDIA Corp.</td>
+                                    <td>200</td>
+                                    <td style="color: #22c55e;">250</td>
+                                    <td style="color: #22c55e;">+50</td>
+                                    <td>
+                                        <div class="action-options">
+                                            <label class="action-option">
+                                                <input type="radio" name="nvda-action" checked>
+                                                <span class="action-radio"></span>
+                                                Update
+                                            </label>
+                                            <label class="action-option">
+                                                <input type="radio" name="nvda-action">
+                                                <span class="action-radio"></span>
+                                                Keep
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>GOOGL - Alphabet Inc.</td>
+                                    <td>100</td>
+                                    <td style="color: #ef4444;">80</td>
+                                    <td style="color: #ef4444;">-20</td>
+                                    <td>
+                                        <div class="action-options">
+                                            <label class="action-option">
+                                                <input type="radio" name="googl-action">
+                                                <span class="action-radio"></span>
+                                                Update
+                                            </label>
+                                            <label class="action-option">
+                                                <input type="radio" name="googl-action" checked>
+                                                <span class="action-radio"></span>
+                                                Keep
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>AMZN - Amazon.com</td>
+                                    <td>150</td>
+                                    <td style="color: #22c55e;">175</td>
+                                    <td style="color: #22c55e;">+25</td>
+                                    <td>
+                                        <div class="action-options">
+                                            <label class="action-option">
+                                                <input type="radio" name="amzn-action">
+                                                <span class="action-radio"></span>
+                                                Update
+                                            </label>
+                                            <label class="action-option">
+                                                <input type="radio" name="amzn-action">
+                                                <span class="action-radio"></span>
+                                                Keep
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="quick-actions">
+                            <button class="quick-btn primary">Select All: Update</button>
+                            <button class="quick-btn">Select All: Keep</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stale Section -->
+                <div class="recon-section expanded">
+                    <div class="recon-header" onclick="toggleSection(this.parentElement)">
+                        <div class="recon-header-left">
+                            <div class="recon-icon stale">✕</div>
+                            <span class="recon-title">STALE POSITIONS</span>
+                            <span class="recon-count">(5 positions)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span class="recon-value">In system but NOT in import file</span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="recon-body">
+                        <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">These positions may have been closed or transferred</div>
+                        <table class="recon-table">
+                            <thead>
+                                <tr>
+                                    <th>Security</th>
+                                    <th>Quantity</th>
+                                    <th>Value</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>IBM - Intl Business Machines</td>
+                                    <td>100</td>
+                                    <td>$17,500</td>
+                                    <td>
+                                        <div class="action-options">
+                                            <label class="action-option">
+                                                <input type="radio" name="ibm-action">
+                                                <span class="action-radio"></span>
+                                                Delete
+                                            </label>
+                                            <label class="action-option">
+                                                <input type="radio" name="ibm-action" checked>
+                                                <span class="action-radio"></span>
+                                                Keep
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>GE - General Electric</td>
+                                    <td>50</td>
+                                    <td>$8,200</td>
+                                    <td>
+                                        <div class="action-options">
+                                            <label class="action-option">
+                                                <input type="radio" name="ge-action">
+                                                <span class="action-radio"></span>
+                                                Delete
+                                            </label>
+                                            <label class="action-option">
+                                                <input type="radio" name="ge-action">
+                                                <span class="action-radio"></span>
+                                                Keep
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="quick-actions">
+                            <button class="quick-btn danger">Select All: Delete</button>
+                            <button class="quick-btn">Select All: Keep</button>
+                        </div>
+                        <div class="warning-banner" style="margin-top: 12px;">
+                            <span class="icon">⚠️</span>
+                            <span class="text">Deleting positions is permanent and will be logged in the audit trail</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Positions Section -->
+                <div class="recon-section expanded">
+                    <div class="recon-header" onclick="toggleSection(this.parentElement)">
+                        <div class="recon-header-left">
+                            <div class="recon-icon new">+</div>
+                            <span class="recon-title">NEW POSITIONS</span>
+                            <span class="recon-count">(3 positions)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span class="recon-value">In import file but NOT in system</span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="recon-body">
+                        <table class="recon-table">
+                            <thead>
+                                <tr>
+                                    <th>Security</th>
+                                    <th>Quantity</th>
+                                    <th>Est. Value</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>PLTR - Palantir Technologies</td>
+                                    <td>400</td>
+                                    <td>$10,000</td>
+                                    <td><span class="status-badge ready">✓ Ready to add</span></td>
+                                </tr>
+                                <tr>
+                                    <td>SNOW - Snowflake Inc.</td>
+                                    <td>100</td>
+                                    <td>$15,000</td>
+                                    <td><span class="status-badge ready">✓ Ready to add</span></td>
+                                </tr>
+                                <tr>
+                                    <td>XYZ Corp Class A</td>
+                                    <td>200</td>
+                                    <td>$20,000</td>
+                                    <td>
+                                        <span class="status-badge unmatched" style="cursor: pointer;" onclick="event.stopPropagation(); openModal('resolve')">
+                                            ⚠ Unmatched
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="warning-banner" style="margin-top: 12px;">
+                            <span class="icon">⚠️</span>
+                            <span class="text">1 security needs mapping before import. <a href="#" style="color: #fbbf24;" onclick="event.preventDefault(); openModal('resolve')">Resolve Now →</a></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Box -->
+                <div class="summary-box">
+                    <div class="summary-title">Summary of Changes</div>
+                    <div class="summary-item update">
+                        <span class="icon">📝</span>
+                        Update <strong>1</strong> positions (select more above)
+                    </div>
+                    <div class="summary-item delete">
+                        <span class="icon">🗑️</span>
+                        Delete <strong>0</strong> positions (select above)
+                    </div>
+                    <div class="summary-item add">
+                        <span class="icon">➕</span>
+                        Add <strong>2</strong> new positions
+                    </div>
+                    <div class="summary-item pending">
+                        <span class="icon">⚠️</span>
+                        <strong>1</strong> position pending security mapping
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="goToStep('step2')">← Back to Mapping</button>
+                <button class="btn btn-primary" onclick="closeModal('step3')">Apply Selected Changes →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resolve Unmatched Security Modal -->
+    <div class="modal-overlay" id="modal-resolve">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Resolve Unmatched Security</h2>
+                <button class="modal-close" onclick="closeModal('resolve')">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 13px; color: #94a3b8;">Security Name:</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #e2e8f0; margin-top: 4px;">"XYZ Corp Class A Common"</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Appears in: 1 position</div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-bottom: 12px;">What is this security?</h3>
+
+                <div class="resolve-options">
+                    <div class="resolve-option selected" onclick="selectResolveOption(this)">
+                        <div class="radio"></div>
+                        <div class="resolve-content">
+                            <div class="resolve-title">Map to existing type:</div>
+                            <select class="form-select" style="margin-top: 8px; max-width: 100%;">
+                                <option>Common Stock</option>
+                                <option>Preferred Stock</option>
+                                <option>Corporate Bond</option>
+                                <option>Structured Note</option>
+                            </select>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="createAlias" checked>
+                                <label for="createAlias">Create alias for future imports</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resolve-option" onclick="selectResolveOption(this)">
+                        <div class="radio"></div>
+                        <div class="resolve-content">
+                            <div class="resolve-title">This is a structured product (decompose):</div>
+                            <div class="resolve-desc">Break down into component securities for risk attribution</div>
+                            <button class="btn btn-secondary" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">Create Composition Template →</button>
+                        </div>
+                    </div>
+
+                    <div class="resolve-option" onclick="selectResolveOption(this)">
+                        <div class="radio"></div>
+                        <div class="resolve-content">
+                            <div class="resolve-title">Skip this security</div>
+                            <div class="resolve-desc">Won't be imported - use if this is test/invalid data</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('resolve')">Cancel</button>
+                <button class="btn btn-primary" onclick="closeModal('resolve')">Apply Mapping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adjust Quantity Modal -->
+    <div class="modal-overlay" id="modal-adjust">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Adjust Position Quantity</h2>
+                <button class="modal-close" onclick="closeModal('adjust')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <span class="detail-label">Security:</span>
+                    <span class="detail-value">AAPL - Apple Inc.</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Portfolio:</span>
+                    <span class="detail-value">Alpha Growth</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Current Quantity:</span>
+                    <span class="detail-value">1,000 shares</span>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">New Quantity:</label>
+                    <input type="text" class="input-field" placeholder="Enter new quantity" value="1,200">
+                </div>
+
+                <div class="reason-options">
+                    <label class="input-label">Reason for adjustment:</label>
+                    <div class="reason-option selected" onclick="selectReason(this)">
+                        <input type="radio" name="adjust-reason" checked>
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Trade not captured (missed import)</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="adjust-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Corporate action (split/dividend)</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="adjust-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Transfer between books</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="adjust-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Correction (data entry error)</span>
+                    </div>
+                </div>
+
+                <div class="audit-warning">
+                    <span class="icon">ℹ️</span>
+                    This change will be logged in the audit trail
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('adjust')">Cancel</button>
+                <button class="btn btn-primary" onclick="closeModal('adjust')">Apply Adjustment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Position Modal -->
+    <div class="modal-overlay" id="modal-delete">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Delete Position</h2>
+                <button class="modal-close" onclick="closeModal('delete')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning" style="margin-bottom: 16px;">
+                    <span class="icon">⚠️</span>
+                    Are you sure you want to delete this position?
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Security:</span>
+                    <span class="detail-value">AAPL - Apple Inc.</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Portfolio:</span>
+                    <span class="detail-value">Alpha Growth</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Quantity:</span>
+                    <span class="detail-value">1,000 shares</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Value:</span>
+                    <span class="detail-value">$195,500</span>
+                </div>
+
+                <div class="reason-options">
+                    <label class="input-label">Reason for deletion:</label>
+                    <div class="reason-option selected" onclick="selectReason(this)">
+                        <input type="radio" name="delete-reason" checked>
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Position closed (sold/covered)</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="delete-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Transferred to another account</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="delete-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Duplicate entry</span>
+                    </div>
+                    <div class="reason-option" onclick="selectReason(this)">
+                        <input type="radio" name="delete-reason">
+                        <span class="reason-radio"></span>
+                        <span class="reason-text">Test/demo data</span>
+                    </div>
+                </div>
+
+                <div class="delete-warning" style="margin-top: 16px;">
+                    <span class="icon">⚠️</span>
+                    This action is permanent and cannot be undone. The position will be archived in history for audit.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('delete')">Cancel</button>
+                <button class="btn btn-danger" onclick="closeModal('delete')">Delete Position</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Navigation -->
+    <div class="demo-nav">
+        <button class="demo-btn" onclick="openModal('step1')">Step 1: Mode</button>
+        <button class="demo-btn" onclick="openModal('step2')">Step 2: Mapping</button>
+        <button class="demo-btn" onclick="openModal('step3')">Step 3: Reconcile</button>
+        <button class="demo-btn" onclick="openModal('resolve')">Resolve</button>
+        <button class="demo-btn" onclick="openModal('adjust')">Adjust Qty</button>
+        <button class="demo-btn" onclick="openModal('delete')">Delete</button>
+    </div>
+
+    <script>
+        // Toggle Import Submenu in Sidebar
+        function toggleImportSubmenu(element) {
+            const submenu = document.getElementById('importSubmenu');
+            const isExpanded = submenu.classList.contains('show');
+
+            // Toggle submenu
+            submenu.classList.toggle('show');
+
+            // Toggle expanded class on parent item
+            element.classList.toggle('expanded', !isExpanded);
+        }
+
+        // Close submenu when clicking outside sidebar
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const submenu = document.getElementById('importSubmenu');
+            const importItem = document.querySelector('.nav-item.has-submenu');
+
+            if (!sidebar.contains(event.target)) {
+                submenu.classList.remove('show');
+                if (importItem) importItem.classList.remove('expanded');
+            }
+        });
+
+        // Modal functions
+        function openModal(modalId, mode) {
+            // Close submenu when opening modal
+            const submenu = document.getElementById('importSubmenu');
+            const importItem = document.querySelector('.nav-item.has-submenu');
+            if (submenu) submenu.classList.remove('show');
+            if (importItem) importItem.classList.remove('expanded');
+
+            // Close all modals first
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+
+            // Open requested modal
+            const modal = document.getElementById('modal-' + modalId);
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById('modal-' + modalId);
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        function goToStep(stepId) {
+            // Close all modals
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+            // Open target step
+            openModal(stepId);
+        }
+
+        // Mode selection
+        function selectMode(card) {
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        }
+
+        // Resolve option selection
+        function selectResolveOption(option) {
+            document.querySelectorAll('.resolve-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+        }
+
+        // Reason selection
+        function selectReason(option) {
+            const parent = option.parentElement;
+            parent.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            option.querySelector('input').checked = true;
+        }
+
+        // Toggle reconciliation section
+        function toggleSection(section) {
+            section.classList.toggle('expanded');
+        }
+
+        // Drag and drop
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            // In real implementation, handle the dropped file
+            console.log('File dropped:', e.dataTransfer.files);
+        }
+    </script>
+</body>
+</html>

@@ -648,11 +648,22 @@ export function formatQuantity(value: number): string {
   }).format(value)
 }
 
+// Brand colors for each asset class (matching Riskboard)
+export const RISKPOD_COLORS = {
+  equity: '#3b82f6',     // Blue
+  rates: '#22c55e',      // Green
+  credit: '#a855f7',     // Purple
+  fx: '#06b6d4',         // Cyan
+  commodities: '#f97316', // Orange
+  other: '#94a3b8',      // Gray
+}
+
 // RiskPod configuration for display
 export const RISKPOD_CONFIG = {
   equity: {
     key: 'equity' as const,
     label: 'Equity',
+    color: RISKPOD_COLORS.equity,
     primaryMetric: 'delta',
     primaryMetricLabel: 'Delta',
     columns: ['delta', 'gamma', 'sector'],
@@ -660,6 +671,7 @@ export const RISKPOD_CONFIG = {
   rates: {
     key: 'rates' as const,
     label: 'Rates',
+    color: RISKPOD_COLORS.rates,
     primaryMetric: 'dv01',
     primaryMetricLabel: 'DV01',
     columns: ['dv01', 'convexity'],
@@ -667,6 +679,7 @@ export const RISKPOD_CONFIG = {
   credit: {
     key: 'credit' as const,
     label: 'Credit',
+    color: RISKPOD_COLORS.credit,
     primaryMetric: 'cs01',
     primaryMetricLabel: 'CS01',
     columns: ['cs01', 'sector'],
@@ -674,13 +687,23 @@ export const RISKPOD_CONFIG = {
   fx: {
     key: 'fx' as const,
     label: 'FX',
+    color: RISKPOD_COLORS.fx,
     primaryMetric: 'delta',
     primaryMetricLabel: 'FX Delta',
+    columns: ['delta'],
+  },
+  commodities: {
+    key: 'commodities' as const,
+    label: 'Commodities',
+    color: RISKPOD_COLORS.commodities,
+    primaryMetric: 'delta',
+    primaryMetricLabel: 'Sensitivity',
     columns: ['delta'],
   },
   other: {
     key: 'other' as const,
     label: 'Other',
+    color: RISKPOD_COLORS.other,
     primaryMetric: 'delta',
     primaryMetricLabel: 'Sensitivity',
     columns: ['delta'],

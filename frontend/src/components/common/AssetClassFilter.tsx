@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import type { RiskPodType } from '../../types'
+import { RISKPOD_COLORS } from '../../services/api'
 
 interface AssetClassFilterProps {
   selected: RiskPodType[]
@@ -7,12 +8,14 @@ interface AssetClassFilterProps {
   className?: string
 }
 
+// Use brand colors from api.ts
 const RISKPODS: { key: RiskPodType; label: string; color: string }[] = [
-  { key: 'equity', label: 'Equity', color: 'bg-blue-500' },
-  { key: 'rates', label: 'Rates', color: 'bg-emerald-500' },
-  { key: 'credit', label: 'Credit', color: 'bg-amber-500' },
-  { key: 'fx', label: 'FX', color: 'bg-purple-500' },
-  { key: 'other', label: 'Other', color: 'bg-slate-500' },
+  { key: 'equity', label: 'Equity', color: RISKPOD_COLORS.equity },
+  { key: 'rates', label: 'Rates', color: RISKPOD_COLORS.rates },
+  { key: 'credit', label: 'Credit', color: RISKPOD_COLORS.credit },
+  { key: 'fx', label: 'FX', color: RISKPOD_COLORS.fx },
+  { key: 'commodities', label: 'Commodities', color: RISKPOD_COLORS.commodities },
+  { key: 'other', label: 'Other', color: RISKPOD_COLORS.other },
 ]
 
 export default function AssetClassFilter({
@@ -68,11 +71,11 @@ export default function AssetClassFilter({
             )}
           >
             <span
-              className={clsx(
-                'w-2 h-2 rounded-full transition-opacity',
-                pod.color,
-                isSelected ? 'opacity-100' : 'opacity-30'
-              )}
+              className="w-2 h-2 rounded-full transition-opacity"
+              style={{
+                backgroundColor: pod.color,
+                opacity: isSelected ? 1 : 0.3,
+              }}
             />
             <span>{pod.label}</span>
           </button>

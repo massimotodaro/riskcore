@@ -172,7 +172,7 @@ const TIME_PRESETS: TimeSelection[] = [
 
 export default function RiskboardNew() {
   // Theme context
-  const { isDarkMode, toggleTheme } = useTheme()
+  const { isDarkMode } = useTheme()
 
   // RiskPod states
   const [riskPods, setRiskPods] = useState<RiskPodState[]>([
@@ -404,19 +404,6 @@ export default function RiskboardNew() {
             {/* Last Calculated */}
             <span className="last-calculated">Last: {lastCalculated}</span>
           </div>
-        </div>
-
-        {/* Right side - Theme Toggle */}
-        <div className="accessibility-toggle">
-          <span className="label">{isDarkMode ? 'Dark' : 'Light'}</span>
-          <label className="toggle-switch" title="Toggle dark/light mode">
-            <input
-              type="checkbox"
-              checked={!isDarkMode}
-              onChange={toggleTheme}
-            />
-            <span className="toggle-slider" />
-          </label>
         </div>
       </header>
 

@@ -49,27 +49,46 @@ export default function Header() {
 
       {/* Right side - actions */}
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className={clsx(
-            'relative p-2 rounded-xl transition-all duration-200',
-            isDarkMode
-              ? 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-[#D9D9D9]'
-          )}
-          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDarkMode ? (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
+        {/* Theme Toggle - Multicolor Circle */}
+        <div className="flex items-center gap-2">
+          <span className={clsx(
+            'text-[11px] uppercase tracking-wide',
+            isDarkMode ? 'text-slate-500' : 'text-slate-500'
+          )}>
+            {isDarkMode ? 'Dark' : 'Light'}
+          </span>
+          <label
+            className="relative w-14 h-7 cursor-pointer"
+            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <input
+              type="checkbox"
+              checked={!isDarkMode}
+              onChange={toggleTheme}
+              className="sr-only"
+            />
+            <div className={clsx(
+              'absolute inset-0 rounded-full border transition-all duration-300',
+              isDarkMode
+                ? 'bg-slate-700/80 border-white/15'
+                : 'bg-slate-400/30 border-slate-300'
+            )}>
+              <div
+                className={clsx(
+                  'absolute top-[2px] w-[22px] h-[22px] rounded-full transition-all duration-300',
+                  !isDarkMode && 'translate-x-7'
+                )}
+                style={{
+                  left: '2px',
+                  background: isDarkMode
+                    ? 'conic-gradient(#ef4444 0deg 60deg, #f97316 60deg 120deg, #22c55e 120deg 180deg, #06b6d4 180deg 240deg, #3b82f6 240deg 300deg, #a855f7 300deg 360deg)'
+                    : '#475569',
+                  boxShadow: !isDarkMode ? '0 0 8px rgba(71, 85, 105, 0.5)' : 'none'
+                }}
+              />
+            </div>
+          </label>
+        </div>
 
         {/* Notifications */}
         <button

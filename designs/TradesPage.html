@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RISKCORE - Trades Page</title>
+    <title>RISKCORE - Positions & Trades</title>
     <style>
         * {
             margin: 0;
@@ -92,57 +92,107 @@
             overflow: hidden;
         }
 
-        /* Header */
-        .header {
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(15, 23, 42, 0.5);
-        }
-
-        .header-top {
+        /* Global Header (like Header.tsx) */
+        .global-header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .header-left {
-            display: flex;
             align-items: center;
-            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            width: 300px;
         }
 
-        /* Time Selector */
-        .time-selector {
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input::placeholder {
+            color: #64748b;
+        }
+
+        .search-input:focus {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(51, 65, 85, 0.8);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        /* Global Header Right Side */
+        .global-header-right {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-icon-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
             border-radius: 8px;
+            color: #64748b;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .time-selector:hover {
-            border-color: rgba(255, 255, 255, 0.2);
+        .header-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
         }
 
-        .time-dot {
-            width: 8px;
-            height: 8px;
+        .header-separator {
+            width: 1px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 8px;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #22c55e;
+        }
+
+        .live-badge .dot {
+            width: 6px;
+            height: 6px;
             background: #22c55e;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: pulse 2s ease-in-out infinite;
         }
 
         @keyframes pulse {
@@ -150,96 +200,472 @@
             50% { opacity: 0.5; }
         }
 
-        .time-label {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* Book Selector */
-        .book-selector {
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 4px;
+        }
+
+        /* Page Header (below global header) */
+        .page-header {
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+        }
+
+        .page-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .page-header-bottom {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        /* Positions/Trades Toggle */
+        .view-toggle {
+            display: flex;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 8px;
+            padding: 3px;
+            gap: 3px;
+            height: 36px;
+            box-sizing: border-box;
         }
 
-        .book-label {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .book-pill {
-            padding: 4px 10px;
-            font-size: 12px;
-            border-radius: 4px;
+        .view-toggle-btn {
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-        }
-
-        .book-pill.active {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .book-pill:not(.active) {
+            background: transparent;
             color: #64748b;
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
 
-        .book-pill:not(.active):hover {
+        .view-toggle-btn:hover {
             color: #e2e8f0;
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Asset Class Filter */
-        .asset-filter {
+        .view-toggle-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Time Travel Controls */
+        .time-travel-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-selector {
+            position: relative;
+        }
+
+        .time-selector-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            height: 36px;
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .time-selector-btn:hover {
+            background: rgba(51, 65, 85, 1);
+        }
+
+        .import-timestamp {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: live-pulse 2s ease-in-out infinite;
+        }
+
+        .live-dot.historical {
+            background: #f59e0b;
+            animation: none;
+        }
+
+        @keyframes live-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+        }
+
+        .time-selector-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-width: 220px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .time-selector-menu.active {
+            display: block;
+        }
+
+        .time-menu-section {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .time-menu-section:last-child {
+            border-bottom: none;
+        }
+
+        .time-menu-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            padding: 4px 12px 8px;
+        }
+
+        .time-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .time-menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .time-menu-item.selected {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .time-menu-item .radio {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #64748b;
+        }
+
+        .time-menu-item.selected .radio {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            box-shadow: inset 0 0 0 3px rgba(30, 41, 59, 1);
+        }
+
+        .time-menu-item .item-label {
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+
+        .time-menu-item .item-sublabel {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .time-menu-custom {
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .time-menu-custom input {
+            flex: 1;
+            padding: 6px 10px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+
+        .time-menu-custom .apply-btn {
+            padding: 6px 12px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Calculate Button */
+        .global-calculate-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 14px;
+            height: 36px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            color: #22c55e;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .global-calculate-btn:hover {
+            background: rgba(34, 197, 94, 0.25);
+        }
+
+        .global-calculate-btn .icon {
+            font-size: 14px;
+        }
+
+        .global-calculate-btn.calculating .icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Portfolio Selector - Dropdown Style (matching Riskboard) */
+        .portfolio-selector {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .filter-pill {
+        .portfolio-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .portfolio-dropdown-btn {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 0 12px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 500;
-            border-radius: 20px;
-            cursor: pointer;
+            gap: 8px;
             transition: all 0.2s;
-            border: 1px solid transparent;
+            box-sizing: border-box;
         }
 
-        .filter-pill.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.2);
+        .portfolio-dropdown-btn:hover {
+            background: rgba(51, 65, 85, 1);
         }
 
-        .filter-pill:not(.active) {
-            background: rgba(255, 255, 255, 0.05);
+        .portfolio-dropdown-btn .arrow {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .selected-portfolios {
+            font-size: 12px;
+            color: #94a3b8;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .selected-portfolios.all {
+            color: #3CD574;
+            font-weight: 600;
+        }
+
+        .portfolio-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(30, 41, 59, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            min-width: 220px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .portfolio-menu.active {
+            display: block;
+        }
+
+        .portfolio-menu-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .portfolio-menu-header span {
+            font-size: 11px;
             color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .filter-pill:not(.active):hover {
-            border-color: rgba(255, 255, 255, 0.1);
+        .select-all-btn {
+            font-size: 10px;
+            color: #3b82f6;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
 
-        .filter-dot {
-            width: 8px;
-            height: 8px;
+        .select-all-btn:hover {
+            text-decoration: underline;
+        }
+
+        .portfolio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .portfolio-item:hover {
+            background: rgba(51, 65, 85, 0.5);
+        }
+
+        .portfolio-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3CD574;
+            cursor: pointer;
+        }
+
+        .portfolio-item label {
+            font-size: 13px;
+            color: #e2e8f0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* Theme Toggle - Multicolor Circle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle .label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
             border-radius: 50%;
+            transition: all 0.3s ease;
+            background: conic-gradient(
+                #ef4444 0deg 60deg,
+                #f97316 60deg 120deg,
+                #22c55e 120deg 180deg,
+                #06b6d4 180deg 240deg,
+                #3b82f6 240deg 300deg,
+                #a855f7 300deg 360deg
+            );
         }
 
-        .filter-dot.equity { background: #3b82f6; }
-        .filter-dot.rates { background: #10b981; }
-        .filter-dot.credit { background: #f59e0b; }
-        .filter-dot.fx { background: #8b5cf6; }
-        .filter-dot.other { background: #64748b; }
+        .toggle-switch input:checked + .toggle-slider {
+            background: rgba(100, 116, 139, 0.3);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(28px);
+            background: #475569;
+            box-shadow: 0 0 8px rgba(71, 85, 105, 0.5);
+        }
 
         /* Tables Container */
         .tables-container {
@@ -260,7 +686,6 @@
         .table-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             padding: 16px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -268,19 +693,21 @@
         .table-title-section {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .table-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: 700;
         }
 
         .table-title.equity { color: #3b82f6; }
-        .table-title.rates { color: #10b981; }
-        .table-title.credit { color: #f59e0b; }
-        .table-title.fx { color: #8b5cf6; }
-        .table-title.other { color: #64748b; }
+        .table-title.rates { color: #22c55e; }
+        .table-title.credit { color: #a855f7; }
+        .table-title.fx { color: #06b6d4; }
+        .table-title.commodities { color: #f97316; }
+        .table-title.other { color: #94a3b8; }
 
         .position-count {
             font-size: 13px;
@@ -290,8 +717,11 @@
         .table-metrics {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
             font-size: 13px;
+            margin-left: 8px;
+            padding-left: 16px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .metric-label {
@@ -307,23 +737,69 @@
         .metric-value.negative { color: #f87171; }
 
         /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1400px;
+            table-layout: fixed;
         }
+
+        /* First column (Name) gets more space */
+        th:first-child,
+        td:first-child {
+            width: 180px;
+        }
+
+        /* Type, Ccy, Quantity columns - same width (2x "Quantity" word) */
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(3),
+        th:nth-child(4),
+        td:nth-child(4) {
+            width: 120px;
+        }
+
+        /* Quantity colors */
+        .qty-positive { color: #34d399; }
+        .qty-negative { color: #f87171; }
+
+        /* Portfolio card styling */
+        .portfolio-card {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .portfolio-alpha { background: #3b82f6; border: 1px solid #60a5fa; }      /* Blue */
+        .portfolio-beta { background: #8b5cf6; border: 1px solid #a78bfa; }       /* Purple */
+        .portfolio-gamma { background: #f59e0b; border: 1px solid #fbbf24; }      /* Amber */
+        .portfolio-delta { background: #06b6d4; border: 1px solid #22d3ee; }      /* Cyan */
+        .portfolio-epsilon { background: #ec4899; border: 1px solid #f472b6; }    /* Pink */
+        .portfolio-zeta { background: #10b981; border: 1px solid #34d399; }       /* Emerald */
+        .portfolio-eta { background: #f97316; border: 1px solid #fb923c; }        /* Orange */
+        .portfolio-theta { background: #6366f1; border: 1px solid #818cf8; }      /* Indigo */
 
         thead {
             background: rgba(255, 255, 255, 0.02);
         }
 
         th {
-            padding: 12px 16px;
+            padding: 10px 12px;
             text-align: left;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #64748b;
+            white-space: nowrap;
         }
 
         th.right { text-align: right; }
@@ -332,183 +808,836 @@
         tbody tr {
             border-top: 1px solid rgba(255, 255, 255, 0.03);
             transition: background 0.2s;
+            cursor: pointer;
         }
 
         tbody tr:hover {
             background: rgba(255, 255, 255, 0.02);
         }
 
-        tbody tr.expanded {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
         td {
-            padding: 14px 16px;
-            font-size: 13px;
+            padding: 12px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td.right { text-align: right; }
         td.center { text-align: center; }
 
-        /* Expand Button */
-        .expand-btn {
-            background: none;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            padding: 4px;
-            transition: all 0.2s;
+        /* Entry Price with tooltip */
+        .entry-price-cell {
+            position: relative;
+            cursor: help;
         }
 
-        .expand-btn:hover {
-            color: #e2e8f0;
-            background: rgba(255, 255, 255, 0.1);
+        .entry-price-cell .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            z-index: 100;
+            transition: opacity 0.2s, visibility 0.2s;
+            pointer-events: none;
+            margin-bottom: 4px;
+        }
+
+        .entry-price-cell .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .entry-price-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* PNL styling */
+        .pnl-positive { color: #34d399; }
+        .pnl-negative { color: #f87171; }
+
+        /* Trade-only columns (hidden in positions view) */
+        .trade-col {
+            display: none;
+        }
+
+        .trades-view .trade-col {
+            display: table-cell;
+        }
+
+        /* Pricing Type Badge */
+        .pricing-badge {
+            display: inline-block;
+            padding: 2px 8px;
             border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
         }
 
-        .expand-btn.expanded {
-            transform: rotate(90deg);
+        .pricing-badge.market {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
         }
 
-        /* Instrument Cell */
-        .instrument-cell {
-            cursor: pointer;
+        .pricing-badge.model {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
         }
 
-        .instrument-cell:hover .ticker {
+        /* Hedge Indicator */
+        .hedge-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .hedge-indicator.hedged {
+            background: rgba(59, 130, 246, 0.15);
             color: #3b82f6;
         }
 
-        .ticker {
+        .hedge-indicator.unhedged {
+            background: rgba(100, 116, 139, 0.1);
+            color: #64748b;
+        }
+
+        /* Correlation value coloring */
+        .correlation-high { color: #f87171; }
+        .correlation-medium { color: #fbbf24; }
+        .correlation-low { color: #22c55e; }
+
+        /* Instrument Type Badges */
+        .inst-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .inst-type.common {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+        }
+
+        .inst-type.preferred {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+        }
+
+        .inst-type.option {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .inst-type.future {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .inst-type.etf {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+        }
+
+        .inst-type.adr {
+            background: rgba(236, 72, 153, 0.15);
+            color: #ec4899;
+        }
+
+        .inst-type.bond {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .inst-type.swap {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+        }
+
+        .inst-type.cds {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .inst-type.spot {
+            background: rgba(20, 184, 166, 0.15);
+            color: #14b8a6;
+        }
+
+        .inst-type.forward {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fb923c;
+        }
+
+        .inst-type.structured {
+            background: rgba(156, 163, 175, 0.15);
+            color: #9ca3af;
+        }
+
+        .inst-type.fund {
+            background: rgba(34, 211, 238, 0.15);
+            color: #22d3ee;
+        }
+
+        /* Currency badges */
+        .currency {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .currency.usd {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .currency.eur {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .currency.gbp {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+        }
+
+        .currency.jpy {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .currency.chf {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .currency.cad {
+            background: rgba(236, 72, 153, 0.15);
+            color: #ec4899;
+        }
+
+        .currency.aud {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+        }
+
+        .currency.cny {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fb923c;
+        }
+
+        .currency.hkd {
+            background: rgba(20, 184, 166, 0.15);
+            color: #14b8a6;
+        }
+
+        .currency.sgd {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+        }
+
+        /* Name/Ticker Cell */
+        .ticker {
+            font-weight: 500;
             color: #e2e8f0;
             transition: color 0.2s;
         }
 
-        .security-name {
-            font-size: 11px;
-            color: #64748b;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* Direction Badge */
-        .direction-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .direction-badge.long {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-        }
-
-        .direction-badge.short {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-        }
-
-        /* Reprice Button */
-        .reprice-btn {
-            padding: 5px 12px;
-            font-size: 11px;
-            font-weight: 500;
-            background: rgba(245, 158, 11, 0.1);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .reprice-btn:hover {
-            background: rgba(245, 158, 11, 0.2);
-            border-color: rgba(245, 158, 11, 0.3);
-        }
-
-        /* Expanded Trades Section */
-        .expanded-trades {
-            background: rgba(30, 41, 59, 0.5);
-        }
-
-        .expanded-trades td {
-            padding: 0;
-        }
-
-        .trades-inner {
-            padding: 12px 16px 12px 48px;
-        }
-
-        .trades-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 0;
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .trades-header span {
-            flex: 1;
-        }
-
-        .trades-header span:first-child { flex: 0 0 80px; }
-        .trades-header span:nth-child(2) { flex: 0 0 80px; }
-        .trades-header span:nth-child(3) { flex: 0 0 60px; }
-        .trades-header span:nth-child(4) { flex: 0 0 80px; text-align: right; }
-        .trades-header span:nth-child(5) { flex: 0 0 80px; text-align: right; }
-        .trades-header span:nth-child(6) { flex: 0 0 100px; text-align: right; }
-        .trades-header span:nth-child(7) { flex: 1; }
-        .trades-header span:nth-child(8) { flex: 0 0 100px; }
-
-        .trade-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 0;
-            font-size: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .trade-row:last-child {
-            border-bottom: none;
-        }
-
-        .trade-row span {
-            flex: 1;
-        }
-
-        .trade-row span:first-child { flex: 0 0 80px; color: #64748b; font-family: monospace; }
-        .trade-row span:nth-child(2) { flex: 0 0 80px; color: #64748b; }
-        .trade-row span:nth-child(3) { flex: 0 0 60px; }
-        .trade-row span:nth-child(4) { flex: 0 0 80px; text-align: right; color: #e2e8f0; }
-        .trade-row span:nth-child(5) { flex: 0 0 80px; text-align: right; color: #94a3b8; }
-        .trade-row span:nth-child(6) { flex: 0 0 100px; text-align: right; color: #e2e8f0; }
-        .trade-row span:nth-child(7) { flex: 1; color: #fbbf24; font-weight: 500; }
-        .trade-row span:nth-child(8) { flex: 0 0 100px; color: #64748b; }
-
-        .side-buy { color: #34d399; font-weight: 500; }
-        .side-sell { color: #f87171; font-weight: 500; }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
+        tbody tr:hover .ticker {
+            color: #3b82f6;
         }
 
         /* Monospace numbers */
         .mono {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+        }
+
+        /* ========================================
+           POSITION DRILL-DOWN PANEL
+           ======================================== */
+
+        /* Overlay */
+        .panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Slide-out Panel */
+        .drilldown-panel {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            height: 100vh;
+            background: #1e293b;
+            border-left: 1px solid #334155;
+            z-index: 1001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drilldown-panel.active {
+            right: 0;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-shrink: 0;
+        }
+
+        .panel-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-inst-type {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #8b5cf620;
+            color: #a78bfa;
+            border: 1px solid #8b5cf640;
+        }
+
+        .panel-subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .panel-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .panel-close-btn:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* Override Warning Banner */
+        .override-warning-banner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #f59e0b15 0%, #f59e0b08 100%);
+            border: 1px solid #f59e0b30;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .override-warning-banner.active {
+            display: flex;
+        }
+
+        .warning-icon {
+            width: 36px;
+            height: 36px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 2px;
+        }
+
+        .warning-text {
+            font-size: 12px;
+            color: #fcd34d;
+            opacity: 0.8;
+        }
+
+        .reset-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #f59e0b50;
+            border-radius: 6px;
+            color: #fbbf24;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #f59e0b20;
+            border-color: #f59e0b;
+        }
+
+        /* Metrics Grid */
+        .metrics-section {
+            margin-bottom: 24px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: #334155;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .metric-value.positive { color: #34d399; }
+        .metric-value.negative { color: #f87171; }
+
+        /* Pricing Section */
+        .pricing-section {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+
+        .pricing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .pricing-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pricing-source-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .pricing-source-badge.market {
+            background: #3b82f620;
+            color: #60a5fa;
+            border: 1px solid #3b82f640;
+        }
+
+        .pricing-source-badge.model {
+            background: #8b5cf620;
+            color: #a78bfa;
+            border: 1px solid #8b5cf640;
+        }
+
+        .pricing-source-badge.manual {
+            background: #f59e0b20;
+            color: #fbbf24;
+            border: 1px solid #f59e0b40;
+        }
+
+        .pricing-source-badge.model-override {
+            background: linear-gradient(135deg, #8b5cf620 0%, #f59e0b10 100%);
+            color: #c4b5fd;
+            border: 1px solid #8b5cf640;
+        }
+
+        /* Pricing Tabs */
+        .pricing-tabs {
+            display: flex;
+            gap: 4px;
+            background: #1e293b;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pricing-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pricing-tab:hover {
+            color: #94a3b8;
+        }
+
+        .pricing-tab.active {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .pricing-tab.hidden {
+            display: none;
+        }
+
+        /* Current Price Display */
+        .current-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #1e293b;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .price-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        /* Override Input Section */
+        .override-section {
+            padding: 16px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px dashed #475569;
+        }
+
+        .override-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        .override-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .override-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #f1f5f9;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .override-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px #3b82f620;
+        }
+
+        /* Model Inputs Grid */
+        .model-inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .model-input-card {
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .model-input-card.overridden {
+            border-color: #f59e0b50;
+            background: linear-gradient(135deg, #f59e0b08 0%, transparent 100%);
+        }
+
+        .model-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .model-input-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .model-input-edit {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: none;
+            background: #475569;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .model-input-edit:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .model-input-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .model-input-card.overridden .model-input-value {
+            color: #fbbf24;
+        }
+
+        .model-input-default {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* What-if Preview */
+        .whatif-preview {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #3b82f610 0%, #3b82f605 100%);
+            border: 1px solid #3b82f630;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .whatif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .whatif-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .whatif-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .whatif-label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .whatif-value {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .whatif-change {
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .whatif-change.positive { color: #34d399; }
+        .whatif-change.negative { color: #f87171; }
+
+        /* Panel Footer */
+        .panel-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        /* Tab content visibility */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Manual override badge in table */
+        .override-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            background: #f59e0b20;
+            border: 1px solid #f59e0b40;
+            border-radius: 4px;
+            font-size: 9px;
+            color: #fbbf24;
+            font-weight: 600;
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -531,7 +1660,7 @@
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
-                    Trades
+                    Positions & Trades
                 </a>
                 <a href="#" class="nav-item">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -539,583 +1668,1478 @@
                     </svg>
                     CIO View
                 </a>
-                <a href="#" class="nav-item">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    Dashboard
-                </a>
             </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-top">
-                    <div class="header-left">
-                        <h1 class="page-title">Trades</h1>
-                        <div class="time-selector">
-                            <div class="time-dot"></div>
-                            <span class="time-label">Latest</span>
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                <path d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="book-selector">
-                        <span class="book-label">Books:</span>
-                        <span class="book-pill active">Alpha Growth</span>
-                        <span class="book-pill active">Beta Momentum</span>
-                        <span class="book-pill">Gamma Value</span>
-                        <span class="book-pill">Delta Quant</span>
-                        <span class="book-pill">+6</span>
-                    </div>
+            <!-- Global Header (like Header.tsx) -->
+            <header class="global-header">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search positions, instruments, books...">
                 </div>
-                <div class="asset-filter">
-                    <span class="filter-pill active">All</span>
-                    <span class="filter-pill active">
-                        <span class="filter-dot equity"></span>
-                        Equity
-                    </span>
-                    <span class="filter-pill active">
-                        <span class="filter-dot rates"></span>
-                        Rates
-                    </span>
-                    <span class="filter-pill active">
-                        <span class="filter-dot credit"></span>
-                        Credit
-                    </span>
-                    <span class="filter-pill active">
-                        <span class="filter-dot fx"></span>
-                        FX
-                    </span>
-                    <span class="filter-pill active">
-                        <span class="filter-dot other"></span>
-                        Other
-                    </span>
+
+                <!-- Right Side: Theme, Notifications, Live, User -->
+                <div class="global-header-right">
+                    <!-- Theme Toggle (Multicolor Circle) -->
+                    <div class="theme-toggle">
+                        <span class="label">Dark</span>
+                        <label class="toggle-switch" title="Toggle dark/light mode">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="header-icon-btn" title="Notifications">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </button>
+
+                    <!-- Refresh -->
+                    <button class="header-icon-btn" title="Refresh data">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+
+                    <div class="header-separator"></div>
+
+                    <!-- Live Badge -->
+                    <div class="live-badge">
+                        <span class="dot"></span>
+                        <span>Live</span>
+                    </div>
+
+                    <!-- User Avatar -->
+                    <div class="user-avatar">MT</div>
                 </div>
             </header>
+
+            <!-- Page Header (Positions & Trades specific) -->
+            <div class="page-header">
+                <!-- Top Row: Title -->
+                <div class="page-header-top">
+                    <span class="page-title">Positions & Trades</span>
+                </div>
+
+                <!-- Bottom Row: All Selectors -->
+                <div class="page-header-bottom">
+                    <!-- Positions/Trades Toggle -->
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn active">Positions</button>
+                        <button class="view-toggle-btn">Trades</button>
+                    </div>
+
+                    <!-- Portfolio Selector - Dropdown Style -->
+                    <div class="portfolio-selector">
+                        <div class="portfolio-dropdown">
+                            <button class="portfolio-dropdown-btn" onclick="togglePortfolioMenu()">
+                                <span>Portfolios</span>
+                                <span class="arrow">▼</span>
+                            </button>
+                            <div class="portfolio-menu" id="portfolioMenu">
+                                <div class="portfolio-menu-header">
+                                    <span>Select Portfolios</span>
+                                    <button class="select-all-btn" onclick="selectAllPortfolios()">Select All</button>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio1" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio1">Alpha Growth</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio2" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio2">Beta Momentum</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio3" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio3">Gamma Value</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio4" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio4">Delta Quant</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio5" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio5">Epsilon Macro</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio6" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio6">Zeta Credit</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio7" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio7">Eta Rates</label>
+                                </div>
+                                <div class="portfolio-item">
+                                    <input type="checkbox" id="portfolio8" checked onchange="updatePortfolioText()">
+                                    <label for="portfolio8">Theta FX</label>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="selected-portfolios all" id="selectedPortfoliosText">All</span>
+                    </div>
+
+                    <!-- Time Selector -->
+                    <div class="time-selector">
+                        <button class="time-selector-btn" onclick="toggleTimeMenu()">
+                            <span class="live-dot"></span>
+                            <span>Latest</span>
+                            <span style="font-size: 10px; color: #94a3b8;">▼</span>
+                        </button>
+                        <div class="time-selector-menu" id="timeMenu">
+                            <div class="time-menu-section">
+                                <div class="time-menu-section-title">Snapshots</div>
+                                <div class="time-menu-item selected">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Latest</div>
+                                        <div class="item-sublabel">Imported: Jan 19, 2026 09:15 AM</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">COB Yesterday</div>
+                                        <div class="item-sublabel">Jan 18, 2026 close</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Start of Month</div>
+                                        <div class="item-sublabel">Jan 1, 2026</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Start of Quarter</div>
+                                        <div class="item-sublabel">Jan 1, 2026</div>
+                                    </div>
+                                </div>
+                                <div class="time-menu-item">
+                                    <div class="radio"></div>
+                                    <div class="item-content">
+                                        <div class="item-label">Start of Year</div>
+                                        <div class="item-sublabel">Jan 1, 2026</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="time-menu-section">
+                                <div class="time-menu-section-title">Custom Date & Time</div>
+                                <div class="time-menu-custom">
+                                    <input type="datetime-local">
+                                    <button class="apply-btn">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculate Button -->
+                    <button class="global-calculate-btn">
+                        <span class="icon">↻</span>
+                        <span>Calculate</span>
+                    </button>
+
+                    <!-- Import Timestamp -->
+                    <span class="import-timestamp">Imported: Jan 19, 2026 09:15 AM</span>
+                </div>
+            </div>
 
             <!-- Tables Container -->
             <div class="tables-container">
                 <!-- Equity Table -->
-                <div class="riskpod-table">
+                <div class="riskpod-table" id="equity-table">
                     <div class="table-header">
                         <div class="table-title-section">
                             <span class="table-title equity">Equity</span>
                             <span class="position-count">24 positions</span>
-                        </div>
-                        <div class="table-metrics">
-                            <div>
-                                <span class="metric-label">Gross: </span>
-                                <span class="metric-value">$245.8M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Net: </span>
-                                <span class="metric-value positive">$142.3M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Delta: </span>
-                                <span class="metric-value">1.42M</span>
-                            </div>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>Instrument</th>
-                                <th>Book</th>
-                                <th>PM</th>
-                                <th class="center">Direction</th>
-                                <th class="right">Quantity</th>
-                                <th class="right">Market Value</th>
-                                <th class="right">Delta</th>
-                                <th class="right">Gamma</th>
-                                <th>Sector</th>
-                                <th class="center">Reprice</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="expanded">
-                                <td>
-                                    <button class="expand-btn expanded">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">NVDA</div>
-                                    <div class="security-name">NVIDIA Corporation</div>
-                                </td>
-                                <td>Alpha Growth</td>
-                                <td style="color: #64748b;">Matthew Davis</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">15,000</td>
-                                <td class="right mono" style="color: #34d399;">$12.45M</td>
-                                <td class="right mono">14,850</td>
-                                <td class="right mono">245</td>
-                                <td style="color: #64748b;">Technology</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                            <tr class="expanded-trades">
-                                <td colspan="11">
-                                    <div class="trades-inner">
-                                        <div class="trades-header">
-                                            <span>Trade ID</span>
-                                            <span>Date</span>
-                                            <span>Side</span>
-                                            <span>Qty</span>
-                                            <span>Price</span>
-                                            <span>Notional</span>
-                                            <span>Counterparty</span>
-                                            <span>Broker</span>
-                                        </div>
-                                        <div class="trade-row">
-                                            <span>TRD-8A3F</span>
-                                            <span>Jan 10, 2026</span>
-                                            <span class="side-buy">BUY</span>
-                                            <span>10,000</span>
-                                            <span>$825.50</span>
-                                            <span>$8.26M</span>
-                                            <span>-</span>
-                                            <span>Goldman Sachs</span>
-                                        </div>
-                                        <div class="trade-row">
-                                            <span>TRD-7B2E</span>
-                                            <span>Jan 8, 2026</span>
-                                            <span class="side-buy">BUY</span>
-                                            <span>5,000</span>
-                                            <span>$838.20</span>
-                                            <span>$4.19M</span>
-                                            <span>-</span>
-                                            <span>Morgan Stanley</span>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">AAPL</div>
-                                    <div class="security-name">Apple Inc.</div>
-                                </td>
-                                <td>Beta Momentum</td>
-                                <td style="color: #64748b;">Emily Chen</td>
-                                <td class="center">
-                                    <span class="direction-badge short">SHORT</span>
-                                </td>
-                                <td class="right mono">8,500</td>
-                                <td class="right mono" style="color: #f87171;">-$1.53M</td>
-                                <td class="right mono">-8,415</td>
-                                <td class="right mono">-142</td>
-                                <td style="color: #64748b;">Technology</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">MSFT</div>
-                                    <div class="security-name">Microsoft Corporation</div>
-                                </td>
-                                <td>Alpha Growth</td>
-                                <td style="color: #64748b;">Matthew Davis</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">12,000</td>
-                                <td class="right mono" style="color: #34d399;">$4.92M</td>
-                                <td class="right mono">11,880</td>
-                                <td class="right mono">198</td>
-                                <td style="color: #64748b;">Technology</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Credit Table (CDS with Counterparty) -->
-                <div class="riskpod-table">
-                    <div class="table-header">
-                        <div class="table-title-section">
-                            <span class="table-title credit">Credit</span>
-                            <span class="position-count">8 positions</span>
-                        </div>
-                        <div class="table-metrics">
-                            <div>
-                                <span class="metric-label">Gross: </span>
-                                <span class="metric-value">$85.2M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Net: </span>
-                                <span class="metric-value negative">-$12.5M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">CS01: </span>
-                                <span class="metric-value">42.5K</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$245.8M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value positive">$142.3M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Delta: </span>
+                                    <span class="metric-value">1.42M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Gamma: </span>
+                                    <span class="metric-value">24.5K</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>Instrument</th>
-                                <th>Book</th>
-                                <th>PM</th>
-                                <th class="center">Direction</th>
-                                <th class="right">Notional</th>
-                                <th class="right">Market Value</th>
-                                <th class="right">CS01</th>
-                                <th>Sector</th>
-                                <th class="center">Reprice</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="expanded">
-                                <td>
-                                    <button class="expand-btn expanded">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">GM 5Y CDS</div>
-                                    <div class="security-name">General Motors 5Y CDS</div>
-                                </td>
-                                <td>Credit Alpha</td>
-                                <td style="color: #64748b;">James Wilson</td>
-                                <td class="center">
-                                    <span class="direction-badge short">SHORT</span>
-                                </td>
-                                <td class="right mono">$15M</td>
-                                <td class="right mono" style="color: #f87171;">-$2.85M</td>
-                                <td class="right mono">12,500</td>
-                                <td style="color: #64748b;">Auto</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                            <tr class="expanded-trades">
-                                <td colspan="10">
-                                    <div class="trades-inner">
-                                        <div class="trades-header">
-                                            <span>Trade ID</span>
-                                            <span>Date</span>
-                                            <span>Side</span>
-                                            <span>Notional</span>
-                                            <span>Spread</span>
-                                            <span>MTM</span>
-                                            <span>Counterparty</span>
-                                            <span>Broker</span>
-                                        </div>
-                                        <div class="trade-row">
-                                            <span>CDS-4F2A</span>
-                                            <span>Jan 5, 2026</span>
-                                            <span class="side-sell">SELL</span>
-                                            <span>$10M</span>
-                                            <span>185 bps</span>
-                                            <span>-$1.92M</span>
-                                            <span>JPMorgan Chase</span>
-                                            <span>-</span>
-                                        </div>
-                                        <div class="trade-row">
-                                            <span>CDS-3E1B</span>
-                                            <span>Dec 20, 2025</span>
-                                            <span class="side-sell">SELL</span>
-                                            <span>$5M</span>
-                                            <span>172 bps</span>
-                                            <span>-$0.93M</span>
-                                            <span>Bank of America</span>
-                                            <span>-</span>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">F 5Y CDS</div>
-                                    <div class="security-name">Ford Motor 5Y CDS</div>
-                                </td>
-                                <td>Credit Alpha</td>
-                                <td style="color: #64748b;">James Wilson</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">$8M</td>
-                                <td class="right mono" style="color: #34d399;">$1.24M</td>
-                                <td class="right mono">8,200</td>
-                                <td style="color: #64748b;">Auto</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">Delta</th>
+                                    <th class="right">Gamma</th>
+                                    <th class="right">Vega</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Alpha Growth -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Microsoft Corp</div>
+                                    </td>
+                                    <td><span class="inst-type common">Common</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">12,000</td>
+                                    <td><span class="portfolio-card portfolio-alpha">Alpha Growth</span></td>
+                                    <td style="color: #64748b;">M. Davis</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-6C1D</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 5, 2026</td>
+                                    <td class="right mono entry-price-cell">$415.20<span class="tooltip">Weighted avg. entry price of 4 trades</span></td>
+                                    <td class="right mono">$420.80</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$67.2K</td>
+                                    <td class="right mono" style="color: #34d399;">$5.05M</td>
+                                    <td class="right mono">11,880</td>
+                                    <td class="right mono">198</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-high">0.91</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">NVIDIA Corporation</div>
+                                    </td>
+                                    <td><span class="inst-type common">Common</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">15,000</td>
+                                    <td><span class="portfolio-card portfolio-alpha">Alpha Growth</span></td>
+                                    <td style="color: #64748b;">M. Davis</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-8A3F</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 10, 2026</td>
+                                    <td class="right mono entry-price-cell">$825.50<span class="tooltip">Weighted avg. entry price of 3 trades</span></td>
+                                    <td class="right mono">$830.00</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$67.5K</td>
+                                    <td class="right mono" style="color: #34d399;">$12.45M</td>
+                                    <td class="right mono">14,850</td>
+                                    <td class="right mono">245</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-high">0.85</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <!-- Beta Momentum -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Apple Inc.</div>
+                                    </td>
+                                    <td><span class="inst-type common">Common</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-8,500</td>
+                                    <td><span class="portfolio-card portfolio-beta">Beta Momentum</span></td>
+                                    <td style="color: #64748b;">E. Chen</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-7B2E</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 8, 2026</td>
+                                    <td class="right mono entry-price-cell">$182.30<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">$180.50</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$15.3K</td>
+                                    <td class="right mono" style="color: #f87171;">-$1.53M</td>
+                                    <td class="right mono">-8,415</td>
+                                    <td class="right mono">-142</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-medium">0.72</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">S&P 500 E-mini Jun26</div>
+                                    </td>
+                                    <td><span class="inst-type future">Future</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-25</td>
+                                    <td><span class="portfolio-card portfolio-beta">Beta Momentum</span></td>
+                                    <td style="color: #64748b;">E. Chen</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-4E8B</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 2, 2026</td>
+                                    <td class="right mono entry-price-cell">$4,825.00<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">$4,892.50</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-negative">-$168.8K</td>
+                                    <td class="right mono" style="color: #f87171;">-$6.12M</td>
+                                    <td class="right mono">-125,000</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-high">0.98</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                                <!-- Delta Quant -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">SPY Mar 480 Call</div>
+                                    </td>
+                                    <td><span class="inst-type option">Option</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">500</td>
+                                    <td><span class="portfolio-card portfolio-delta">Delta Quant</span></td>
+                                    <td style="color: #64748b;">A. Thompson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-5D9A</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 3, 2026</td>
+                                    <td class="right mono">$12.50</td>
+                                    <td class="right mono">$14.20</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$85K</td>
+                                    <td class="right mono" style="color: #34d399;">$710K</td>
+                                    <td class="right mono">32,500</td>
+                                    <td class="right mono">1,850</td>
+                                    <td class="right mono">45,200</td>
+                                    <td class="right correlation-high">0.88</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <!-- Gamma Value -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Bank of America Pfd C</div>
+                                    </td>
+                                    <td><span class="inst-type preferred">Preferred</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">10,000</td>
+                                    <td><span class="portfolio-card portfolio-gamma">Gamma Value</span></td>
+                                    <td style="color: #64748b;">S. Park</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-3F7C</td>
+                                    <td class="trade-col" style="color: #64748b;">Dec 28, 2025</td>
+                                    <td class="right mono">$24.50</td>
+                                    <td class="right mono">$24.85</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$3.5K</td>
+                                    <td class="right mono" style="color: #34d399;">$248.5K</td>
+                                    <td class="right mono">9,900</td>
+                                    <td class="right mono">165</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-medium">0.65</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Rates Table -->
-                <div class="riskpod-table">
+                <div class="riskpod-table" id="rates-table">
                     <div class="table-header">
                         <div class="table-title-section">
                             <span class="table-title rates">Rates</span>
                             <span class="position-count">12 positions</span>
-                        </div>
-                        <div class="table-metrics">
-                            <div>
-                                <span class="metric-label">Gross: </span>
-                                <span class="metric-value">$320.5M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Net: </span>
-                                <span class="metric-value positive">$85.2M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">DV01: </span>
-                                <span class="metric-value">125.8K</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$320.5M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value positive">$85.2M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">DV01: </span>
+                                    <span class="metric-value">125.8K</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Convexity: </span>
+                                    <span class="metric-value">3.42</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>Instrument</th>
-                                <th>Book</th>
-                                <th>PM</th>
-                                <th class="center">Direction</th>
-                                <th class="right">Notional</th>
-                                <th class="right">Market Value</th>
-                                <th class="right">DV01</th>
-                                <th class="right">Convexity</th>
-                                <th class="center">Reprice</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">UST 10Y</div>
-                                    <div class="security-name">US Treasury 10Y 4.25%</div>
-                                </td>
-                                <td>Rates Alpha</td>
-                                <td style="color: #64748b;">Sarah Kim</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">$50M</td>
-                                <td class="right mono" style="color: #34d399;">$52.3M</td>
-                                <td class="right mono">45,200</td>
-                                <td class="right mono">1.24</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">5Y IRS</div>
-                                    <div class="security-name">5Y Interest Rate Swap</div>
-                                </td>
-                                <td>Rates Alpha</td>
-                                <td style="color: #64748b;">Sarah Kim</td>
-                                <td class="center">
-                                    <span class="direction-badge short">SHORT</span>
-                                </td>
-                                <td class="right mono">$25M</td>
-                                <td class="right mono" style="color: #f87171;">-$1.85M</td>
-                                <td class="right mono">-22,500</td>
-                                <td class="right mono">0.85</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">DV01</th>
+                                    <th class="right">Convexity</th>
+                                    <th class="right">Duration</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Epsilon Macro -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">10Y Treasury Future Mar26</div>
+                                    </td>
+                                    <td><span class="inst-type future">Future</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-150</td>
+                                    <td><span class="portfolio-card portfolio-epsilon">Epsilon Macro</span></td>
+                                    <td style="color: #64748b;">J. Mueller</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-9I4F</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 7, 2026</td>
+                                    <td class="right mono entry-price-cell">110.25<span class="tooltip">Weighted avg. entry price of 3 trades</span></td>
+                                    <td class="right mono">111.50</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-negative">-$187.5K</td>
+                                    <td class="right mono" style="color: #f87171;">-$16.7M</td>
+                                    <td class="right mono">-68,250</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-high">0.95</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">EUR Bund 10Y 2.75%</div>
+                                    </td>
+                                    <td><span class="inst-type bond">Bond</span></td>
+                                    <td>EUR</td>
+                                    <td class="right mono qty-positive">€25M</td>
+                                    <td><span class="portfolio-card portfolio-epsilon">Epsilon Macro</span></td>
+                                    <td style="color: #64748b;">J. Mueller</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-2G6D</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 9, 2026</td>
+                                    <td class="right mono">102.35</td>
+                                    <td class="right mono">103.15</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$200K</td>
+                                    <td class="right mono" style="color: #34d399;">$27.8M</td>
+                                    <td class="right mono">22,150</td>
+                                    <td class="right mono">0.95</td>
+                                    <td class="right mono">9.2Y</td>
+                                    <td class="right correlation-low">0.35</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <!-- Eta Rates -->
+                                <tr>
+                                    <td>
+                                        <div class="ticker">5Y/10Y Swap Spread</div>
+                                    </td>
+                                    <td><span class="inst-type swap">Swap</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">$100M</td>
+                                    <td><span class="portfolio-card portfolio-eta">Eta Rates</span></td>
+                                    <td style="color: #64748b;">S. Kim</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-1H5E</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 8, 2026</td>
+                                    <td class="right mono">-12 bps</td>
+                                    <td class="right mono">-8 bps</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$400K</td>
+                                    <td class="right mono" style="color: #34d399;">$4.2M</td>
+                                    <td class="right mono">28,500</td>
+                                    <td class="right mono">0.42</td>
+                                    <td class="right mono">7.5Y</td>
+                                    <td class="right correlation-medium">0.58</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">US Treasury 10Y 4.25%</div>
+                                    </td>
+                                    <td><span class="inst-type bond">Bond</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">$50M</td>
+                                    <td><span class="portfolio-card portfolio-eta">Eta Rates</span></td>
+                                    <td style="color: #64748b;">S. Kim</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-4E8B</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 12, 2026</td>
+                                    <td class="right mono entry-price-cell">98.45<span class="tooltip">Weighted avg. entry price of 5 trades</span></td>
+                                    <td class="right mono">99.12</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$335K</td>
+                                    <td class="right mono" style="color: #34d399;">$52.3M</td>
+                                    <td class="right mono">45,200</td>
+                                    <td class="right mono">1.24</td>
+                                    <td class="right mono">8.5Y</td>
+                                    <td class="right correlation-medium">0.68</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">US Treasury 2Y 4.50%</div>
+                                    </td>
+                                    <td><span class="inst-type bond">Bond</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-$30M</td>
+                                    <td><span class="portfolio-card portfolio-eta">Eta Rates</span></td>
+                                    <td style="color: #64748b;">S. Kim</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-3F7C</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 11, 2026</td>
+                                    <td class="right mono entry-price-cell">99.85<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">99.72</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$39K</td>
+                                    <td class="right mono" style="color: #f87171;">-$29.8M</td>
+                                    <td class="right mono">-5,820</td>
+                                    <td class="right mono">0.08</td>
+                                    <td class="right mono">1.9Y</td>
+                                    <td class="right correlation-high">0.92</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Credit Table -->
+                <div class="riskpod-table" id="credit-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title credit">Credit</span>
+                            <span class="position-count">8 positions</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$85.2M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value negative">-$12.5M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">CS01: </span>
+                                    <span class="metric-value">42.5K</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">JTD: </span>
+                                    <span class="metric-value">$8.2M</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">CS01</th>
+                                    <th class="right">Spread</th>
+                                    <th class="right">JTD</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Apple Corp 5.25% 2030</div>
+                                    </td>
+                                    <td><span class="inst-type bond">Bond</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">$20M</td>
+                                    <td><span class="portfolio-card portfolio-zeta">Zeta Credit</span></td>
+                                    <td style="color: #64748b;">J. Wilson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-8J3G</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 12, 2026</td>
+                                    <td class="right mono entry-price-cell">101.25<span class="tooltip">Weighted avg. entry price of 3 trades</span></td>
+                                    <td class="right mono">102.50</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$250K</td>
+                                    <td class="right mono" style="color: #34d399;">$20.5M</td>
+                                    <td class="right mono">8,200</td>
+                                    <td class="right mono">45 bps</td>
+                                    <td class="right mono">$2.0M</td>
+                                    <td class="right correlation-low">0.32</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Ford Motor 3Y CDS</div>
+                                    </td>
+                                    <td><span class="inst-type cds">CDS</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">$10M</td>
+                                    <td><span class="portfolio-card portfolio-zeta">Zeta Credit</span></td>
+                                    <td style="color: #64748b;">J. Wilson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-9I4F</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 13, 2026</td>
+                                    <td class="right mono">145 bps</td>
+                                    <td class="right mono">138 bps</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$70K</td>
+                                    <td class="right mono" style="color: #34d399;">$1.42M</td>
+                                    <td class="right mono">-4,200</td>
+                                    <td class="right mono">138 bps</td>
+                                    <td class="right mono">$1.0M</td>
+                                    <td class="right correlation-high">0.82</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">General Motors 5Y CDS</div>
+                                    </td>
+                                    <td><span class="inst-type cds">CDS</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-$15M</td>
+                                    <td><span class="portfolio-card portfolio-zeta">Zeta Credit</span></td>
+                                    <td style="color: #64748b;">J. Wilson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-1H5E</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 14, 2026</td>
+                                    <td class="right mono entry-price-cell">185 bps<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">192 bps</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-negative">-$105K</td>
+                                    <td class="right mono" style="color: #f87171;">-$2.85M</td>
+                                    <td class="right mono">12,500</td>
+                                    <td class="right mono">192 bps</td>
+                                    <td class="right mono">$1.5M</td>
+                                    <td class="right correlation-medium">0.58</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- FX Table -->
-                <div class="riskpod-table">
+                <div class="riskpod-table" id="fx-table">
                     <div class="table-header">
                         <div class="table-title-section">
                             <span class="table-title fx">FX</span>
                             <span class="position-count">6 positions</span>
-                        </div>
-                        <div class="table-metrics">
-                            <div>
-                                <span class="metric-label">Gross: </span>
-                                <span class="metric-value">$45.2M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Net: </span>
-                                <span class="metric-value positive">$12.8M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">FX Delta: </span>
-                                <span class="metric-value">12.8M</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$45.2M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value positive">$12.8M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">FX Delta: </span>
+                                    <span class="metric-value">$12.8M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Vega: </span>
+                                    <span class="metric-value">85K</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>Instrument</th>
-                                <th>Book</th>
-                                <th>PM</th>
-                                <th class="center">Direction</th>
-                                <th class="right">Notional</th>
-                                <th class="right">Market Value</th>
-                                <th class="right">FX Delta</th>
-                                <th class="center">Reprice</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">EUR/USD</div>
-                                    <div class="security-name">Euro vs US Dollar</div>
-                                </td>
-                                <td>FX Macro</td>
-                                <td style="color: #64748b;">David Lee</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">$15M</td>
-                                <td class="right mono" style="color: #34d399;">$15.2M</td>
-                                <td class="right mono">15,200</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">FX Delta</th>
+                                    <th class="right">Gamma</th>
+                                    <th class="right">Vega</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">EUR/USD 3M Call 1.10</div>
+                                    </td>
+                                    <td><span class="inst-type option">Option</span></td>
+                                    <td>EUR</td>
+                                    <td class="right mono qty-positive">€10M</td>
+                                    <td><span class="portfolio-card portfolio-epsilon">Epsilon Macro</span></td>
+                                    <td style="color: #64748b;">K. Tanaka</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-6L1I</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 12, 2026</td>
+                                    <td class="right mono entry-price-cell">0.0085<span class="tooltip">Weighted avg. entry price of 3 trades</span></td>
+                                    <td class="right mono">0.0112</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$270K</td>
+                                    <td class="right mono" style="color: #34d399;">$1.12M</td>
+                                    <td class="right mono">$5,200</td>
+                                    <td class="right mono">85</td>
+                                    <td class="right mono">42,500</td>
+                                    <td class="right correlation-low">0.18</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Euro vs US Dollar</div>
+                                    </td>
+                                    <td><span class="inst-type spot">Spot</span></td>
+                                    <td>EUR</td>
+                                    <td class="right mono qty-positive">€15M</td>
+                                    <td><span class="portfolio-card portfolio-theta">Theta FX</span></td>
+                                    <td style="color: #64748b;">D. Lee</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-8J3G</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 15, 2026</td>
+                                    <td class="right mono entry-price-cell">1.0820<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">1.0892</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$108K</td>
+                                    <td class="right mono" style="color: #34d399;">$15.2M</td>
+                                    <td class="right mono">$15,200</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-low">0.28</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">GBP/USD 6M Forward</div>
+                                    </td>
+                                    <td><span class="inst-type forward">Forward</span></td>
+                                    <td>GBP</td>
+                                    <td class="right mono qty-positive">£8M</td>
+                                    <td><span class="portfolio-card portfolio-theta">Theta FX</span></td>
+                                    <td style="color: #64748b;">D. Lee</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-5M0J</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 10, 2026</td>
+                                    <td class="right mono">1.2650</td>
+                                    <td class="right mono">1.2720</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$56K</td>
+                                    <td class="right mono" style="color: #34d399;">$10.2M</td>
+                                    <td class="right mono">$8,100</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-medium">0.52</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">US Dollar vs Japanese Yen</div>
+                                    </td>
+                                    <td><span class="inst-type spot">Spot</span></td>
+                                    <td>JPY</td>
+                                    <td class="right mono qty-negative">-$20M</td>
+                                    <td><span class="portfolio-card portfolio-theta">Theta FX</span></td>
+                                    <td style="color: #64748b;">D. Lee</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-7K2H</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 14, 2026</td>
+                                    <td class="right mono">148.50</td>
+                                    <td class="right mono">147.85</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$88K</td>
+                                    <td class="right mono" style="color: #f87171;">-$19.8M</td>
+                                    <td class="right mono">-$19,800</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-medium">0.62</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Commodities Table -->
+                <div class="riskpod-table" id="commodities-table">
+                    <div class="table-header">
+                        <div class="table-title-section">
+                            <span class="table-title commodities">Commodities</span>
+                            <span class="position-count">4 positions</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$28.5M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value positive">$18.2M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Delta: </span>
+                                    <span class="metric-value">18.2K</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Theta: </span>
+                                    <span class="metric-value">-$12K</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">Delta</th>
+                                    <th class="right">Gamma</th>
+                                    <th class="right">Theta</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">COMEX Gold Futures Feb26</div>
+                                    </td>
+                                    <td><span class="inst-type future">Future</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">50</td>
+                                    <td><span class="portfolio-card portfolio-delta">Delta Quant</span></td>
+                                    <td style="color: #64748b;">A. Thompson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-5M0J</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 16, 2026</td>
+                                    <td class="right mono entry-price-cell">$2,045.20<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">$2,068.50</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$116.5K</td>
+                                    <td class="right mono" style="color: #34d399;">$10.2M</td>
+                                    <td class="right mono">5,100</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-low">0.15</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Gold Call 2100 Jun26</div>
+                                    </td>
+                                    <td><span class="inst-type option">Option</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">20</td>
+                                    <td><span class="portfolio-card portfolio-delta">Delta Quant</span></td>
+                                    <td style="color: #64748b;">A. Thompson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-3O8L</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 14, 2026</td>
+                                    <td class="right mono entry-price-cell">$45.80<span class="tooltip">Weighted avg. entry price of 4 trades</span></td>
+                                    <td class="right mono">$52.35</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$131K</td>
+                                    <td class="right mono" style="color: #34d399;">$1.05M</td>
+                                    <td class="right mono">840</td>
+                                    <td class="right mono">28</td>
+                                    <td class="right mono">-$12K</td>
+                                    <td class="right correlation-low">0.22</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">WTI Crude Futures Mar26</div>
+                                    </td>
+                                    <td><span class="inst-type future">Future</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-negative">-25</td>
+                                    <td><span class="portfolio-card portfolio-epsilon">Epsilon Macro</span></td>
+                                    <td style="color: #64748b;">R. Patel</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-4N9K</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 15, 2026</td>
+                                    <td class="right mono">$78.45</td>
+                                    <td class="right mono">$76.82</td>
+                                    <td class="center"><span class="pricing-badge market">Market</span></td>
+                                    <td class="right mono pnl-positive">+$40.8K</td>
+                                    <td class="right mono" style="color: #f87171;">-$1.92M</td>
+                                    <td class="right mono">-1,250</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-medium">0.55</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Other Table -->
-                <div class="riskpod-table">
+                <div class="riskpod-table" id="other-table">
                     <div class="table-header">
                         <div class="table-title-section">
                             <span class="table-title other">Other</span>
                             <span class="position-count">3 positions</span>
-                        </div>
-                        <div class="table-metrics">
-                            <div>
-                                <span class="metric-label">Gross: </span>
-                                <span class="metric-value">$18.5M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Net: </span>
-                                <span class="metric-value positive">$8.2M</span>
-                            </div>
-                            <div>
-                                <span class="metric-label">Sensitivity: </span>
-                                <span class="metric-value">8.2K</span>
+                            <div class="table-metrics">
+                                <div>
+                                    <span class="metric-label">Gross: </span>
+                                    <span class="metric-value">$18.5M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Net: </span>
+                                    <span class="metric-value positive">$8.2M</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Sensitivity: </span>
+                                    <span class="metric-value">8.2K</span>
+                                </div>
+                                <div>
+                                    <span class="metric-label">Decomposed: </span>
+                                    <span class="metric-value">2 of 3</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>Instrument</th>
-                                <th>Book</th>
-                                <th>PM</th>
-                                <th class="center">Direction</th>
-                                <th class="right">Quantity</th>
-                                <th class="right">Market Value</th>
-                                <th class="right">Sensitivity</th>
-                                <th class="center">Reprice</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <button class="expand-btn">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="instrument-cell">
-                                    <div class="ticker">GC</div>
-                                    <div class="security-name">Gold Futures</div>
-                                </td>
-                                <td>Commodities</td>
-                                <td style="color: #64748b;">Alex Thompson</td>
-                                <td class="center">
-                                    <span class="direction-badge long">LONG</span>
-                                </td>
-                                <td class="right mono">50</td>
-                                <td class="right mono" style="color: #34d399;">$10.2M</td>
-                                <td class="right mono">5,100</td>
-                                <td class="center">
-                                    <button class="reprice-btn">Reprice</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Ccy</th>
+                                    <th class="right">Quantity</th>
+                                    <th>Portfolio</th>
+                                    <th>PM</th>
+                                    <th class="trade-col">Trade ID</th>
+                                    <th class="trade-col">Trade Date</th>
+                                    <th class="right">Entry Price</th>
+                                    <th class="right">Last Price</th>
+                                    <th class="center">Pricing</th>
+                                    <th class="right">PNL</th>
+                                    <th class="right">Market Value</th>
+                                    <th class="right">Delta</th>
+                                    <th class="right">DV01</th>
+                                    <th class="right">CS01</th>
+                                    <th class="right">Correl</th>
+                                    <th class="center">0HEDGE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Private Equity Fund LP</div>
+                                    </td>
+                                    <td><span class="inst-type fund">Fund</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">1</td>
+                                    <td><span class="portfolio-card portfolio-alpha">Alpha Growth</span></td>
+                                    <td style="color: #64748b;">M. Davis</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-0R5O</td>
+                                    <td class="trade-col" style="color: #64748b;">Dec 15, 2025</td>
+                                    <td class="right mono">$5.0M</td>
+                                    <td class="right mono">$5.2M</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$200K</td>
+                                    <td class="right mono" style="color: #34d399;">$5.2M</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right mono">-</td>
+                                    <td class="right correlation-low">0.12</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">Structured Note ABC 5Y</div>
+                                    </td>
+                                    <td><span class="inst-type structured">Structured</span></td>
+                                    <td>USD</td>
+                                    <td class="right mono qty-positive">100</td>
+                                    <td><span class="portfolio-card portfolio-gamma">Gamma Value</span></td>
+                                    <td style="color: #64748b;">M. Johnson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-2P7M</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 17, 2026</td>
+                                    <td class="right mono entry-price-cell">$82,000<span class="tooltip">Weighted avg. entry price of 2 trades</span></td>
+                                    <td class="right mono">$84,250</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-positive">+$225K</td>
+                                    <td class="right mono" style="color: #34d399;">$8.42M</td>
+                                    <td class="right mono">4,210</td>
+                                    <td class="right mono">12,500</td>
+                                    <td class="right mono">3,200</td>
+                                    <td class="right correlation-medium">0.52</td>
+                                    <td class="center"><span class="hedge-indicator unhedged">-</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="ticker">CLN Tech Basket 3Y</div>
+                                    </td>
+                                    <td><span class="inst-type structured">Structured</span></td>
+                                    <td>EUR</td>
+                                    <td class="right mono qty-positive">50</td>
+                                    <td><span class="portfolio-card portfolio-zeta">Zeta Credit</span></td>
+                                    <td style="color: #64748b;">J. Wilson</td>
+                                    <td class="trade-col mono" style="color: #64748b;">TRD-1Q6N</td>
+                                    <td class="trade-col" style="color: #64748b;">Jan 16, 2026</td>
+                                    <td class="right mono">$98,500</td>
+                                    <td class="right mono">$97,800</td>
+                                    <td class="center"><span class="pricing-badge model">Model</span></td>
+                                    <td class="right mono pnl-negative">-$35K</td>
+                                    <td class="right mono" style="color: #f87171;">-$4.89M</td>
+                                    <td class="right mono">-2,445</td>
+                                    <td class="right mono">8,200</td>
+                                    <td class="right mono">15,800</td>
+                                    <td class="right correlation-high">0.78</td>
+                                    <td class="center"><span class="hedge-indicator hedged">H</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Position Drill-down Panel Overlay -->
+    <div class="panel-overlay" id="panelOverlay"></div>
+
+    <!-- Position Drill-down Panel -->
+    <div class="drilldown-panel" id="drilldownPanel">
+        <div class="panel-header">
+            <div class="panel-title-section">
+                <div class="panel-title">
+                    <span id="panelPositionName">Position Name</span>
+                    <span class="panel-inst-type" id="panelInstType">Type</span>
+                </div>
+                <div class="panel-subtitle" id="panelSubtitle">Portfolio | PM | Trade ID</div>
+            </div>
+            <button class="panel-close-btn" onclick="closePanel()">x</button>
+        </div>
+
+        <div class="panel-body">
+            <!-- Override Warning Banner (hidden by default) -->
+            <div class="override-warning-banner" id="overrideWarning">
+                <div class="warning-icon">!</div>
+                <div class="warning-content">
+                    <div class="warning-title" id="warningTitle">Manual Price Override Active</div>
+                    <div class="warning-text" id="warningText">Override details here</div>
+                </div>
+                <button class="reset-btn" onclick="resetOverride()">Reset to Default</button>
+            </div>
+
+            <!-- Position Metrics -->
+            <div class="metrics-section">
+                <div class="section-label">Position Details</div>
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="metric-card">
+                        <div class="metric-label">Quantity</div>
+                        <div class="metric-value" id="metricQty">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Entry Price</div>
+                        <div class="metric-value" id="metricEntry">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Last Price</div>
+                        <div class="metric-value" id="metricLast">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Market Value</div>
+                        <div class="metric-value" id="metricMV">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">P&L</div>
+                        <div class="metric-value" id="metricPnl">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Correlation</div>
+                        <div class="metric-value" id="metricCorrel">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Greeks (shown for derivatives) -->
+            <div class="metrics-section" id="greeksSection" style="display: none;">
+                <div class="section-label">Greeks</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Delta</div>
+                        <div class="metric-value" id="metricDelta">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Gamma</div>
+                        <div class="metric-value" id="metricGamma">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Vega</div>
+                        <div class="metric-value" id="metricVega">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Override Section -->
+            <div class="pricing-section">
+                <div class="pricing-header">
+                    <div class="pricing-title">
+                        Pricing
+                        <span class="pricing-source-badge market" id="pricingBadge">Market</span>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="pricing-tabs">
+                    <button class="pricing-tab active" id="tabPrice" onclick="switchTab('price')">Override Price</button>
+                    <button class="pricing-tab" id="tabModel" onclick="switchTab('model')">Override Model Inputs</button>
+                </div>
+
+                <!-- Tab 1: Override Price -->
+                <div class="tab-content active" id="tabContentPrice">
+                    <div class="current-price-row">
+                        <span class="price-label">Current Price</span>
+                        <span class="price-value" id="currentPrice">-</span>
+                    </div>
+
+                    <div class="override-section">
+                        <div class="override-title">Enter Manual Price Override</div>
+                        <div class="override-input-row">
+                            <div class="input-group">
+                                <label class="input-label">New Price</label>
+                                <input type="text" class="override-input" id="newPriceInput" placeholder="e.g., 152.50">
+                            </div>
+                            <div class="input-group" style="max-width: 180px;">
+                                <label class="input-label">Reason (optional)</label>
+                                <input type="text" class="override-input" id="priceReason" placeholder="Reason...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="whatif-preview" id="whatifPrice" style="display: none;">
+                        <div class="whatif-header">
+                            <span class="whatif-title">What-if Preview</span>
+                        </div>
+                        <div class="whatif-row">
+                            <span class="whatif-label">New Market Value</span>
+                            <span class="whatif-value" id="whatifMV">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Override Model Inputs -->
+                <div class="tab-content" id="tabContentModel">
+                    <div class="current-price-row">
+                        <span class="price-label">Model Calculated Price</span>
+                        <span class="price-value" id="modelPrice" style="color: #a78bfa;">-</span>
+                    </div>
+
+                    <div class="section-label" style="margin-top: 16px;">Model Inputs</div>
+                    <div class="model-inputs-grid" id="modelInputsGrid">
+                        <!-- Populated dynamically based on instrument type -->
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Spot Price</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">-</div>
+                            <div class="model-input-default">Market observed</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Volatility</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">-</div>
+                            <div class="model-input-default">Implied from market</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Risk-Free Rate</span>
+                                <button class="model-input-edit">E</button>
+                            </div>
+                            <div class="model-input-value">-</div>
+                            <div class="model-input-default">Fed curve</div>
+                        </div>
+                        <div class="model-input-card">
+                            <div class="model-input-header">
+                                <span class="model-input-label">Time to Expiry</span>
+                                <button class="model-input-edit" disabled style="opacity: 0.5;">E</button>
+                            </div>
+                            <div class="model-input-value">-</div>
+                            <div class="model-input-default">Calculated</div>
+                        </div>
+                    </div>
+
+                    <div class="whatif-preview" id="whatifModel" style="display: none;">
+                        <div class="whatif-header">
+                            <span class="whatif-title">Model Recalculation Preview</span>
+                        </div>
+                        <div class="whatif-row">
+                            <span class="whatif-label">New Model Price</span>
+                            <span class="whatif-value" id="whatifModelPrice">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <button class="btn-secondary" onclick="closePanel()">Cancel</button>
+            <button class="btn-primary" onclick="saveAndRecalculate()">Save and Recalculate</button>
+        </div>
+    </div>
+
     <script>
-        // Toggle expand/collapse for position rows
-        document.querySelectorAll('.expand-btn').forEach(btn => {
+        // View toggle (Positions/Trades)
+        let currentView = 'positions';
+
+        function setView(view) {
+            currentView = view;
+            const container = document.querySelector('.tables-container');
+            const posBtn = document.querySelector('.view-toggle-btn:first-child');
+            const tradeBtn = document.querySelector('.view-toggle-btn:last-child');
+
+            if (view === 'trades') {
+                container.classList.add('trades-view');
+                posBtn.classList.remove('active');
+                tradeBtn.classList.add('active');
+            } else {
+                container.classList.remove('trades-view');
+                posBtn.classList.add('active');
+                tradeBtn.classList.remove('active');
+            }
+        }
+
+        // Initialize view toggle buttons
+        document.querySelectorAll('.view-toggle-btn').forEach((btn, index) => {
             btn.addEventListener('click', () => {
-                btn.classList.toggle('expanded');
-                // In real app, this would show/hide the trades section
+                setView(index === 0 ? 'positions' : 'trades');
             });
+        });
+
+        function toggleTimeMenu() {
+            const menu = document.getElementById('timeMenu');
+            menu.classList.toggle('active');
+            // Close portfolio menu if open
+            document.getElementById('portfolioMenu').classList.remove('active');
+        }
+
+        function togglePortfolioMenu() {
+            const menu = document.getElementById('portfolioMenu');
+            menu.classList.toggle('active');
+            // Close time menu if open
+            document.getElementById('timeMenu').classList.remove('active');
+        }
+
+        function updatePortfolioText() {
+            const checkboxes = document.querySelectorAll('.portfolio-item input[type="checkbox"]');
+            const total = checkboxes.length;
+            const checked = document.querySelectorAll('.portfolio-item input[type="checkbox"]:checked').length;
+            const textEl = document.getElementById('selectedPortfoliosText');
+
+            if (checked === total) {
+                textEl.textContent = 'All';
+                textEl.classList.add('all');
+            } else if (checked === 0) {
+                textEl.textContent = 'None';
+                textEl.classList.remove('all');
+            } else {
+                textEl.textContent = checked + ' selected';
+                textEl.classList.remove('all');
+            }
+        }
+
+        function selectAllPortfolios() {
+            const checkboxes = document.querySelectorAll('.portfolio-item input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            updatePortfolioText();
+        }
+
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.time-selector')) {
+                document.getElementById('timeMenu').classList.remove('active');
+            }
+            if (!e.target.closest('.portfolio-dropdown')) {
+                document.getElementById('portfolioMenu').classList.remove('active');
+            }
+        });
+
+        // Calculate button animation
+        document.querySelector('.global-calculate-btn').addEventListener('click', function() {
+            this.classList.add('calculating');
+            setTimeout(() => {
+                this.classList.remove('calculating');
+            }, 1500);
+        });
+
+        // ========================================
+        // POSITION DRILL-DOWN PANEL LOGIC
+        // ========================================
+
+        let currentPosition = null;
+
+        // Open panel when clicking a table row
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                openPanel(row);
+            });
+        });
+
+        function openPanel(row) {
+            // Extract data from row cells
+            const cells = row.querySelectorAll('td');
+            const tickerEl = row.querySelector('.ticker');
+            const instTypeEl = row.querySelector('.inst-type');
+            const portfolioEl = row.querySelector('.portfolio-card');
+            const pricingBadgeEl = row.querySelector('.pricing-badge');
+
+            // Get values
+            const name = tickerEl ? tickerEl.textContent : 'Unknown';
+            const instType = instTypeEl ? instTypeEl.textContent : 'Unknown';
+            const portfolio = portfolioEl ? portfolioEl.textContent : '-';
+            const currency = cells[2] ? cells[2].textContent.trim() : '-';
+            const quantity = cells[3] ? cells[3].textContent.trim() : '-';
+            const pm = cells[5] ? cells[5].textContent.trim() : '-';
+            const tradeId = cells[6] ? cells[6].textContent.trim() : '-';
+            const entryPrice = cells[8] ? cells[8].textContent.trim().split('\n')[0] : '-';
+            const lastPrice = cells[9] ? cells[9].textContent.trim() : '-';
+            const pricingSource = pricingBadgeEl ? pricingBadgeEl.textContent : 'Market';
+            const pnl = cells[11] ? cells[11].textContent.trim() : '-';
+            const marketValue = cells[12] ? cells[12].textContent.trim() : '-';
+            const correlation = cells.length > 16 ? cells[cells.length - 2].textContent.trim() : '-';
+
+            // Store current position
+            currentPosition = { name, instType, portfolio, currency, quantity, pm, tradeId, entryPrice, lastPrice, pricingSource, pnl, marketValue, correlation };
+
+            // Populate panel header
+            document.getElementById('panelPositionName').textContent = name;
+            document.getElementById('panelInstType').textContent = instType;
+            document.getElementById('panelSubtitle').textContent = `${portfolio} | ${pm} | ${tradeId}`;
+
+            // Populate metrics
+            document.getElementById('metricQty').textContent = quantity;
+            document.getElementById('metricEntry').textContent = entryPrice;
+            document.getElementById('metricLast').textContent = lastPrice;
+            document.getElementById('metricMV').textContent = marketValue;
+            document.getElementById('metricPnl').textContent = pnl;
+            document.getElementById('metricCorrel').textContent = correlation;
+
+            // Style P&L
+            const pnlEl = document.getElementById('metricPnl');
+            pnlEl.className = 'metric-value';
+            if (pnl.includes('+')) pnlEl.classList.add('positive');
+            else if (pnl.includes('-')) pnlEl.classList.add('negative');
+
+            // Update pricing badge
+            const badge = document.getElementById('pricingBadge');
+            badge.textContent = pricingSource;
+            badge.className = 'pricing-source-badge ' + pricingSource.toLowerCase();
+
+            // Set current price
+            document.getElementById('currentPrice').textContent = lastPrice;
+            document.getElementById('modelPrice').textContent = lastPrice;
+
+            // Show/hide model inputs tab based on instrument type
+            const isModelPriced = ['Option', 'Swap', 'CDS', 'Swaption', 'Structured'].includes(instType);
+            document.getElementById('tabModel').classList.toggle('hidden', !isModelPriced);
+
+            // Show/hide Greeks section for derivatives
+            const showGreeks = ['Option', 'Future', 'Swap', 'CDS'].includes(instType);
+            document.getElementById('greeksSection').style.display = showGreeks ? 'block' : 'none';
+
+            // Reset to price tab
+            switchTab('price');
+
+            // Check for override warning (demo - check if pricing is Manual)
+            const hasOverride = pricingSource === 'Manual' || pricingSource === 'Model';
+            document.getElementById('overrideWarning').classList.toggle('active', pricingSource === 'Manual');
+
+            // Show panel
+            document.getElementById('panelOverlay').classList.add('active');
+            document.getElementById('drilldownPanel').classList.add('active');
+        }
+
+        function closePanel() {
+            document.getElementById('panelOverlay').classList.remove('active');
+            document.getElementById('drilldownPanel').classList.remove('active');
+            currentPosition = null;
+
+            // Clear inputs
+            document.getElementById('newPriceInput').value = '';
+            document.getElementById('priceReason').value = '';
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.getElementById('tabPrice').classList.toggle('active', tab === 'price');
+            document.getElementById('tabModel').classList.toggle('active', tab === 'model');
+
+            // Update tab content
+            document.getElementById('tabContentPrice').classList.toggle('active', tab === 'price');
+            document.getElementById('tabContentModel').classList.toggle('active', tab === 'model');
+        }
+
+        function resetOverride() {
+            document.getElementById('overrideWarning').classList.remove('active');
+            const badge = document.getElementById('pricingBadge');
+            badge.textContent = 'Market';
+            badge.className = 'pricing-source-badge market';
+            alert('Override reset to default pricing');
+        }
+
+        function saveAndRecalculate() {
+            const newPrice = document.getElementById('newPriceInput').value;
+            if (newPrice && currentPosition) {
+                // In real implementation, this would call the API
+                alert(`Price override saved: ${newPrice}\nPosition: ${currentPosition.name}\nRecalculating risk metrics...`);
+                closePanel();
+            } else {
+                alert('Please enter a new price');
+            }
+        }
+
+        // Close panel when clicking overlay
+        document.getElementById('panelOverlay').addEventListener('click', closePanel);
+
+        // What-if preview on input change
+        document.getElementById('newPriceInput').addEventListener('input', function() {
+            const newPrice = parseFloat(this.value);
+            const preview = document.getElementById('whatifPrice');
+            if (!isNaN(newPrice) && currentPosition) {
+                preview.style.display = 'block';
+                // Simple demo calculation
+                const currentQty = parseFloat(currentPosition.quantity.replace(/[^0-9.-]/g, '')) || 1;
+                const newMV = newPrice * currentQty;
+                document.getElementById('whatifMV').textContent = '$' + newMV.toLocaleString();
+            } else {
+                preview.style.display = 'none';
+            }
         });
     </script>
 </body>
