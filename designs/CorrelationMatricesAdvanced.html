@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISKCORE - Correlation Analysis (Advanced)</title>
+    <style>
+        /* ========================================
+           RESET & BASE STYLES
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Brand Colors */
+            --color-blue: #3b82f6;
+            --color-green: #22c55e;
+            --color-purple: #a855f7;
+            --color-cyan: #06b6d4;
+            --color-orange: #f97316;
+            --color-gray: #94a3b8;
+            --color-red: #ef4444;
+            --color-yellow: #eab308;
+
+            /* UI Colors */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ========================================
+           LAYOUT
+           ======================================== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* ========================================
+           SIDEBAR
+           ======================================== */
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-green);
+            margin-bottom: 32px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--color-purple);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+        /* ========================================
+           HEADER
+           ======================================== */
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--color-purple);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #9333ea;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ========================================
+           CONTROL BAR
+           ======================================== */
+        .control-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        /* Time Period Selector */
+        .time-selector {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .time-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .time-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .time-btn.active {
+            background: var(--color-purple);
+            color: white;
+        }
+
+        /* Scenario Selector */
+        .scenario-selector {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .scenario-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scenario-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .scenario-btn.active {
+            color: white;
+        }
+
+        .scenario-btn.active.normal {
+            background: var(--color-green);
+        }
+
+        .scenario-btn.active.stress-2008 {
+            background: var(--color-red);
+        }
+
+        .scenario-btn.active.stress-2020 {
+            background: var(--color-orange);
+        }
+
+        .scenario-btn.active.stress-rates {
+            background: var(--color-yellow);
+            color: #0f172a;
+        }
+
+        .scenario-icon {
+            font-size: 14px;
+        }
+
+        /* ========================================
+           PORTFOLIO SELECTOR
+           ======================================== */
+        .selector-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .selector-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .selector-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .portfolio-count {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .portfolio-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .portfolio-chip {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .portfolio-chip.selected {
+            border-color: currentColor;
+        }
+
+        .portfolio-chip:hover {
+            transform: scale(1.02);
+        }
+
+        /* Portfolio colors */
+        .portfolio-chip[data-portfolio="1"] { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .portfolio-chip[data-portfolio="2"] { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .portfolio-chip[data-portfolio="3"] { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+        .portfolio-chip[data-portfolio="4"] { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+        .portfolio-chip[data-portfolio="5"] { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+        .portfolio-chip[data-portfolio="6"] { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+
+        .check-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .portfolio-chip.selected .check-icon {
+            opacity: 1;
+        }
+
+        /* ========================================
+           STRESS SCENARIO BANNER
+           ======================================== */
+        .stress-banner {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stress-banner.active {
+            display: flex;
+        }
+
+        .stress-banner.stress-2008 {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .stress-banner.stress-2020 {
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .stress-banner.stress-rates {
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .stress-icon {
+            font-size: 32px;
+        }
+
+        .stress-content {
+            flex: 1;
+        }
+
+        .stress-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stress-title.stress-2008 { color: var(--color-red); }
+        .stress-title.stress-2020 { color: var(--color-orange); }
+        .stress-title.stress-rates { color: var(--color-yellow); }
+
+        .stress-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stress-stat {
+            text-align: right;
+        }
+
+        .stress-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stress-stat-value.stress-2008 { color: var(--color-red); }
+        .stress-stat-value.stress-2020 { color: var(--color-orange); }
+        .stress-stat-value.stress-rates { color: var(--color-yellow); }
+
+        .stress-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========================================
+           MATRICES LAYOUT
+           ======================================== */
+        .matrices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Total Matrix - Large */
+        .total-matrix-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .matrix-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .matrix-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .matrix-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .matrix-badge.total {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--color-purple);
+        }
+
+        .matrix-badge.equity { background: rgba(59, 130, 246, 0.2); color: var(--color-blue); }
+        .matrix-badge.rates { background: rgba(34, 197, 94, 0.2); color: var(--color-green); }
+        .matrix-badge.credit { background: rgba(168, 85, 247, 0.2); color: var(--color-purple); }
+        .matrix-badge.fx { background: rgba(6, 182, 212, 0.2); color: var(--color-cyan); }
+        .matrix-badge.commodities { background: rgba(249, 115, 22, 0.2); color: var(--color-orange); }
+        .matrix-badge.other { background: rgba(148, 163, 184, 0.2); color: var(--color-gray); }
+
+        .matrix-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* RiskPod Matrices Grid - 2x3 layout */
+        .riskpod-matrices-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .riskpod-matrix-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .riskpod-matrix-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .riskpod-matrix-card.equity { border-top: 3px solid var(--color-blue); }
+        .riskpod-matrix-card.rates { border-top: 3px solid var(--color-green); }
+        .riskpod-matrix-card.credit { border-top: 3px solid var(--color-purple); }
+        .riskpod-matrix-card.fx { border-top: 3px solid var(--color-cyan); }
+        .riskpod-matrix-card.commodities { border-top: 3px solid var(--color-orange); }
+        .riskpod-matrix-card.other { border-top: 3px solid var(--color-gray); }
+
+        .riskpod-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .riskpod-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .riskpod-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .riskpod-icon.equity { background: rgba(59, 130, 246, 0.2); color: var(--color-blue); }
+        .riskpod-icon.rates { background: rgba(34, 197, 94, 0.2); color: var(--color-green); }
+        .riskpod-icon.credit { background: rgba(168, 85, 247, 0.2); color: var(--color-purple); }
+        .riskpod-icon.fx { background: rgba(6, 182, 212, 0.2); color: var(--color-cyan); }
+        .riskpod-icon.commodities { background: rgba(249, 115, 22, 0.2); color: var(--color-orange); }
+        .riskpod-icon.other { background: rgba(148, 163, 184, 0.2); color: var(--color-gray); }
+
+        .anchor-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           CORRELATION MATRIX HEATMAP
+           ======================================== */
+        .matrix-wrapper {
+            overflow-x: auto;
+        }
+
+        .correlation-matrix {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 3px;
+        }
+
+        .correlation-matrix th {
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .correlation-matrix th.row-header {
+            text-align: right;
+            padding-right: 10px;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .correlation-matrix td {
+            padding: 0;
+        }
+
+        .matrix-cell {
+            width: 100%;
+            aspect-ratio: 1;
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .matrix-cell:hover {
+            transform: scale(1.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+
+        .matrix-cell.diagonal {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-muted) !important;
+            cursor: default;
+        }
+
+        .matrix-cell.diagonal:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Selected cell */
+        .matrix-cell.selected {
+            outline: 3px solid white;
+            outline-offset: 2px;
+        }
+
+        /* Large matrix cells */
+        .total-matrix .matrix-cell {
+            min-width: 70px;
+            min-height: 70px;
+            font-size: 14px;
+        }
+
+        /* Small matrix cells */
+        .small-matrix .matrix-cell {
+            min-width: 44px;
+            min-height: 44px;
+            font-size: 11px;
+        }
+
+        /* Correlation color scale - Green (positive) to Red (negative) */
+        .matrix-cell.c-10 { background: #14532d; color: white; }
+        .matrix-cell.c-09 { background: #166534; color: white; }
+        .matrix-cell.c-08 { background: #15803d; color: white; }
+        .matrix-cell.c-07 { background: #16a34a; color: white; }
+        .matrix-cell.c-06 { background: #22c55e; color: white; }
+        .matrix-cell.c-05 { background: #4ade80; color: #0f172a; }
+        .matrix-cell.c-04 { background: #86efac; color: #0f172a; }
+        .matrix-cell.c-03 { background: #bbf7d0; color: #0f172a; }
+        .matrix-cell.c-02 { background: #dcfce7; color: #0f172a; }
+        .matrix-cell.c-01 { background: #f0fdf4; color: #0f172a; }
+        .matrix-cell.c-00 { background: var(--bg-tertiary); color: var(--text-muted); }
+        .matrix-cell.c--01 { background: #fef2f2; color: #0f172a; }
+        .matrix-cell.c--02 { background: #fee2e2; color: #0f172a; }
+        .matrix-cell.c--03 { background: #fecaca; color: #0f172a; }
+        .matrix-cell.c--04 { background: #fca5a5; color: #0f172a; }
+        .matrix-cell.c--05 { background: #f87171; color: white; }
+        .matrix-cell.c--06 { background: #ef4444; color: white; }
+        .matrix-cell.c--07 { background: #dc2626; color: white; }
+        .matrix-cell.c--08 { background: #b91c1c; color: white; }
+        .matrix-cell.c--09 { background: #991b1b; color: white; }
+        .matrix-cell.c--10 { background: #7f1d1d; color: white; }
+
+        /* Matrix Legend */
+        .matrix-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .legend-gradient {
+            width: 240px;
+            height: 16px;
+            border-radius: 8px;
+            background: linear-gradient(to right,
+                #7f1d1d, #991b1b, #b91c1c, #dc2626, #ef4444, #f87171,
+                #fca5a5, #fecaca, #fee2e2,
+                var(--bg-tertiary),
+                #dcfce7, #bbf7d0, #86efac,
+                #4ade80, #22c55e, #16a34a, #15803d, #166534, #14532d);
+        }
+
+        .legend-text {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           STATS ROW
+           ======================================== */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 12px 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.positive { color: var(--color-green); }
+        .stat-value.negative { color: #ef4444; }
+        .stat-value.neutral { color: var(--text-muted); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========================================
+           SECTION TITLE
+           ======================================== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--color-purple);
+        }
+
+        /* ========================================
+           DETAIL PANEL (Slide-out)
+           ======================================== */
+        .detail-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .detail-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 520px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 101;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-panel.active {
+            transform: translateX(0);
+        }
+
+        .detail-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .detail-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .detail-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* Portfolio pair header */
+        .pair-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .pair-portfolio {
+            text-align: center;
+        }
+
+        .pair-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .pair-code {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pair-vs {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Correlation summary */
+        .corr-summary {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .corr-value-big {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .corr-value-big.positive { color: var(--color-green); }
+        .corr-value-big.negative { color: var(--color-red); }
+        .corr-value-big.neutral { color: var(--text-muted); }
+
+        .corr-interpretation {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* RiskPod breakdown */
+        .breakdown-section {
+            margin-bottom: 24px;
+        }
+
+        .breakdown-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breakdown-title svg {
+            width: 18px;
+            height: 18px;
+            color: var(--color-purple);
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .breakdown-item {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 3px solid;
+        }
+
+        .breakdown-item.equity { border-left-color: var(--color-blue); }
+        .breakdown-item.rates { border-left-color: var(--color-green); }
+        .breakdown-item.credit { border-left-color: var(--color-purple); }
+        .breakdown-item.fx { border-left-color: var(--color-cyan); }
+        .breakdown-item.commodities { border-left-color: var(--color-orange); }
+        .breakdown-item.other { border-left-color: var(--color-gray); }
+
+        .breakdown-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .breakdown-item-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .breakdown-item-label.equity { color: var(--color-blue); }
+        .breakdown-item-label.rates { color: var(--color-green); }
+        .breakdown-item-label.credit { color: var(--color-purple); }
+        .breakdown-item-label.fx { color: var(--color-cyan); }
+        .breakdown-item-label.commodities { color: var(--color-orange); }
+        .breakdown-item-label.other { color: var(--color-gray); }
+
+        .breakdown-item-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .breakdown-item-value.positive { color: var(--color-green); }
+        .breakdown-item-value.negative { color: var(--color-red); }
+        .breakdown-item-value.neutral { color: var(--text-muted); }
+
+        .breakdown-item-weight {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .breakdown-item-contrib {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Anchor correlation comparison */
+        .anchor-comparison {
+            margin-bottom: 24px;
+        }
+
+        .anchor-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .anchor-info {
+            flex: 1;
+        }
+
+        .anchor-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .anchor-ticker {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .anchor-values {
+            display: flex;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .anchor-val {
+            min-width: 60px;
+        }
+
+        .anchor-val-num {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+        }
+
+        .anchor-val-num.positive { color: var(--color-green); }
+        .anchor-val-num.negative { color: var(--color-red); }
+
+        .anchor-val-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Time series mini chart */
+        .timeseries-section {
+            margin-bottom: 24px;
+        }
+
+        .timeseries-chart {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 16px;
+            height: 150px;
+            position: relative;
+        }
+
+        .chart-y-axis {
+            position: absolute;
+            left: 8px;
+            top: 16px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        .chart-line-container {
+            position: absolute;
+            left: 35px;
+            right: 16px;
+            top: 16px;
+            bottom: 24px;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-x-axis {
+            position: absolute;
+            bottom: 4px;
+            left: 35px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        /* Insight section */
+        .insights-section {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .insight-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .insight-icon.warning { background: rgba(249, 115, 22, 0.2); }
+        .insight-icon.success { background: rgba(34, 197, 94, 0.2); }
+        .insight-icon.info { background: rgba(59, 130, 246, 0.2); }
+
+        .insight-content {
+            flex: 1;
+        }
+
+        .insight-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .insight-title.warning { color: var(--color-orange); }
+        .insight-title.success { color: var(--color-green); }
+        .insight-title.info { color: var(--color-blue); }
+
+        .insight-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* ========================================
+           WATERMARK
+           ======================================== */
+        .watermark {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            opacity: 0.5;
+            z-index: 50;
+        }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 1400px) {
+            .riskpod-matrices-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .riskpod-matrices-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">RISKCORE</div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <div class="nav-item">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                        </svg>
+                        <span>Riskboard</span>
+                    </div>
+                    <div class="nav-item">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span>Positions & Trades</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Analysis</div>
+                    <div class="nav-item active">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                        </svg>
+                        <span>Correlation</span>
+                    </div>
+                    <div class="nav-item">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Reports</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Data</div>
+                    <div class="nav-item">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>Import Data</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="page-title">Correlation Analysis</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export PDF
+                    </button>
+                    <button class="btn btn-primary">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Recalculate
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Control Bar -->
+                <div class="control-bar">
+                    <div class="control-group">
+                        <span class="control-label">Time Period</span>
+                        <div class="time-selector">
+                            <button class="time-btn" onclick="selectTime(this, '1M')">1M</button>
+                            <button class="time-btn active" onclick="selectTime(this, '3M')">3M</button>
+                            <button class="time-btn" onclick="selectTime(this, '6M')">6M</button>
+                            <button class="time-btn" onclick="selectTime(this, '1Y')">1Y</button>
+                            <button class="time-btn" onclick="selectTime(this, 'YTD')">YTD</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Scenario</span>
+                        <div class="scenario-selector">
+                            <button class="scenario-btn active normal" onclick="selectScenario(this, 'normal')">
+                                <span class="scenario-icon">📊</span>
+                                Current
+                            </button>
+                            <button class="scenario-btn stress-2008" onclick="selectScenario(this, 'stress-2008')">
+                                <span class="scenario-icon">💥</span>
+                                2008 Crisis
+                            </button>
+                            <button class="scenario-btn stress-2020" onclick="selectScenario(this, 'stress-2020')">
+                                <span class="scenario-icon">🦠</span>
+                                COVID 2020
+                            </button>
+                            <button class="scenario-btn stress-rates" onclick="selectScenario(this, 'stress-rates')">
+                                <span class="scenario-icon">📈</span>
+                                Rates Shock
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stress Scenario Banners -->
+                <div class="stress-banner stress-2008" id="banner-2008">
+                    <div class="stress-icon">💥</div>
+                    <div class="stress-content">
+                        <div class="stress-title stress-2008">2008 Financial Crisis Stress Scenario</div>
+                        <div class="stress-description">Simulating correlation behavior during Sept-Nov 2008. Correlations typically spike to 0.8-0.95 as "everything sells off together".</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-value stress-2008">+0.45</div>
+                        <div class="stress-stat-label">Avg Corr Increase</div>
+                    </div>
+                </div>
+
+                <div class="stress-banner stress-2020" id="banner-2020">
+                    <div class="stress-icon">🦠</div>
+                    <div class="stress-content">
+                        <div class="stress-title stress-2020">COVID-19 March 2020 Stress Scenario</div>
+                        <div class="stress-description">Simulating correlation behavior during Feb-Mar 2020. Rapid correlation spike followed by regime change (rates decorrelated from equities).</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-value stress-2020">+0.38</div>
+                        <div class="stress-stat-label">Avg Corr Increase</div>
+                    </div>
+                </div>
+
+                <div class="stress-banner stress-rates" id="banner-rates">
+                    <div class="stress-icon">📈</div>
+                    <div class="stress-content">
+                        <div class="stress-title stress-rates">Interest Rate Shock Scenario</div>
+                        <div class="stress-description">Simulating +200bps parallel shift in yield curve. Rates and credit exposures become highly correlated; equity correlation varies by sector.</div>
+                    </div>
+                    <div class="stress-stat">
+                        <div class="stress-stat-value stress-rates">+0.52</div>
+                        <div class="stress-stat-label">Rates Corr Spike</div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Selector -->
+                <div class="selector-section">
+                    <div class="selector-header">
+                        <div class="selector-title">Select Portfolios to Compare</div>
+                        <div class="portfolio-count"><span id="selectedCount">6</span> portfolios selected</div>
+                    </div>
+                    <div class="portfolio-grid">
+                        <div class="portfolio-chip selected" data-portfolio="1" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Alpha Growth
+                        </div>
+                        <div class="portfolio-chip selected" data-portfolio="2" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Macro Systematic
+                        </div>
+                        <div class="portfolio-chip selected" data-portfolio="3" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Credit Opportunities
+                        </div>
+                        <div class="portfolio-chip selected" data-portfolio="4" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            EM Equity
+                        </div>
+                        <div class="portfolio-chip selected" data-portfolio="5" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Volatility Trading
+                        </div>
+                        <div class="portfolio-chip selected" data-portfolio="6" onclick="togglePortfolio(this)">
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Rates RV
+                        </div>
+                    </div>
+                </div>
+
+                <div class="matrices-container">
+                    <!-- TOTAL CORRELATION MATRIX -->
+                    <div class="total-matrix-section">
+                        <div class="matrix-header">
+                            <div>
+                                <div class="matrix-title">
+                                    <span class="matrix-badge total">TOTAL</span>
+                                    Overall Portfolio Correlation
+                                </div>
+                                <div class="matrix-subtitle">Weighted average across all RiskPods based on portfolio allocations • Click any cell for details</div>
+                            </div>
+                        </div>
+
+                        <div class="matrix-wrapper">
+                            <table class="correlation-matrix total-matrix" id="totalMatrix">
+                                <thead>
+                                    <tr>
+                                        <th class="row-header"></th>
+                                        <th>Alpha<br>Growth</th>
+                                        <th>Macro<br>Sys</th>
+                                        <th>Credit<br>Opp</th>
+                                        <th>EM<br>Equity</th>
+                                        <th>Vol<br>Trading</th>
+                                        <th>Rates<br>RV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="row-header">Alpha Growth</th>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        <td><div class="matrix-cell c-07" onclick="showDetail('Alpha Growth', 'Macro Systematic', 0.72)">0.72</div></td>
+                                        <td><div class="matrix-cell c-04" onclick="showDetail('Alpha Growth', 'Credit Opportunities', 0.42)">0.42</div></td>
+                                        <td><div class="matrix-cell c-08" onclick="showDetail('Alpha Growth', 'EM Equity', 0.85)">0.85</div></td>
+                                        <td><div class="matrix-cell c--03" onclick="showDetail('Alpha Growth', 'Volatility Trading', -0.28)">-0.28</div></td>
+                                        <td><div class="matrix-cell c-03" onclick="showDetail('Alpha Growth', 'Rates RV', 0.31)">0.31</div></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="row-header">Macro Systematic</th>
+                                        <td><div class="matrix-cell c-07" onclick="showDetail('Macro Systematic', 'Alpha Growth', 0.72)">0.72</div></td>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        <td><div class="matrix-cell c-05" onclick="showDetail('Macro Systematic', 'Credit Opportunities', 0.48)">0.48</div></td>
+                                        <td><div class="matrix-cell c-06" onclick="showDetail('Macro Systematic', 'EM Equity', 0.68)">0.68</div></td>
+                                        <td><div class="matrix-cell c--02" onclick="showDetail('Macro Systematic', 'Volatility Trading', -0.15)">-0.15</div></td>
+                                        <td><div class="matrix-cell c-05" onclick="showDetail('Macro Systematic', 'Rates RV', 0.52)">0.52</div></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="row-header">Credit Opportunities</th>
+                                        <td><div class="matrix-cell c-04" onclick="showDetail('Credit Opportunities', 'Alpha Growth', 0.42)">0.42</div></td>
+                                        <td><div class="matrix-cell c-05" onclick="showDetail('Credit Opportunities', 'Macro Systematic', 0.48)">0.48</div></td>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        <td><div class="matrix-cell c-03" onclick="showDetail('Credit Opportunities', 'EM Equity', 0.35)">0.35</div></td>
+                                        <td><div class="matrix-cell c--04" onclick="showDetail('Credit Opportunities', 'Volatility Trading', -0.38)">-0.38</div></td>
+                                        <td><div class="matrix-cell c-06" onclick="showDetail('Credit Opportunities', 'Rates RV', 0.62)">0.62</div></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="row-header">EM Equity</th>
+                                        <td><div class="matrix-cell c-08" onclick="showDetail('EM Equity', 'Alpha Growth', 0.85)">0.85</div></td>
+                                        <td><div class="matrix-cell c-06" onclick="showDetail('EM Equity', 'Macro Systematic', 0.68)">0.68</div></td>
+                                        <td><div class="matrix-cell c-03" onclick="showDetail('EM Equity', 'Credit Opportunities', 0.35)">0.35</div></td>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        <td><div class="matrix-cell c--04" onclick="showDetail('EM Equity', 'Volatility Trading', -0.42)">-0.42</div></td>
+                                        <td><div class="matrix-cell c-02" onclick="showDetail('EM Equity', 'Rates RV', 0.18)">0.18</div></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="row-header">Volatility Trading</th>
+                                        <td><div class="matrix-cell c--03" onclick="showDetail('Volatility Trading', 'Alpha Growth', -0.28)">-0.28</div></td>
+                                        <td><div class="matrix-cell c--02" onclick="showDetail('Volatility Trading', 'Macro Systematic', -0.15)">-0.15</div></td>
+                                        <td><div class="matrix-cell c--04" onclick="showDetail('Volatility Trading', 'Credit Opportunities', -0.38)">-0.38</div></td>
+                                        <td><div class="matrix-cell c--04" onclick="showDetail('Volatility Trading', 'EM Equity', -0.42)">-0.42</div></td>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        <td><div class="matrix-cell c--01" onclick="showDetail('Volatility Trading', 'Rates RV', -0.05)">-0.05</div></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="row-header">Rates RV</th>
+                                        <td><div class="matrix-cell c-03" onclick="showDetail('Rates RV', 'Alpha Growth', 0.31)">0.31</div></td>
+                                        <td><div class="matrix-cell c-05" onclick="showDetail('Rates RV', 'Macro Systematic', 0.52)">0.52</div></td>
+                                        <td><div class="matrix-cell c-06" onclick="showDetail('Rates RV', 'Credit Opportunities', 0.62)">0.62</div></td>
+                                        <td><div class="matrix-cell c-02" onclick="showDetail('Rates RV', 'EM Equity', 0.18)">0.18</div></td>
+                                        <td><div class="matrix-cell c--01" onclick="showDetail('Rates RV', 'Volatility Trading', -0.05)">-0.05</div></td>
+                                        <td><div class="matrix-cell diagonal">1.00</div></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Stats Row -->
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-value positive" id="statHighest">0.85</div>
+                                <div class="stat-label">Highest Correlation</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value negative" id="statLowest">-0.42</div>
+                                <div class="stat-label">Lowest Correlation</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value neutral" id="statAverage">0.32</div>
+                                <div class="stat-label">Average Correlation</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value positive" id="statHedges">5</div>
+                                <div class="stat-label">Hedging Pairs (&lt; 0)</div>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="matrix-legend">
+                            <span class="legend-label">-1.0</span>
+                            <span class="legend-text">Negative</span>
+                            <div class="legend-gradient"></div>
+                            <span class="legend-text">Positive</span>
+                            <span class="legend-label">+1.0</span>
+                        </div>
+                    </div>
+
+                    <!-- RISKPOD-SPECIFIC MATRICES -->
+                    <div class="section-header">
+                        <div class="section-title">
+                            <svg class="section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                            </svg>
+                            Correlation by RiskPod
+                        </div>
+                    </div>
+
+                    <div class="riskpod-matrices-grid">
+                        <!-- EQUITY Matrix -->
+                        <div class="riskpod-matrix-card equity">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon equity">EQ</div>
+                                    Equity Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: SPX</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-08">0.82</div></td>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c-09">0.92</div></td>
+                                            <td><div class="matrix-cell c--05">-0.52</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-08">0.82</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-04">0.41</div></td>
+                                            <td><div class="matrix-cell c-07">0.78</div></td>
+                                            <td><div class="matrix-cell c--04">-0.38</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c-04">0.41</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-04">0.45</div></td>
+                                            <td><div class="matrix-cell c--03">-0.32</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-09">0.92</div></td>
+                                            <td><div class="matrix-cell c-07">0.78</div></td>
+                                            <td><div class="matrix-cell c-04">0.45</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c--06">-0.58</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c--05">-0.52</div></td>
+                                            <td><div class="matrix-cell c--04">-0.38</div></td>
+                                            <td><div class="matrix-cell c--03">-0.32</div></td>
+                                            <td><div class="matrix-cell c--06">-0.58</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- RATES Matrix -->
+                        <div class="riskpod-matrix-card rates">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon rates">RT</div>
+                                    Rates Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: US10Y</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-06">0.58</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-04">0.38</div></td>
+                                            <td><div class="matrix-cell c-01">0.12</div></td>
+                                            <td><div class="matrix-cell c-07">0.72</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-06">0.58</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-08">0.85</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-07">0.78</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-04">0.38</div></td>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c-01">0.12</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-07">0.72</div></td>
+                                            <td><div class="matrix-cell c-08">0.85</div></td>
+                                            <td><div class="matrix-cell c-07">0.78</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- CREDIT Matrix -->
+                        <div class="riskpod-matrix-card credit">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon credit">CR</div>
+                                    Credit Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: CDX.IG</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-06">0.68</div></td>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c--04">-0.42</div></td>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-06">0.62</div></td>
+                                            <td><div class="matrix-cell c-04">0.45</div></td>
+                                            <td><div class="matrix-cell c--03">-0.35</div></td>
+                                            <td><div class="matrix-cell c-05">0.58</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-06">0.68</div></td>
+                                            <td><div class="matrix-cell c-06">0.62</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c--05">-0.55</div></td>
+                                            <td><div class="matrix-cell c-07">0.72</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-05">0.48</div></td>
+                                            <td><div class="matrix-cell c-04">0.45</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c--04">-0.48</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c--04">-0.42</div></td>
+                                            <td><div class="matrix-cell c--03">-0.35</div></td>
+                                            <td><div class="matrix-cell c--05">-0.55</div></td>
+                                            <td><div class="matrix-cell c--04">-0.48</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c--03">-0.28</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                            <td><div class="matrix-cell c-05">0.58</div></td>
+                                            <td><div class="matrix-cell c-07">0.72</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell c--03">-0.28</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- FX Matrix -->
+                        <div class="riskpod-matrix-card fx">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon fx">FX</div>
+                                    FX Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: DXY</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell c-03">0.32</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell c-01">0.05</div></td>
+                                            <td><div class="matrix-cell c-02">0.25</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell c-01">0.05</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-01">0.10</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-03">0.32</div></td>
+                                            <td><div class="matrix-cell c-02">0.25</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-01">0.10</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- COMMODITIES Matrix -->
+                        <div class="riskpod-matrix-card commodities">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon commodities">CM</div>
+                                    Commodities Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: BCOM</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-06">0.62</div></td>
+                                            <td><div class="matrix-cell c--02">-0.15</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-03">0.25</div></td>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                            <td><div class="matrix-cell c--01">-0.08</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-03">0.25</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell c--02">-0.12</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-06">0.62</div></td>
+                                            <td><div class="matrix-cell c-05">0.55</div></td>
+                                            <td><div class="matrix-cell c-02">0.22</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c--02">-0.18</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c--02">-0.15</div></td>
+                                            <td><div class="matrix-cell c--01">-0.08</div></td>
+                                            <td><div class="matrix-cell c--02">-0.12</div></td>
+                                            <td><div class="matrix-cell c--02">-0.18</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-01">0.05</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-01">0.05</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- OTHER Matrix -->
+                        <div class="riskpod-matrix-card other">
+                            <div class="riskpod-header">
+                                <div class="riskpod-title">
+                                    <div class="riskpod-icon other">OT</div>
+                                    Other Correlation
+                                </div>
+                                <div class="anchor-label">Anchor: VIX</div>
+                            </div>
+                            <div class="matrix-wrapper">
+                                <table class="correlation-matrix small-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th class="row-header"></th>
+                                            <th>AG</th>
+                                            <th>MS</th>
+                                            <th>CO</th>
+                                            <th>EM</th>
+                                            <th>VT</th>
+                                            <th>RR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="row-header">AG</th>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-03">0.32</div></td>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">MS</th>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell c-03">0.25</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">CO</th>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-02">0.18</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell c-02">0.10</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">EM</th>
+                                            <td><div class="matrix-cell c-03">0.32</div></td>
+                                            <td><div class="matrix-cell c-03">0.25</div></td>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-06">0.58</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">VT</th>
+                                            <td><div class="matrix-cell c-06">0.65</div></td>
+                                            <td><div class="matrix-cell c-05">0.52</div></td>
+                                            <td><div class="matrix-cell c-04">0.42</div></td>
+                                            <td><div class="matrix-cell c-06">0.58</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row-header">RR</th>
+                                            <td><div class="matrix-cell c-02">0.12</div></td>
+                                            <td><div class="matrix-cell c-02">0.15</div></td>
+                                            <td><div class="matrix-cell c-02">0.10</div></td>
+                                            <td><div class="matrix-cell c-01">0.08</div></td>
+                                            <td><div class="matrix-cell c-03">0.28</div></td>
+                                            <td><div class="matrix-cell diagonal">1.00</div></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Panel (Slide-out) -->
+    <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <div class="detail-title">Correlation Detail</div>
+            <button class="detail-close" onclick="closeDetail()">&times;</button>
+        </div>
+        <div class="detail-body">
+            <!-- Portfolio Pair Header -->
+            <div class="pair-header">
+                <div class="pair-portfolio">
+                    <div class="pair-name" id="detailPortfolioA">Alpha Growth</div>
+                    <div class="pair-code">AG</div>
+                </div>
+                <div class="pair-vs">VS</div>
+                <div class="pair-portfolio">
+                    <div class="pair-name" id="detailPortfolioB">EM Equity</div>
+                    <div class="pair-code">EM</div>
+                </div>
+            </div>
+
+            <!-- Total Correlation -->
+            <div class="corr-summary">
+                <div class="corr-value-big positive" id="detailCorrValue">0.85</div>
+                <div class="corr-interpretation" id="detailInterpretation">High Positive Correlation - These portfolios tend to move together</div>
+            </div>
+
+            <!-- RiskPod Breakdown -->
+            <div class="breakdown-section">
+                <div class="breakdown-title">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    RiskPod Breakdown
+                </div>
+                <div class="breakdown-grid">
+                    <div class="breakdown-item equity">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label equity">Equity</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.92</div>
+                        <div class="breakdown-item-weight">Weight: 45%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.41 to total</div>
+                    </div>
+                    <div class="breakdown-item rates">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label rates">Rates</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.38</div>
+                        <div class="breakdown-item-weight">Weight: 15%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.06 to total</div>
+                    </div>
+                    <div class="breakdown-item credit">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label credit">Credit</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.48</div>
+                        <div class="breakdown-item-weight">Weight: 20%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.10 to total</div>
+                    </div>
+                    <div class="breakdown-item fx">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label fx">FX</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.65</div>
+                        <div class="breakdown-item-weight">Weight: 12%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.08 to total</div>
+                    </div>
+                    <div class="breakdown-item commodities">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label commodities">Commodities</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.62</div>
+                        <div class="breakdown-item-weight">Weight: 5%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.03 to total</div>
+                    </div>
+                    <div class="breakdown-item other">
+                        <div class="breakdown-item-header">
+                            <span class="breakdown-item-label other">Other</span>
+                        </div>
+                        <div class="breakdown-item-value positive">0.32</div>
+                        <div class="breakdown-item-weight">Weight: 3%</div>
+                        <div class="breakdown-item-contrib">Contributes +0.01 to total</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anchor Correlation Comparison -->
+            <div class="anchor-comparison">
+                <div class="breakdown-title">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Correlation to Anchors
+                </div>
+                <div class="anchor-row">
+                    <div class="anchor-info">
+                        <div class="anchor-name">S&P 500 (SPX)</div>
+                        <div class="anchor-ticker">Equity Anchor</div>
+                    </div>
+                    <div class="anchor-values">
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.85</div>
+                            <div class="anchor-val-label">AG</div>
+                        </div>
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.92</div>
+                            <div class="anchor-val-label">EM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="anchor-row">
+                    <div class="anchor-info">
+                        <div class="anchor-name">10Y Treasury (US10Y)</div>
+                        <div class="anchor-ticker">Rates Anchor</div>
+                    </div>
+                    <div class="anchor-values">
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.52</div>
+                            <div class="anchor-val-label">AG</div>
+                        </div>
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.38</div>
+                            <div class="anchor-val-label">EM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="anchor-row">
+                    <div class="anchor-info">
+                        <div class="anchor-name">CDX IG</div>
+                        <div class="anchor-ticker">Credit Anchor</div>
+                    </div>
+                    <div class="anchor-values">
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.45</div>
+                            <div class="anchor-val-label">AG</div>
+                        </div>
+                        <div class="anchor-val">
+                            <div class="anchor-val-num positive">0.52</div>
+                            <div class="anchor-val-label">EM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rolling Correlation Chart -->
+            <div class="timeseries-section">
+                <div class="breakdown-title">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                    21-Day Rolling Correlation
+                </div>
+                <div class="timeseries-chart">
+                    <div class="chart-y-axis">
+                        <span>1.0</span>
+                        <span>0.5</span>
+                        <span>0.0</span>
+                    </div>
+                    <div class="chart-line-container">
+                        <svg class="chart-svg" viewBox="0 0 400 100" preserveAspectRatio="none">
+                            <!-- Grid lines -->
+                            <line x1="0" y1="50" x2="400" y2="50" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                            <!-- Correlation line -->
+                            <polyline
+                                fill="none"
+                                stroke="#a855f7"
+                                stroke-width="2"
+                                points="0,25 40,22 80,28 120,20 160,18 200,22 240,15 280,18 320,12 360,15 400,10"
+                            />
+                            <!-- Area fill -->
+                            <polyline
+                                fill="url(#purpleGradient)"
+                                stroke="none"
+                                points="0,25 40,22 80,28 120,20 160,18 200,22 240,15 280,18 320,12 360,15 400,10 400,100 0,100"
+                            />
+                            <defs>
+                                <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="rgba(168,85,247,0.3)"/>
+                                    <stop offset="100%" stop-color="rgba(168,85,247,0)"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="chart-x-axis">
+                        <span>Oct</span>
+                        <span>Nov</span>
+                        <span>Dec</span>
+                        <span>Jan</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights-section">
+                <div class="insight-item">
+                    <div class="insight-icon warning">⚠️</div>
+                    <div class="insight-content">
+                        <div class="insight-title warning">High Concentration Risk</div>
+                        <div class="insight-text">Both portfolios are >85% correlated to S&P 500. In a market downturn, expect similar drawdowns.</div>
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-icon info">💡</div>
+                    <div class="insight-content">
+                        <div class="insight-title info">Equity Drives Correlation</div>
+                        <div class="insight-text">Equity contributes 48% of total correlation. Reducing equity overlap would most effectively reduce correlation.</div>
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-icon success">✓</div>
+                    <div class="insight-content">
+                        <div class="insight-title success">Stable Over Time</div>
+                        <div class="insight-text">21-day rolling correlation has been consistent (0.80-0.90) over the past 3 months.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Watermark -->
+    <div class="watermark">Powered by RISKCORE</div>
+
+    <script>
+        // Portfolio selection toggle
+        function togglePortfolio(chip) {
+            chip.classList.toggle('selected');
+            updateCount();
+        }
+
+        function updateCount() {
+            const count = document.querySelectorAll('.portfolio-chip.selected').length;
+            document.getElementById('selectedCount').textContent = count;
+        }
+
+        // Time period selector
+        function selectTime(btn, period) {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // In real app: Recalculate correlations for selected time period
+            console.log('Selected time period:', period);
+        }
+
+        // Scenario selector
+        function selectScenario(btn, scenario) {
+            document.querySelectorAll('.scenario-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+
+            // Hide all banners
+            document.querySelectorAll('.stress-banner').forEach(b => b.classList.remove('active'));
+
+            // Show relevant banner
+            if (scenario !== 'normal') {
+                const banner = document.getElementById('banner-' + scenario.replace('stress-', ''));
+                if (banner) banner.classList.add('active');
+            }
+
+            // In a real app, this would recalculate all matrices with stress scenario multipliers
+            // For demo, we just update the stats
+            if (scenario === 'stress-2008') {
+                document.getElementById('statHighest').textContent = '0.95';
+                document.getElementById('statLowest').textContent = '0.52';
+                document.getElementById('statAverage').textContent = '0.78';
+                document.getElementById('statHedges').textContent = '0';
+            } else if (scenario === 'stress-2020') {
+                document.getElementById('statHighest').textContent = '0.92';
+                document.getElementById('statLowest').textContent = '0.35';
+                document.getElementById('statAverage').textContent = '0.68';
+                document.getElementById('statHedges').textContent = '1';
+            } else if (scenario === 'stress-rates') {
+                document.getElementById('statHighest').textContent = '0.88';
+                document.getElementById('statLowest').textContent = '-0.15';
+                document.getElementById('statAverage').textContent = '0.58';
+                document.getElementById('statHedges').textContent = '2';
+            } else {
+                // Normal
+                document.getElementById('statHighest').textContent = '0.85';
+                document.getElementById('statLowest').textContent = '-0.42';
+                document.getElementById('statAverage').textContent = '0.32';
+                document.getElementById('statHedges').textContent = '5';
+            }
+
+            console.log('Selected scenario:', scenario);
+        }
+
+        // Show detail panel
+        function showDetail(portfolioA, portfolioB, correlation) {
+            document.getElementById('detailPortfolioA').textContent = portfolioA;
+            document.getElementById('detailPortfolioB').textContent = portfolioB;
+
+            const corrValue = document.getElementById('detailCorrValue');
+            corrValue.textContent = correlation.toFixed(2);
+
+            // Update color class
+            corrValue.classList.remove('positive', 'negative', 'neutral');
+            if (correlation > 0.2) {
+                corrValue.classList.add('positive');
+            } else if (correlation < -0.2) {
+                corrValue.classList.add('negative');
+            } else {
+                corrValue.classList.add('neutral');
+            }
+
+            // Update interpretation
+            const interp = document.getElementById('detailInterpretation');
+            if (correlation > 0.7) {
+                interp.textContent = 'High Positive Correlation - These portfolios tend to move together strongly';
+            } else if (correlation > 0.4) {
+                interp.textContent = 'Moderate Positive Correlation - Some shared risk factors';
+            } else if (correlation > 0.1) {
+                interp.textContent = 'Low Positive Correlation - Limited co-movement';
+            } else if (correlation > -0.1) {
+                interp.textContent = 'No Significant Correlation - Movements are independent';
+            } else if (correlation > -0.4) {
+                interp.textContent = 'Low Negative Correlation - Slight hedging benefit';
+            } else {
+                interp.textContent = 'High Negative Correlation - Strong hedging relationship';
+            }
+
+            // Show panel
+            document.getElementById('detailOverlay').classList.add('active');
+            document.getElementById('detailPanel').classList.add('active');
+        }
+
+        // Close detail panel
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('active');
+            document.getElementById('detailPanel').classList.remove('active');
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetail();
+            }
+        });
+    </script>
+</body>
+</html>
