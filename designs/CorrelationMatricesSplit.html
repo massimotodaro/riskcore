@@ -531,17 +531,30 @@
         }
 
         .correlation-matrix th {
-            padding: 4px 2px;
-            font-size: 10px;
+            padding: 3px 2px;
+            font-size: 9px;
             font-weight: 500;
             color: var(--text-secondary);
             text-align: center;
             white-space: nowrap;
+            line-height: 1.2;
         }
 
         .correlation-matrix th.row-header {
             text-align: right;
-            padding-right: 6px;
+            padding-right: 8px;
+            font-size: 9px;
+        }
+
+        /* Total matrix gets slightly larger headers */
+        .total-matrix th {
+            font-size: 10px;
+            padding: 4px 3px;
+        }
+
+        .total-matrix th.row-header {
+            font-size: 10px;
+            padding-right: 10px;
         }
 
         .correlation-matrix td {
@@ -551,16 +564,16 @@
         .matrix-cell {
             width: 100%;
             aspect-ratio: 1;
-            min-width: 32px;
-            min-height: 32px;
+            min-width: 24px;
+            min-height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'SF Mono', Monaco, 'Consolas', monospace;
-            font-size: 10px;
+            font-size: 11px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 3px;
             transition: all 0.15s;
             position: relative;
         }
@@ -589,16 +602,16 @@
 
         /* Large matrix cells for Total */
         .total-matrix .matrix-cell {
-            min-width: 42px;
-            min-height: 42px;
-            font-size: 11px;
+            min-width: 36px;
+            min-height: 36px;
+            font-size: 12px;
         }
 
         /* Small matrix cells for RiskPods */
         .small-matrix .matrix-cell {
-            min-width: 28px;
-            min-height: 28px;
-            font-size: 9px;
+            min-width: 22px;
+            min-height: 22px;
+            font-size: 10px;
         }
 
         /* Correlation color scale */
@@ -1056,17 +1069,17 @@
                                 <thead>
                                     <tr>
                                         <th class="row-header"></th>
-                                        <th>AG</th>
-                                        <th>MS</th>
-                                        <th>CO</th>
-                                        <th>EM</th>
-                                        <th>VT</th>
-                                        <th>RR</th>
+                                        <th>Alpha<br>Growth</th>
+                                        <th>Macro<br>Sys</th>
+                                        <th>Credit<br>Opp</th>
+                                        <th>EM<br>Equity</th>
+                                        <th>Vol<br>Trading</th>
+                                        <th>Rates<br>RV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <th class="row-header">AG</th>
+                                        <th class="row-header">Alpha Growth</th>
                                         <td><div class="matrix-cell diagonal">1.00</div></td>
                                         <td><div class="matrix-cell c-07" onclick="showDetail('Alpha Growth', 'Macro Systematic', 0.72)">0.72</div></td>
                                         <td><div class="matrix-cell c-04" onclick="showDetail('Alpha Growth', 'Credit Opportunities', 0.42)">0.42</div></td>
@@ -1075,7 +1088,7 @@
                                         <td><div class="matrix-cell c-03" onclick="showDetail('Alpha Growth', 'Rates RV', 0.31)">0.31</div></td>
                                     </tr>
                                     <tr>
-                                        <th class="row-header">MS</th>
+                                        <th class="row-header">Macro Sys</th>
                                         <td><div class="matrix-cell c-07" onclick="showDetail('Macro Systematic', 'Alpha Growth', 0.72)">0.72</div></td>
                                         <td><div class="matrix-cell diagonal">1.00</div></td>
                                         <td><div class="matrix-cell c-05" onclick="showDetail('Macro Systematic', 'Credit Opportunities', 0.48)">0.48</div></td>
@@ -1084,7 +1097,7 @@
                                         <td><div class="matrix-cell c-05" onclick="showDetail('Macro Systematic', 'Rates RV', 0.52)">0.52</div></td>
                                     </tr>
                                     <tr>
-                                        <th class="row-header">CO</th>
+                                        <th class="row-header">Credit Opp</th>
                                         <td><div class="matrix-cell c-04" onclick="showDetail('Credit Opportunities', 'Alpha Growth', 0.42)">0.42</div></td>
                                         <td><div class="matrix-cell c-05" onclick="showDetail('Credit Opportunities', 'Macro Systematic', 0.48)">0.48</div></td>
                                         <td><div class="matrix-cell diagonal">1.00</div></td>
@@ -1093,7 +1106,7 @@
                                         <td><div class="matrix-cell c-06" onclick="showDetail('Credit Opportunities', 'Rates RV', 0.62)">0.62</div></td>
                                     </tr>
                                     <tr>
-                                        <th class="row-header">EM</th>
+                                        <th class="row-header">EM Equity</th>
                                         <td><div class="matrix-cell c-08" onclick="showDetail('EM Equity', 'Alpha Growth', 0.85)">0.85</div></td>
                                         <td><div class="matrix-cell c-06" onclick="showDetail('EM Equity', 'Macro Systematic', 0.68)">0.68</div></td>
                                         <td><div class="matrix-cell c-03" onclick="showDetail('EM Equity', 'Credit Opportunities', 0.35)">0.35</div></td>
@@ -1102,7 +1115,7 @@
                                         <td><div class="matrix-cell c-02" onclick="showDetail('EM Equity', 'Rates RV', 0.18)">0.18</div></td>
                                     </tr>
                                     <tr>
-                                        <th class="row-header">VT</th>
+                                        <th class="row-header">Vol Trading</th>
                                         <td><div class="matrix-cell c--03" onclick="showDetail('Volatility Trading', 'Alpha Growth', -0.28)">-0.28</div></td>
                                         <td><div class="matrix-cell c--02" onclick="showDetail('Volatility Trading', 'Macro Systematic', -0.15)">-0.15</div></td>
                                         <td><div class="matrix-cell c--04" onclick="showDetail('Volatility Trading', 'Credit Opportunities', -0.38)">-0.38</div></td>
@@ -1111,7 +1124,7 @@
                                         <td><div class="matrix-cell c--01" onclick="showDetail('Volatility Trading', 'Rates RV', -0.05)">-0.05</div></td>
                                     </tr>
                                     <tr>
-                                        <th class="row-header">RR</th>
+                                        <th class="row-header">Rates RV</th>
                                         <td><div class="matrix-cell c-03" onclick="showDetail('Rates RV', 'Alpha Growth', 0.31)">0.31</div></td>
                                         <td><div class="matrix-cell c-05" onclick="showDetail('Rates RV', 'Macro Systematic', 0.52)">0.52</div></td>
                                         <td><div class="matrix-cell c-06" onclick="showDetail('Rates RV', 'Credit Opportunities', 0.62)">0.62</div></td>
@@ -1172,16 +1185,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-08">0.82</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-09">0.92</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-08">0.82</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.41</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c--04">-0.38</div></td><td><div class="matrix-cell c-03">0.28</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.41</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.45</div></td><td><div class="matrix-cell c--03">-0.32</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-09">0.92</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c-04">0.45</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--06">-0.58</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c--04">-0.38</div></td><td><div class="matrix-cell c--03">-0.32</div></td><td><div class="matrix-cell c--06">-0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.08</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-08">0.82</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-09">0.92</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-08">0.82</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.41</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c--04">-0.38</div></td><td><div class="matrix-cell c-03">0.28</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.41</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.45</div></td><td><div class="matrix-cell c--03">-0.32</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-09">0.92</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c-04">0.45</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--06">-0.58</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c--04">-0.38</div></td><td><div class="matrix-cell c--03">-0.32</div></td><td><div class="matrix-cell c--06">-0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.08</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1200,16 +1213,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-07">0.72</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-08">0.85</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-07">0.78</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-05">0.52</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-08">0.85</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-07">0.72</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-08">0.85</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-07">0.78</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-05">0.52</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-08">0.85</div></td><td><div class="matrix-cell c-07">0.78</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1228,16 +1241,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-03">0.35</div></td><td><div class="matrix-cell c--04">-0.42</div></td><td><div class="matrix-cell c-05">0.52</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c-05">0.48</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c-07">0.72</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-03">0.35</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--03">-0.28</div></td><td><div class="matrix-cell c-03">0.32</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c--04">-0.42</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c--03">-0.28</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--02">-0.15</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-03">0.35</div></td><td><div class="matrix-cell c--04">-0.42</div></td><td><div class="matrix-cell c-05">0.52</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c-05">0.48</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-06">0.65</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c-07">0.72</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-03">0.35</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--03">-0.28</div></td><td><div class="matrix-cell c-03">0.32</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c--04">-0.42</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c--05">-0.52</div></td><td><div class="matrix-cell c--03">-0.28</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--02">-0.15</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1256,16 +1269,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.32</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.05</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-01">0.05</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-05">0.52</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.32</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-05">0.55</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-01">0.05</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-01">0.05</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1284,16 +1297,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c--02">-0.12</div></td><td><div class="matrix-cell c-01">0.08</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c--01">-0.05</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c-03">0.28</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell c-01">0.12</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c--02">-0.12</div></td><td><div class="matrix-cell c--01">-0.05</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-00">0.02</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c--02">-0.12</div></td><td><div class="matrix-cell c-01">0.08</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c--01">-0.05</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c-03">0.28</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-07">0.72</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell c-01">0.12</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c--02">-0.12</div></td><td><div class="matrix-cell c--01">-0.05</div></td><td><div class="matrix-cell c--02">-0.18</div></td><td><div class="matrix-cell c--02">-0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-00">0.02</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-01">0.08</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.28</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-00">0.02</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1312,16 +1325,16 @@
                                     <table class="correlation-matrix small-matrix">
                                         <thead>
                                             <tr>
-                                                <th></th><th>AG</th><th>MS</th><th>CO</th><th>EM</th><th>VT</th><th>RR</th>
+                                                <th></th><th>Alpha</th><th>Macro</th><th>Credit</th><th>EM</th><th>Vol</th><th>Rates</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr><th>AG</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-07">0.75</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
-                                            <tr><th>MS</th><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
-                                            <tr><th>CO</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-04">0.42</div></td></tr>
-                                            <tr><th>EM</th><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-01">0.12</div></td></tr>
-                                            <tr><th>VT</th><td><div class="matrix-cell c-07">0.75</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
-                                            <tr><th>RR</th><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
+                                            <tr><th>Alpha</th><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-07">0.75</div></td><td><div class="matrix-cell c-02">0.15</div></td></tr>
+                                            <tr><th>Macro</th><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-02">0.18</div></td></tr>
+                                            <tr><th>Credit</th><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-04">0.42</div></td></tr>
+                                            <tr><th>EM Eq</th><td><div class="matrix-cell c-05">0.48</div></td><td><div class="matrix-cell c-04">0.38</div></td><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell c-01">0.12</div></td></tr>
+                                            <tr><th>Vol</th><td><div class="matrix-cell c-07">0.75</div></td><td><div class="matrix-cell c-06">0.62</div></td><td><div class="matrix-cell c-03">0.32</div></td><td><div class="matrix-cell c-06">0.58</div></td><td><div class="matrix-cell diagonal">1.00</div></td><td><div class="matrix-cell c-02">0.22</div></td></tr>
+                                            <tr><th>Rates</th><td><div class="matrix-cell c-02">0.15</div></td><td><div class="matrix-cell c-02">0.18</div></td><td><div class="matrix-cell c-04">0.42</div></td><td><div class="matrix-cell c-01">0.12</div></td><td><div class="matrix-cell c-02">0.22</div></td><td><div class="matrix-cell diagonal">1.00</div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
