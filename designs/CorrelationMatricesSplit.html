@@ -414,6 +414,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0 10%;
         }
 
         /* Right Panel - RiskPod Matrices (2/3) */
@@ -527,22 +528,11 @@
         .correlation-matrix {
             border-collapse: separate;
             border-spacing: 2px;
+            width: 100%;
         }
 
         .correlation-matrix td {
-            width: 32px;
-            height: 32px;
             padding: 0;
-        }
-
-        .total-matrix td {
-            width: 38px;
-            height: 38px;
-        }
-
-        .small-matrix td {
-            width: 28px;
-            height: 28px;
         }
 
         .correlation-matrix th {
@@ -573,8 +563,8 @@
         }
 
         .matrix-cell {
-            width: 32px;
-            height: 32px;
+            width: 100%;
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -611,15 +601,11 @@
 
         /* Large matrix cells for Total */
         .total-matrix .matrix-cell {
-            width: 38px;
-            height: 38px;
             font-size: 12px;
         }
 
         /* Small matrix cells for RiskPods */
         .small-matrix .matrix-cell {
-            width: 28px;
-            height: 28px;
             font-size: 10px;
         }
 
