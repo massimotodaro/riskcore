@@ -525,9 +525,24 @@
            CORRELATION MATRIX HEATMAP
            ======================================== */
         .correlation-matrix {
-            width: 100%;
             border-collapse: separate;
             border-spacing: 2px;
+        }
+
+        .correlation-matrix td {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+        }
+
+        .total-matrix td {
+            width: 38px;
+            height: 38px;
+        }
+
+        .small-matrix td {
+            width: 28px;
+            height: 28px;
         }
 
         .correlation-matrix th {
@@ -557,15 +572,9 @@
             padding-right: 10px;
         }
 
-        .correlation-matrix td {
-            padding: 0;
-        }
-
         .matrix-cell {
-            width: 100%;
-            aspect-ratio: 1;
-            min-width: 24px;
-            min-height: 24px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -602,15 +611,15 @@
 
         /* Large matrix cells for Total */
         .total-matrix .matrix-cell {
-            min-width: 36px;
-            min-height: 36px;
+            width: 38px;
+            height: 38px;
             font-size: 12px;
         }
 
         /* Small matrix cells for RiskPods */
         .small-matrix .matrix-cell {
-            min-width: 22px;
-            min-height: 22px;
+            width: 28px;
+            height: 28px;
             font-size: 10px;
         }
 
