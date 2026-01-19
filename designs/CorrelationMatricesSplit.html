@@ -384,19 +384,19 @@
         }
 
         .panel-title {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
+            gap: 10px;
+            margin-bottom: 6px;
         }
 
         .panel-badge {
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             background: rgba(168, 85, 247, 0.2);
@@ -484,11 +484,11 @@
         }
 
         .riskpod-card-title {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .riskpod-icon {
@@ -529,10 +529,7 @@
             border-collapse: separate;
             border-spacing: 2px;
             width: 100%;
-        }
-
-        .correlation-matrix td {
-            padding: 0;
+            table-layout: fixed;
         }
 
         .correlation-matrix th {
@@ -562,6 +559,11 @@
             padding-right: 10px;
         }
 
+        .correlation-matrix td {
+            padding: 0;
+            vertical-align: middle;
+        }
+
         .matrix-cell {
             width: 100%;
             aspect-ratio: 1;
@@ -571,10 +573,9 @@
             font-weight: 700;
             font-family: 'SF Mono', Monaco, 'Consolas', monospace;
             font-size: 11px;
-            cursor: pointer;
             border-radius: 3px;
+            cursor: pointer;
             transition: all 0.15s;
-            position: relative;
         }
 
         .matrix-cell:hover {
@@ -601,12 +602,12 @@
 
         /* Large matrix cells for Total */
         .total-matrix .matrix-cell {
-            font-size: 12px;
+            font-size: 13px;
         }
 
         /* Small matrix cells for RiskPods */
         .small-matrix .matrix-cell {
-            font-size: 10px;
+            font-size: 11px;
         }
 
         /* Correlation color scale */
